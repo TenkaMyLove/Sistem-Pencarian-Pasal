@@ -4,3 +4,6 @@ dist/
 *.log
 bpk_search_debug.html
 bpk_detail_debug.html
+.agents/
+skills-lock.json
+app.cjs
