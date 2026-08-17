@@ -115,15 +115,7 @@ npm run start
 
 Server berjalan di `http://localhost:3000`.
 
----
 
-## Akun Default
-
-| Role | Username | Password |
-|---|---|---|
-| Admin | TenkaLOML | (set saat seed) |
-| Pengelola | Pengelola | Pengelola123! |
-| Perancang | Perancang | Perancang123! |
 
 ---
 
