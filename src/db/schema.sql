@@ -88,6 +88,7 @@ CREATE TABLE pengguna (
 CREATE TABLE jadwal_rapat_harmonisasi (
     id SERIAL PRIMARY KEY,
     jenis_rancangan VARCHAR(50) NOT NULL,
+    tentang TEXT NOT NULL DEFAULT '',
     tanggal DATE NOT NULL,
     jam TIME NOT NULL,
     nama_kompilator VARCHAR(150) NOT NULL,

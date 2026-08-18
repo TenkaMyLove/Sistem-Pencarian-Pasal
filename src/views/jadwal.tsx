@@ -5,6 +5,7 @@ import { UserSession } from '../middleware/auth.js';
 export interface JadwalItem {
   id: number;
   jenis_rancangan: string;
+  tentang: string;
   tanggal: string;
   jam: string;
   nama_kompilator: string;
@@ -20,21 +21,16 @@ interface JadwalViewProps {
 }
 
 export function JadwalView({ user, jadwalList, editItem = null, showModal = false }: JadwalViewProps) {
-  const isPengelola = user.peran === 'Pengelola';
+  const canEdit = user.peran === 'Pengelola' || user.peran === 'Perancang';
 
   return (
     <Layout title="Manajemen Jadwal Rapat Harmonisasi" activeNav="jadwal" user={user}>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-        <div>
-          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary-navy);">
-            Daftar Jadwal Rapat Harmonisasi Ranperda & Ranperkada
-          </h3>
-          <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem;">
-            Divisi Peraturan Perundang-undangan dan Pembinaan Hukum (P3H) Kanwil Kemenkumham Kalsel
-          </p>
-        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary-navy);">
+          Daftar Jadwal Rapat Harmonisasi Ranperda &amp; Ranperkada
+        </h3>
 
-        {isPengelola && (
+        {canEdit && (
           <button
             class="btn-search"
             hx-get="/jadwal/modal/tambah"
@@ -47,15 +43,6 @@ export function JadwalView({ user, jadwalList, editItem = null, showModal = fals
           </button>
         )}
       </div>
-
-      {!isPengelola && (
-        <div class="alert alert-success" style="margin-bottom: 1.5rem;">
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span>Anda masuk sebagai <strong>Perancang (Read-Only)</strong>. Anda dapat melihat seluruh daftar jadwal rapat harmonisasi.</span>
-        </div>
-      )}
 
       {/* Main Table Container */}
       <div id="jadwal-table-container">
@@ -71,7 +58,7 @@ export function JadwalView({ user, jadwalList, editItem = null, showModal = fals
 }
 
 export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; jadwalList: JadwalItem[] }) {
-  const isPengelola = user.peran === 'Pengelola';
+  const canEdit = user.peran === 'Pengelola' || user.peran === 'Perancang';
 
   if (!jadwalList || jadwalList.length === 0) {
     return (
@@ -105,11 +92,12 @@ export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; ja
           <tr>
             <th>No</th>
             <th>Jenis Rancangan</th>
+            <th>Tentang</th>
             <th>Hari / Tanggal</th>
             <th>Jam (WITA)</th>
             <th>Nama Kompilator</th>
             <th>Tim Pokja</th>
-            {isPengelola && <th style="text-align: right;">Aksi</th>}
+            {canEdit && <th style="text-align: right;">Aksi</th>}
           </tr>
         </thead>
         <tbody>
@@ -121,6 +109,7 @@ export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; ja
                   {item.jenis_rancangan}
                 </span>
               </td>
+              <td style="max-width: 260px; line-height: 1.45;">{item.tentang || '—'}</td>
               <td style="font-weight: 600;">{formatDate(item.tanggal)}</td>
               <td>{item.jam} WITA</td>
               <td style="font-weight: 600; color: var(--primary-navy);">{item.nama_kompilator}</td>
@@ -129,7 +118,7 @@ export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; ja
                   {item.tim_pokja}
                 </span>
               </td>
-              {isPengelola && (
+              {canEdit && (
                 <td style="text-align: right;">
                   <button
                     class="btn-action btn-edit"
@@ -184,7 +173,7 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
         </div>
 
         <form
-          hx-post={isEdit ? `/jadwal/${editItem.id}/edit` : '/jadwal'}
+          hx-post={isEdit ? `/jadwal/${editItem!.id}/edit` : '/jadwal'}
           hx-target="#jadwal-table-container"
           hx-on="htmx:afterOnLoad: document.getElementById('modal-container').innerHTML=''"
         >
@@ -194,6 +183,19 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
               <option value="Ranperda" selected={editItem?.jenis_rancangan === 'Ranperda'}>Ranperda (Rancangan Peraturan Daerah)</option>
               <option value="Ranperkada" selected={editItem?.jenis_rancangan === 'Ranperkada'}>Ranperkada (Rancangan Peraturan Kepala Daerah)</option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label for="tentang">Tentang (Judul / Pokok Materi)</label>
+            <input
+              type="text"
+              id="tentang"
+              name="tentang"
+              value={editItem?.tentang || ''}
+              class="form-control"
+              placeholder="Contoh: Ketertiban Umum dan Ketenteraman Masyarakat"
+              required
+            />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -250,7 +252,7 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
               onclick="document.getElementById('modal-container').innerHTML=''"
               style="background-color: #f1f5f9; color: var(--text-main);"
             >
-              Batal
+              Tutup
             </button>
             <button type="submit" class="btn-action btn-primary" style="padding: 0.6rem 1.25rem;">
               {isEdit ? 'Simpan Perubahan' : 'Tambah Jadwal'}

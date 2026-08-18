@@ -12,5 +12,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/scraper/diagnoseBPKDetail.ts", "src/scraper/diagnoseBPK.ts", "src/scraper/diagnoseBPK2.ts"]
 }

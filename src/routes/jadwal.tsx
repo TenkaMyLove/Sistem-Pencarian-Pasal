@@ -7,9 +7,14 @@ export const jadwalRoutes = new Hono<Env>();
 
 jadwalRoutes.use('*', requireAuth);
 
+// Pengelola AND Perancang can write
+function canWrite(peran: string) {
+  return peran === 'Pengelola' || peran === 'Perancang';
+}
+
 async function fetchJadwalList(): Promise<JadwalItem[]> {
   return await query<JadwalItem>(`
-    SELECT id, jenis_rancangan, tanggal::text, jam::text, nama_kompilator, tim_pokja, dibuat_oleh
+    SELECT id, jenis_rancangan, tentang, tanggal::text, jam::text, nama_kompilator, tim_pokja, dibuat_oleh
     FROM jadwal_rapat_harmonisasi
     ORDER BY tanggal ASC, jam ASC;
   `);
@@ -25,8 +30,8 @@ jadwalRoutes.get('/jadwal', async (c) => {
 // GET /jadwal/modal/tambah (HTMX modal partial)
 jadwalRoutes.get('/jadwal/modal/tambah', (c) => {
   const user = c.get('user');
-  if (user.peran !== 'Pengelola') {
-    return c.html('<div class="alert alert-danger">Akses ditolak: Hanya Pengelola yang dapat menambah jadwal.</div>', 403);
+  if (!canWrite(user.peran)) {
+    return c.html('<div class="alert alert-danger">Akses ditolak.</div>', 403);
   }
   return c.html(<JadwalModalPartial />);
 });
@@ -34,12 +39,12 @@ jadwalRoutes.get('/jadwal/modal/tambah', (c) => {
 // GET /jadwal/modal/edit/:id (HTMX modal partial)
 jadwalRoutes.get('/jadwal/modal/edit/:id', async (c) => {
   const user = c.get('user');
-  if (user.peran !== 'Pengelola') {
-    return c.html('<div class="alert alert-danger">Akses ditolak: Hanya Pengelola yang dapat mengubah jadwal.</div>', 403);
+  if (!canWrite(user.peran)) {
+    return c.html('<div class="alert alert-danger">Akses ditolak.</div>', 403);
   }
   const id = parseInt(c.req.param('id'), 10);
   const rows = await query<JadwalItem>(`
-    SELECT id, jenis_rancangan, tanggal::text, jam::text, nama_kompilator, tim_pokja, dibuat_oleh
+    SELECT id, jenis_rancangan, tentang, tanggal::text, jam::text, nama_kompilator, tim_pokja, dibuat_oleh
     FROM jadwal_rapat_harmonisasi WHERE id = $1;
   `, [id]);
 
@@ -50,39 +55,41 @@ jadwalRoutes.get('/jadwal/modal/edit/:id', async (c) => {
   return c.html(<JadwalModalPartial editItem={rows[0]} />);
 });
 
-// POST /jadwal (Add Schedule - Pengelola only)
+// POST /jadwal (Add Schedule)
 jadwalRoutes.post('/jadwal', async (c) => {
   const user = c.get('user');
-  if (user.peran !== 'Pengelola') {
+  if (!canWrite(user.peran)) {
     return c.html('<div class="alert alert-danger">Akses ditolak</div>', 403);
   }
 
   const body = await c.req.parseBody();
   const jenis_rancangan = String(body.jenis_rancangan || '');
+  const tentang = String(body.tentang || '');
   const tanggal = String(body.tanggal || '');
   const jam = String(body.jam || '');
   const nama_kompilator = String(body.nama_kompilator || '');
   const tim_pokja = String(body.tim_pokja || '');
 
   await query(`
-    INSERT INTO jadwal_rapat_harmonisasi (jenis_rancangan, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh)
-    VALUES ($1, $2, $3, $4, $5, $6);
-  `, [jenis_rancangan, tanggal, jam, nama_kompilator, tim_pokja, user.username]);
+    INSERT INTO jadwal_rapat_harmonisasi (jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh)
+    VALUES ($1, $2, $3, $4, $5, $6, $7);
+  `, [jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, user.username]);
 
   const jadwalList = await fetchJadwalList();
   return c.html(<JadwalTablePartial user={user} jadwalList={jadwalList} />);
 });
 
-// POST /jadwal/:id/edit (Update Schedule - Pengelola only)
+// POST /jadwal/:id/edit (Update Schedule)
 jadwalRoutes.post('/jadwal/:id/edit', async (c) => {
   const user = c.get('user');
-  if (user.peran !== 'Pengelola') {
+  if (!canWrite(user.peran)) {
     return c.html('<div class="alert alert-danger">Akses ditolak</div>', 403);
   }
 
   const id = parseInt(c.req.param('id'), 10);
   const body = await c.req.parseBody();
   const jenis_rancangan = String(body.jenis_rancangan || '');
+  const tentang = String(body.tentang || '');
   const tanggal = String(body.tanggal || '');
   const jam = String(body.jam || '');
   const nama_kompilator = String(body.nama_kompilator || '');
@@ -90,18 +97,18 @@ jadwalRoutes.post('/jadwal/:id/edit', async (c) => {
 
   await query(`
     UPDATE jadwal_rapat_harmonisasi
-    SET jenis_rancangan = $1, tanggal = $2, jam = $3, nama_kompilator = $4, tim_pokja = $5, updated_at = NOW()
-    WHERE id = $6;
-  `, [jenis_rancangan, tanggal, jam, nama_kompilator, tim_pokja, id]);
+    SET jenis_rancangan = $1, tentang = $2, tanggal = $3, jam = $4, nama_kompilator = $5, tim_pokja = $6, updated_at = NOW()
+    WHERE id = $7;
+  `, [jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, id]);
 
   const jadwalList = await fetchJadwalList();
   return c.html(<JadwalTablePartial user={user} jadwalList={jadwalList} />);
 });
 
-// POST /jadwal/:id/delete (Delete Schedule - Pengelola only)
+// POST /jadwal/:id/delete (Delete Schedule)
 jadwalRoutes.post('/jadwal/:id/delete', async (c) => {
   const user = c.get('user');
-  if (user.peran !== 'Pengelola') {
+  if (!canWrite(user.peran)) {
     return c.html('<div class="alert alert-danger">Akses ditolak</div>', 403);
   }
 

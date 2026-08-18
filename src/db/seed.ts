@@ -47,12 +47,12 @@ async function seed() {
     console.log('Seeding harmonisation meeting schedules...');
     await client.query('DELETE FROM jadwal_rapat_harmonisasi;');
     await client.query(`
-      INSERT INTO jadwal_rapat_harmonisasi (jenis_rancangan, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh)
+      INSERT INTO jadwal_rapat_harmonisasi (jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh)
       VALUES 
-        ('Ranperda', CURRENT_DATE + INTERVAL '1 day', '09:00', 'Budi Santoso, S.H.', 'Pokja 1', 'Pengelola'),
-        ('Ranperkada', CURRENT_DATE + INTERVAL '2 days', '10:30', 'Siti Rahmah, M.H.', 'Pokja 2', 'Pengelola'),
-        ('Ranperda', CURRENT_DATE + INTERVAL '4 days', '14:00', 'Ahmad Fauzi, S.H.', 'Pokja 1', 'Pengelola'),
-        ('Ranperda', CURRENT_DATE + INTERVAL '7 days', '09:30', 'Nur Hidayah, S.H.', 'Pokja 2', 'Pengelola');
+        ('Ranperda', 'Ketertiban Umum dan Ketenteraman Masyarakat', CURRENT_DATE + INTERVAL '1 day', '09:00', 'Budi Santoso, S.H.', 'Pokja 1', 'Pengelola'),
+        ('Ranperkada', 'Pengelolaan Aset Daerah Kabupaten Banjar', CURRENT_DATE + INTERVAL '2 days', '10:30', 'Siti Rahmah, M.H.', 'Pokja 2', 'Pengelola'),
+        ('Ranperda', 'Perlindungan dan Pengelolaan Lingkungan Hidup Daerah', CURRENT_DATE + INTERVAL '4 days', '14:00', 'Ahmad Fauzi, S.H.', 'Pokja 1', 'Pengelola'),
+        ('Ranperda', 'Pemberdayaan Usaha Mikro, Kecil, dan Menengah', CURRENT_DATE + INTERVAL '7 days', '09:30', 'Nur Hidayah, S.H.', 'Pokja 2', 'Pengelola');
     `);
 
     await client.query('COMMIT');
