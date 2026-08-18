@@ -236,7 +236,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Peraturan Pemerintah Nomor 5 Tahun 2021 tentang Penyelenggaraan Perizinan Berusaha Berbasis Risiko',
     status: 'berlaku', status_detail: '',
     wilayah: 'Nasional', sektor: 'Investasi/Perizinan',
-    url: 'https://peraturan.bpk.go.id/Details/161837/pp-no-5-tahun-2021',
+    url: 'https://peraturan.bpk.go.id/Details/161835/pp-no-5tahun-2021',
     pasalList: [
       { nomor: 'Pasal 1', ayat: 'Angka 1', teks: 'Perizinan Berusaha Berbasis Risiko adalah Perizinan Berusaha berdasarkan tingkat risiko kegiatan usaha.' },
       { nomor: 'Pasal 4', ayat: 'Ayat (1)', teks: 'Perizinan Berusaha terdiri atas: a. Nomor Induk Berusaha (NIB); b. Sertifikat Standar; dan c. Izin.' },
@@ -245,6 +245,17 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
   },
 
   // ─── PERDA KALSEL ─────────────────────────────────────────────────────────
+  {
+    jenis: 'Perda', nomor: '7', tahun: 2019,
+    judul: 'Peraturan Daerah Provinsi Kalimantan Selatan Nomor 7 Tahun 2019 tentang Penyelenggaraan Jasa Konstruksi',
+    status: 'berlaku', status_detail: 'Ditetapkan 27 Agustus 2019; Sumber: Lembaran Daerah Provinsi Kalimantan Selatan Tahun 2019 Nomor 7',
+    wilayah: 'Provinsi Kalimantan Selatan', sektor: 'Investasi/Perizinan',
+    url: 'https://jdih.kalselprov.go.id/index.php/dokumen/view?id=1482',
+    pasalList: [
+      { nomor: 'Pasal 1', ayat: 'Angka 1', teks: 'Jasa Konstruksi adalah layanan jasa konsultansi konstruksi dan/atau pekerjaan konstruksi.' },
+      { nomor: 'Pasal 3', ayat: 'Ayat (1)', teks: 'Pemerintah Daerah Provinsi berwenang melakukan penyelenggaraan jasa konstruksi di wilayah Provinsi Kalimantan Selatan.' },
+    ]
+  },
   {
     jenis: 'Perda', nomor: '6', tahun: 2016,
     judul: 'Peraturan Daerah Kota Banjarmasin Nomor 6 Tahun 2016 tentang Izin Mendirikan Bangunan',
