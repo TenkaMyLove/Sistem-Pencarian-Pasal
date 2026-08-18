@@ -106,7 +106,7 @@ export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; ja
             <th>Jam (WITA)</th>
             <th>Nama Kompilator</th>
             <th>Tim Pokja</th>
-            {canEdit && <th style="text-align: right;">Aksi</th>}
+            {canEdit && <th style="text-align: right; width: 140px;">Aksi</th>}
           </tr>
         </thead>
         <tbody>
@@ -128,24 +128,28 @@ export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; ja
                 </span>
               </td>
               {canEdit && (
-                <td style="text-align: right;">
-                  <button
-                    class="btn-action btn-edit"
-                    hx-get={`/jadwal/modal/edit/${item.id}`}
-                    hx-target="#modal-container"
-                    title="Ubah Jadwal"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    class="btn-action btn-delete"
-                    hx-post={`/jadwal/${item.id}/delete`}
-                    hx-target="#jadwal-table-container"
-                    hx-confirm="Apakah Anda yakin ingin menghapus jadwal rapat harmonisasi ini?"
-                    title="Hapus Jadwal"
-                  >
-                    Hapus
-                  </button>
+                <td style="text-align: right; white-space: nowrap;">
+                  <div style="display: inline-flex; gap: 0.35rem; justify-content: flex-end; align-items: center; width: 100%;">
+                    <button
+                      class="btn-action btn-edit"
+                      hx-get={`/jadwal/modal/edit/${item.id}`}
+                      hx-target="#modal-container"
+                      title="Ubah Jadwal"
+                      style="margin: 0;"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      class="btn-action btn-delete"
+                      hx-post={`/jadwal/${item.id}/delete`}
+                      hx-target="#jadwal-table-container"
+                      hx-confirm="Apakah Anda yakin ingin menghapus jadwal rapat harmonisasi ini?"
+                      title="Hapus Jadwal"
+                      style="margin: 0;"
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </td>
               )}
             </tr>
