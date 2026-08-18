@@ -194,7 +194,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Undang-Undang Nomor 17 Tahun 2023 tentang Kesehatan',
     status: 'berlaku', status_detail: 'Mencabut UU No. 36/2009 sebagian',
     wilayah: 'Nasional', sektor: 'Kesehatan',
-    url: 'https://peraturan.bpk.go.id/Details/249507/uu-no-17-tahun-2023',
+    url: 'https://peraturan.bpk.go.id/Details/258028/uu-no-17-tahun-2023',
     pasalList: [
       { nomor: 'Pasal 1', ayat: 'Angka 1', teks: 'Kesehatan adalah keadaan sehat seseorang, baik secara fisik, jiwa, maupun sosial dan bukan sekadar bebas dari penyakit, yang memungkinkan setiap orang untuk hidup produktif.' },
       { nomor: 'Pasal 4', ayat: 'Ayat (1)', teks: 'Setiap orang mempunyai hak yang sama dalam memperoleh akses atas sumber daya di bidang kesehatan.' },
@@ -245,16 +245,6 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
   },
 
   // ─── PERDA KALSEL ─────────────────────────────────────────────────────────
-  {
-    jenis: 'Perda', nomor: '7', tahun: 2019,
-    judul: 'Peraturan Daerah Provinsi Kalimantan Selatan Nomor 7 Tahun 2019 tentang Rencana Pembangunan Jangka Menengah Daerah Provinsi Kalimantan Selatan Tahun 2016-2021',
-    status: 'berlaku', status_detail: '',
-    wilayah: 'Provinsi Kalimantan Selatan', sektor: 'Keuangan Daerah',
-    url: 'https://jdih.kalselprov.go.id',
-    pasalList: [
-      { nomor: 'Pasal 1', ayat: 'Ayat (1)', teks: 'Rencana Pembangunan Jangka Menengah Daerah (RPJMD) Provinsi Kalimantan Selatan Tahun 2016-2021 merupakan penjabaran dari visi, misi dan program Gubernur terpilih.' },
-    ]
-  },
   {
     jenis: 'Perda', nomor: '6', tahun: 2016,
     judul: 'Peraturan Daerah Kota Banjarmasin Nomor 6 Tahun 2016 tentang Izin Mendirikan Bangunan',

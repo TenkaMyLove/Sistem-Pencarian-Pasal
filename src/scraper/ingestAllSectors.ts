@@ -48,7 +48,7 @@ export async function ingestComprehensiveLegalData() {
         },
         {
           judul: 'Perpu Nomor 2 Tahun 2022 tentang Cipta Kerja',
-          url: 'https://peraturan.bpk.go.id/Details/238128/perpu-no-2-tahun-2022'
+          url: 'https://peraturan.bpk.go.id/Details/234926/perpu-no-2-tahun-2022'
         }
       ],
       mencabut: [
@@ -85,7 +85,7 @@ export async function ingestComprehensiveLegalData() {
       mencabut: [
         {
           judul: 'Perppu Nomor 2 Tahun 2022 tentang Cipta Kerja',
-          url: 'https://peraturan.bpk.go.id/Details/238128/perpu-no-2-tahun-2022'
+          url: 'https://peraturan.bpk.go.id/Details/234926/perpu-no-2-tahun-2022'
         }
       ],
       mengubah: [
