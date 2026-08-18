@@ -167,7 +167,7 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
     defaultDate = new Date().toISOString().split('T')[0];
   }
 
-  const standardNames = ['Eryck', 'Kiki', 'Dian'];
+  const standardNames = ['Eryck', 'Kiki', 'Dian', 'Dame', 'Nizar', 'Wyra', 'Dudunk', 'Ryna'];
   const currentNames = editItem?.nama_kompilator
     ? editItem.nama_kompilator.split(',').map((s: string) => s.trim())
     : [];
