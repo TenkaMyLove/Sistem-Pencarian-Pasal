@@ -106,7 +106,7 @@ export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; ja
             <th>Jam (WITA)</th>
             <th>Nama Kompilator</th>
             <th>Tim Pokja</th>
-            {canEdit && <th style="text-align: right; width: 140px;">Aksi</th>}
+            {canEdit && <th style="text-align: center; width: 140px;">Aksi</th>}
           </tr>
         </thead>
         <tbody>
@@ -128,8 +128,8 @@ export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; ja
                 </span>
               </td>
               {canEdit && (
-                <td style="text-align: right; white-space: nowrap;">
-                  <div style="display: inline-flex; gap: 0.35rem; justify-content: flex-end; align-items: center; width: 100%;">
+                <td style="text-align: center; white-space: nowrap;">
+                  <div style="display: inline-flex; gap: 0.35rem; justify-content: center; align-items: center; width: 100%;">
                     <button
                       class="btn-action btn-edit"
                       hx-get={`/jadwal/modal/edit/${item.id}`}
