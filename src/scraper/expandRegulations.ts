@@ -60,7 +60,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Peraturan Pemerintah Nomor 16 Tahun 2018 tentang Satuan Polisi Pamong Praja',
     status: 'berlaku', status_detail: 'Mencabut PP No. 6/2010',
     wilayah: 'Nasional', sektor: 'Otonomi Daerah',
-    url: 'https://peraturan.bpk.go.id/Details/74173/pp-no-16-tahun-2018',
+    url: 'https://peraturan.bpk.go.id/Details/77284/pp-no-16-tahun-2018',
     pasalList: [
       { nomor: 'Pasal 5', ayat: 'Ayat (1)', teks: 'Satpol PP mempunyai tugas menegakkan Peraturan Daerah dan Peraturan Kepala Daerah, menyelenggarakan ketertiban umum dan ketenteraman, serta menyelenggarakan pelindungan masyarakat.' },
       { nomor: 'Pasal 6', ayat: 'Huruf a', teks: 'Dalam melaksanakan tugas sebagaimana dimaksud dalam Pasal 5, Satpol PP mempunyai fungsi: a. penyusunan program penegakan Perda dan Peraturan Kepala Daerah, penyelenggaraan ketertiban umum dan ketenteraman serta pelindungan masyarakat.' },
@@ -107,7 +107,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Peraturan Pemerintah Nomor 12 Tahun 2017 tentang Pembinaan dan Pengawasan Penyelenggaraan Pemerintahan Daerah',
     status: 'berlaku', status_detail: '',
     wilayah: 'Nasional', sektor: 'Keuangan Daerah',
-    url: 'https://peraturan.bpk.go.id/Details/51517/pp-no-12-tahun-2017',
+    url: 'https://peraturan.bpk.go.id/Details/5832/pp-no-12-tahun-2017',
     pasalList: [
       { nomor: 'Pasal 2', ayat: 'Ayat (1)', teks: 'Pembinaan penyelenggaraan Pemerintahan Daerah dilakukan oleh Pemerintah Pusat.' },
       { nomor: 'Pasal 9', ayat: 'Ayat (1)', teks: 'Pengawasan penyelenggaraan Pemerintahan Daerah dilaksanakan oleh Aparat Pengawas Internal Pemerintah.' },
@@ -317,7 +317,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Peraturan Pemerintah Nomor 18 Tahun 2016 tentang Perangkat Daerah',
     status: 'berlaku', status_detail: 'Diubah dengan PP No. 72/2019',
     wilayah: 'Nasional', sektor: 'Otonomi Daerah',
-    url: 'https://peraturan.bpk.go.id/Details/47728/pp-no-18-tahun-2016',
+    url: 'https://peraturan.bpk.go.id/Details/5739/pp-no-18-tahun-2016',
     pasalList: [
       { nomor: 'Pasal 1', ayat: 'Angka 1', teks: 'Perangkat Daerah adalah unsur pembantu kepala Daerah dan Dewan Perwakilan Rakyat Daerah dalam penyelenggaraan Urusan Pemerintahan yang menjadi kewenangan Daerah.' },
       { nomor: 'Pasal 5', ayat: 'Ayat (1)', teks: 'Pembentukan dan susunan Perangkat Daerah ditetapkan dengan Peraturan Daerah.' },
@@ -329,7 +329,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Peraturan Pemerintah Nomor 17 Tahun 2018 tentang Kecamatan',
     status: 'berlaku', status_detail: '',
     wilayah: 'Nasional', sektor: 'Otonomi Daerah',
-    url: 'https://peraturan.bpk.go.id/Details/75393/pp-no-17-tahun-2018',
+    url: 'https://peraturan.bpk.go.id/Details/77921/pp-no-17-tahun-2018',
     pasalList: [
       { nomor: 'Pasal 1', ayat: 'Angka 1', teks: 'Kecamatan atau yang disebut dengan nama lain adalah bagian wilayah dari Daerah kabupaten/kota yang dipimpin oleh camat.' },
       { nomor: 'Pasal 10', ayat: 'Ayat (1)', teks: 'Camat mempunyai tugas menyelenggarakan urusan pemerintahan umum, sebagaimana dimaksud dalam Pasal 25 ayat (6) Undang-Undang Nomor 23 Tahun 2014 tentang Pemerintahan Daerah.' },

@@ -60,7 +60,7 @@ const CRAWL_TARGETS: CrawlTarget[] = [
   { jenis: 'UU',    nomor: '23',   tahun: 2014, source: 'bpk',      knownUrl: 'https://peraturan.bpk.go.id/Details/38685/uu-no-23-tahun-2014' },
   { jenis: 'UU',    nomor: '1',    tahun: 2022, source: 'bpk',      knownUrl: 'https://peraturan.bpk.go.id/Details/195696/uu-no-1-tahun-2022' },
   { jenis: 'UU',    nomor: '6',    tahun: 2023, source: 'kemnaker', knownUrl: 'https://jdih.kemnaker.go.id/peraturan/detail/2302/undang-undang-nomor-6-tahun-2023' },
-  { jenis: 'Perda', nomor: '7',    tahun: 2021, source: 'bpk',      knownUrl: 'https://peraturan.bpk.go.id/Details/174573/perda-kab-tapin-no-07-tahun-2021' },
+  { jenis: 'Perda', nomor: '7',    tahun: 2021, source: 'bpk',      knownUrl: 'https://peraturan.bpk.go.id/Details/174575/perda-kab-tapin-no-09-tahun-2021' },
   // To search via BPK nomor+tahun filter
   { jenis: 'UU',    nomor: '17',   tahun: 2003, source: 'bpk' },
   { jenis: 'UU',    nomor: '1',    tahun: 2004, source: 'bpk' },

@@ -241,7 +241,7 @@ export async function ingestComprehensiveLegalData() {
         status_detail_json: {},
         wilayah: 'Kabupaten Tapin',
         sektor: 'Otonomi Daerah',
-        url: 'https://peraturan.bpk.go.id/Details/174573/perda-kab-tapin-no-07-tahun-2021',
+        url: 'https://peraturan.bpk.go.id/Details/174575/perda-kab-tapin-no-09-tahun-2021',
         status_tautan: 'normal',
         pasalList: [
           { nomor: 'Pasal 14', ayat: 'Ayat (1)', teks: 'Parkir insidental dapat diselenggarakan di dalam Ruang Milik Jalan, dalam hal tempat parkir di luar ruang milik jalan telah melebihi kapasitas.' },
