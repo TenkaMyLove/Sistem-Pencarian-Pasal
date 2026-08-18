@@ -7,9 +7,9 @@ export const jadwalRoutes = new Hono<Env>();
 
 jadwalRoutes.use('*', requireAuth);
 
-// Pengelola AND Perancang can write
+// Pengelola can write, Perancang is read-only
 function canWrite(peran: string) {
-  return peran === 'Pengelola' || peran === 'Perancang';
+  return peran === 'Pengelola';
 }
 
 async function fetchJadwalList(): Promise<JadwalItem[]> {

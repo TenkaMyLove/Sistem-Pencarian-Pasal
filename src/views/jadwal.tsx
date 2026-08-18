@@ -21,7 +21,7 @@ interface JadwalViewProps {
 }
 
 export function JadwalView({ user, jadwalList, editItem = null, showModal = false }: JadwalViewProps) {
-  const canEdit = user.peran === 'Pengelola' || user.peran === 'Perancang';
+  const canEdit = user.peran === 'Pengelola';
 
   return (
     <Layout title="Manajemen Jadwal Rapat Harmonisasi" activeNav="jadwal" user={user}>
@@ -44,6 +44,15 @@ export function JadwalView({ user, jadwalList, editItem = null, showModal = fals
         )}
       </div>
 
+      {user.peran === 'Perancang' && (
+        <div class="alert alert-success" style="margin-bottom: 1.5rem;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>Anda masuk sebagai <strong>Perancang (Read-Only)</strong>. Anda dapat melihat seluruh daftar jadwal rapat harmonisasi.</span>
+        </div>
+      )}
+
       {/* Main Table Container */}
       <div id="jadwal-table-container">
         <JadwalTablePartial user={user} jadwalList={jadwalList} />
@@ -58,7 +67,7 @@ export function JadwalView({ user, jadwalList, editItem = null, showModal = fals
 }
 
 export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; jadwalList: JadwalItem[] }) {
-  const canEdit = user.peran === 'Pengelola' || user.peran === 'Perancang';
+  const canEdit = user.peran === 'Pengelola';
 
   if (!jadwalList || jadwalList.length === 0) {
     return (
@@ -158,6 +167,13 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
     defaultDate = new Date().toISOString().split('T')[0];
   }
 
+  const standardNames = ['Eryck', 'Kiki', 'Dian'];
+  const currentNames = editItem?.nama_kompilator
+    ? editItem.nama_kompilator.split(',').map((s: string) => s.trim())
+    : [];
+
+  const customNames = currentNames.filter(name => !standardNames.includes(name)).join(', ');
+
   return (
     <div class="modal-backdrop">
       <div class="modal-content">
@@ -176,6 +192,15 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
           hx-post={isEdit ? `/jadwal/${editItem!.id}/edit` : '/jadwal'}
           hx-target="#jadwal-table-container"
           hx-on="htmx:afterOnLoad: document.getElementById('modal-container').innerHTML=''"
+          onsubmit="
+            const checked = Array.from(this.querySelectorAll('.kompilator-checkbox:checked')).map(el => el.value);
+            const customVal = this.querySelector('#nama_kompilator_custom').value.trim();
+            const list = [...checked];
+            if (customVal) {
+              list.push(...customVal.split(',').map(s => s.trim()));
+            }
+            this.querySelector('#nama_kompilator').value = list.filter(Boolean).join(', ');
+          "
         >
           <div class="form-group">
             <label for="jenis_rancangan">Jenis Rancangan</label>
@@ -225,15 +250,37 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
           </div>
 
           <div class="form-group">
-            <label for="nama_kompilator">Nama Kompilator / Penyusun</label>
+            <label style="font-weight: 600; margin-bottom: 0.4rem; display: block;">Nama Kompilator / Penyusun</label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.25rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+              {standardNames.map(name => {
+                const isChecked = currentNames.includes(name);
+                return (
+                  <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: 500; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      class="kompilator-checkbox"
+                      value={name}
+                      checked={isChecked}
+                      style="cursor: pointer;"
+                    />
+                    {name}
+                  </label>
+                );
+              })}
+            </div>
             <input
               type="text"
+              id="nama_kompilator_custom"
+              value={customNames}
+              class="form-control"
+              placeholder="Nama Kompilator Lain (jika ada, pisahkan dengan koma)"
+            />
+            {/* The actual hidden field submitted to the server */}
+            <input
+              type="hidden"
               id="nama_kompilator"
               name="nama_kompilator"
               value={editItem?.nama_kompilator || ''}
-              class="form-control"
-              placeholder="Contoh: Budi Santoso, S.H."
-              required
             />
           </div>
 
