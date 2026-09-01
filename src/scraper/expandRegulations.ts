@@ -34,7 +34,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Undang-Undang Nomor 12 Tahun 2011 tentang Pembentukan Peraturan Perundang-undangan',
     status: 'berlaku', status_detail: 'Diubah dengan UU No. 15/2019 dan UU No. 13/2022',
     wilayah: 'Nasional', sektor: 'Otonomi Daerah',
-    url: 'https://peraturan.bpk.go.id/Details/39045/uu-no-12-tahun-2011',
+    url: 'https://peraturan.bpk.go.id/Details/39188/uu-no-12-tahun-2011',
     pasalList: [
       { nomor: 'Pasal 1', ayat: 'Angka 1', teks: 'Pembentukan Peraturan Perundang-undangan adalah pembuatan Peraturan Perundang-undangan yang mencakup tahapan perencanaan, penyusunan, pembahasan, pengesahan atau penetapan, dan pengundangan.' },
       { nomor: 'Pasal 5', ayat: 'Huruf a', teks: 'Dalam membentuk Peraturan Perundang-undangan harus dilakukan berdasarkan pada asas pembentukan Peraturan Perundang-undangan yang baik, yang meliputi: a. kejelasan tujuan.' },
@@ -340,7 +340,7 @@ const ADDITIONAL_REGULATIONS: RegEntry[] = [
     judul: 'Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa',
     status: 'berlaku', status_detail: 'Diubah dengan PP No. 47/2015 dan PP No. 11/2019',
     wilayah: 'Nasional', sektor: 'Otonomi Daerah',
-    url: 'https://peraturan.bpk.go.id/Details/5301/pp-no-43-tahun-2014',
+    url: 'https://peraturan.bpk.go.id/Details/5482/pp-no-43-tahun-2014',
     pasalList: [
       { nomor: 'Pasal 1', ayat: 'Angka 1', teks: 'Desa adalah desa dan desa adat atau yang disebut dengan nama lain, selanjutnya disebut Desa, adalah kesatuan masyarakat hukum yang memiliki batas wilayah yang berwenang untuk mengatur dan mengurus urusan pemerintahan, kepentingan masyarakat setempat berdasarkan prakarsa masyarakat, hak asal usul, dan/atau hak tradisional yang diakui dan dihormati dalam sistem pemerintahan Negara Kesatuan Republik Indonesia.' },
       { nomor: 'Pasal 93', ayat: 'Ayat (1)', teks: 'Pengelolaan keuangan Desa meliputi: a. perencanaan; b. pelaksanaan; c. penatausahaan; d. pelaporan; dan e. pertanggungjawaban.' },
