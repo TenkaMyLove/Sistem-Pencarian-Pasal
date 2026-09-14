@@ -16,7 +16,7 @@ export function Layout({ title, activeNav, user, children }: LayoutProps) {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title} - P3H Kanwil Kemenkumham Kalsel</title>
+        <title>{title} - P3H Kanwil Kementerian Hukum Kalsel </title>
         <link rel="stylesheet" href="/css/style.css" />
         <link rel="icon" type="image/png" href="/images/logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,7 +31,7 @@ export function Layout({ title, activeNav, user, children }: LayoutProps) {
             <div class="sidebar-header">
               <img src="/images/logo.png" alt="Logo Pengayoman" class="sidebar-logo" />
               <div class="sidebar-title">
-                <h1>Kanwil Kemenkumham</h1>
+                <h1>Kementerian Hukum</h1>
                 <span>Kalimantan Selatan</span>
               </div>
             </div>
