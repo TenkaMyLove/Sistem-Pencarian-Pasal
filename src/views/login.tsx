@@ -12,13 +12,14 @@ export function LoginView({ error }: LoginProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Login - P3H Kanwil Kemenkumham Kalsel</title>
         <link rel="stylesheet" href="/css/style.css" />
+        <link rel="icon" type="image/png" href="/images/logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
       <body>
         <div class="login-container">
           <div class="login-card">
-            <div class="login-logo">P3H</div>
+            <img src="/images/logo.png" alt="Logo Pengayoman" class="login-logo" />
             <div class="login-title">
               <h2>Sistem Pencarian Pasal</h2>
               <p>Divisi P3H Kanwil Kemenkumham Kalsel</p>
@@ -63,6 +64,24 @@ export function LoginView({ error }: LoginProps) {
                 Masuk ke Aplikasi
               </button>
             </form>
+
+            {/* Tombol Mode Tamu */}
+            <div style="display: flex; align-items: center; margin: 1.25rem 0; color: var(--text-muted); font-size: 0.8rem;">
+              <div style="flex: 1; height: 1px; background-color: var(--border-color);"></div>
+              <span style="padding: 0 0.75rem; text-transform: uppercase; font-weight: 600; font-size: 0.75rem; color: #94a3b8;">atau</span>
+              <div style="flex: 1; height: 1px; background-color: var(--border-color);"></div>
+            </div>
+
+            <a
+              href="/tamu"
+              class="btn-guest"
+              style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.875rem; text-decoration: none; background-color: #f8fafc; color: var(--primary-navy); border: 1.5px solid #cbd5e1; transition: all 0.2s ease; gap: 0.5rem;"
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              Masuk sebagai Tamu (Pencarian Pasal)
+            </a>
 
             <div style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.8rem; color: var(--text-muted);">
               Hak Cipta &copy; 2026 Divisi P3H Kanwil Kemenkumham Kalsel

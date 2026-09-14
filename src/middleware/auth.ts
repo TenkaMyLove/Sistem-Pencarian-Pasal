@@ -1,10 +1,12 @@
 import { Context, Next } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 
+export type UserRole = 'Pengelola' | 'Perancang' | 'Admin' | 'Tamu';
+
 export interface UserSession {
   id: number;
   username: string;
-  peran: 'Pengelola' | 'Perancang' | 'Admin';
+  peran: UserRole;
 }
 
 export type Env = {
@@ -14,6 +16,12 @@ export type Env = {
 };
 
 const COOKIE_NAME = 'p3h_session';
+
+export const GUEST_USER: UserSession = {
+  id: 0,
+  username: 'Tamu / Publik',
+  peran: 'Tamu',
+};
 
 export function createSessionToken(user: UserSession): string {
   const payload = JSON.stringify({
@@ -62,7 +70,17 @@ export function getSession(c: Context): UserSession | null {
   return parseSessionToken(token);
 }
 
-// Auth Middleware: Requires Login
+// Middleware: Allows logged in users or guests (auto-assigns GUEST_USER if not logged in)
+export async function allowGuestOrAuth(c: Context<Env>, next: Next) {
+  let user = getSession(c);
+  if (!user) {
+    user = GUEST_USER;
+  }
+  c.set('user', user);
+  await next();
+}
+
+// Auth Middleware: Requires Login (any role including Tamu)
 export async function requireAuth(c: Context<Env>, next: Next) {
   const user = getSession(c);
   if (!user) {
@@ -72,10 +90,23 @@ export async function requireAuth(c: Context<Env>, next: Next) {
   await next();
 }
 
+// Staff Middleware: Only Pengelola, Perancang, or Admin (Tamu is rejected/redirected)
+export async function requireStaff(c: Context<Env>, next: Next) {
+  const user = getSession(c);
+  if (!user || user.peran === 'Tamu') {
+    return c.redirect('/pencarian');
+  }
+  c.set('user', user);
+  await next();
+}
+
 // Role Middleware: Admin Only
 export async function requireAdmin(c: Context<Env>, next: Next) {
   const user = getSession(c);
-  if (!user || user.peran !== 'Admin') {
+  if (!user) {
+    return c.redirect('/login');
+  }
+  if (user.peran !== 'Admin') {
     return c.html('<h3>403 Akses Ditolak: Halaman ini hanya dapat diakses oleh Admin.</h3>', 403);
   }
   c.set('user', user);
@@ -85,7 +116,10 @@ export async function requireAdmin(c: Context<Env>, next: Next) {
 // Role Middleware: Pengelola Only
 export async function requirePengelola(c: Context<Env>, next: Next) {
   const user = getSession(c);
-  if (!user || user.peran !== 'Pengelola') {
+  if (!user) {
+    return c.redirect('/login');
+  }
+  if (user.peran !== 'Pengelola' && user.peran !== 'Admin') {
     return c.html('<h3>403 Akses Ditolak: Hanya akun Pengelola yang memiliki hak akses untuk fitur ini.</h3>', 403);
   }
   c.set('user', user);

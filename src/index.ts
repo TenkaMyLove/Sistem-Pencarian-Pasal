@@ -7,14 +7,16 @@ import { authRoutes } from './routes/auth.js';
 import { searchRoutes } from './routes/search.js';
 import { jadwalRoutes } from './routes/jadwal.js';
 import { adminRoutes } from './routes/admin.js';
+import { tambahPeraturanRoutes } from './routes/tambah-peraturan.js';
 import { runRecrawlCheck } from './scraper/recrawl.js';
 
 dotenv.config();
 
 const app = new Hono();
 
-// Serve static assets from public directory (e.g. /css/style.css)
+// Serve static assets from public directory (e.g. /css/style.css, /images/logo.png)
 app.use('/css/*', serveStatic({ root: './public' }));
+app.use('/images/*', serveStatic({ root: './public' }));
 app.use('/favicon.ico', serveStatic({ path: './public/favicon.ico' }));
 
 // Health check endpoint (Public)
@@ -34,6 +36,7 @@ app.route('/', authRoutes);
 app.route('/', searchRoutes);
 app.route('/', jadwalRoutes);
 app.route('/', adminRoutes);
+app.route('/', tambahPeraturanRoutes);
 
 // Fallback 404 Error Page
 app.notFound((c) => {
@@ -42,6 +45,7 @@ app.notFound((c) => {
       <head>
         <title>404 - Halaman Tidak Ditemukan</title>
         <link rel="stylesheet" href="/css/style.css">
+        <link rel="icon" type="image/png" href="/images/logo.png">
       </head>
       <body style="display:flex; align-items:center; justify-content:center; min-height:100vh;">
         <div class="empty-state">

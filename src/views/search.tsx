@@ -5,6 +5,7 @@ import { PaginatedSearchResults } from '../routes/search.js';
 
 export interface StatusRelationItem {
   judul: string;
+  label?: string;
   url: string;
   keterangan?: string;
 }
@@ -14,6 +15,9 @@ export interface StatusDetailJson {
   diubah_dengan?: StatusRelationItem[];
   mencabut?: StatusRelationItem[];
   mengubah?: StatusRelationItem[];
+  mencabut_sebagian?: StatusRelationItem[];
+  dicabut_dengan?: StatusRelationItem[];
+  [key: string]: StatusRelationItem[] | undefined;
 }
 
 export interface SearchResultItem {
@@ -208,10 +212,50 @@ export function SearchResultsPartial({
                   {item.jenis_peraturan} No. {item.nomor} Tahun {item.tahun}
                 </h4>
 
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
                   <span class={`badge ${item.status === 'berlaku' ? 'badge-status-berlaku' : 'badge-status-dicabut'}`}>
                     {item.status.toUpperCase()}
                   </span>
+
+                  {(() => {
+                    const json: Record<string, any[]> = typeof item.status_detail_json === 'string'
+                      ? (() => { try { return JSON.parse(item.status_detail_json); } catch { return {}; } })()
+                      : (item.status_detail_json || {});
+
+                    const relasiBadgeMap: Record<string, { label: string; cls: string }> = {
+                      mencabut:             { label: 'Mencabut',          cls: 'badge-rel-mencabut' },
+                      mencabut_sebagian:    { label: 'Mencabut Sebagian', cls: 'badge-rel-mencabut' },
+                      mengubah:             { label: 'Mengubah',          cls: 'badge-rel-mengubah' },
+                      dicabut_dengan:       { label: 'Dicabut',           cls: 'badge-rel-dicabut' },
+                      dicabut_sebagian_dengan: { label: 'Dicabut Sebagian', cls: 'badge-rel-dicabut' },
+                      diubah_dengan:        { label: 'Diubah',            cls: 'badge-rel-diubah' },
+                    };
+
+                    const relasiBadges = Object.entries(relasiBadgeMap)
+                      .filter(([key]) => Array.isArray(json[key]) && json[key].length > 0)
+                      .map(([key, { label, cls }]) => (
+                        <span
+                          class={`badge ${cls}`}
+                          title={`${label}: ${json[key].length} peraturan`}
+                        >
+                          {label} ({json[key].length})
+                        </span>
+                      ));
+
+                    // Fallback: jika JSON kosong tapi ada teks status_detail
+                    if (relasiBadges.length === 0 && item.status_detail && item.status_detail.trim()) {
+                      return (
+                        <span
+                          class="badge badge-rel-keterangan"
+                          title={item.status_detail}
+                        >
+                          Ada Keterangan
+                        </span>
+                      );
+                    }
+
+                    return relasiBadges;
+                  })()}
 
                   {item.status_tautan === 'tautan_bermasalah' ? (
                     <span class="badge badge-tautan-bermasalah" title="Tautan dokumen asli di situs sumber mengalami kendala HTTP 404/Error">
@@ -327,14 +371,15 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
 
   // Mapping readable labels for known BPK crawler keys
   const labelMap: Record<string, string> = {
-    dicabut_sebagian_dengan: 'Dicabut Sebagian Dengan',
-    diubah_dengan: 'Diubah Dengan',
-    mencabut: 'Mencabut',
-    mengubah: 'Mengubah',
-    mencabut_sebagian: 'Mencabut Sebagian',
-    diubah: 'Diubah',
-    perubahan: 'Perubahan',
-    peraturan_terkait: 'Peraturan Terkait'
+    mencabut: 'MENCABUT',
+    mencabut_sebagian: 'MENCABUT SEBAGIAN',
+    diubah_dengan: 'DIUBAH DENGAN',
+    dicabut_dengan: 'DICABUT DENGAN',
+    dicabut_sebagian_dengan: 'DICABUT SEBAGIAN DENGAN',
+    mengubah: 'MENGUBAH',
+    diubah: 'DIUBAH',
+    perubahan: 'PERUBAHAN',
+    peraturan_terkait: 'PERATURAN TERKAIT'
   };
 
   const keys = Object.keys(json).filter((key) => Array.isArray(json[key]) && json[key].length > 0);
@@ -360,23 +405,24 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
           {keys.length > 0 ? (
             keys.map((key) => (
-              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: var(--radius-md);">
-                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-navy); margin-bottom: 0.5rem; text-transform: uppercase;">
-                  {labelMap[key] || key.replace(/_/g, ' ')}:
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: var(--radius-md);">
+                <h4 style="font-size: 0.9rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                  {labelMap[key] ? `${labelMap[key]}:` : `${key.replace(/_/g, ' ').toUpperCase()}:`}
                 </h4>
-                <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <ul style="list-style-type: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin: 0;">
                   {json[key].map((item: any) => (
-                    <li style="font-size: 0.85rem; color: var(--text-main); line-height: 1.5;">
-                      {item.url ? (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" style="color: var(--primary-navy); font-weight: 700; text-decoration: underline;">
-                          {item.judul || item.keterangan || 'Lihat Dokumen'}
-                        </a>
-                      ) : (
-                        <span>{item.judul || item.keterangan}</span>
-                      )}
-                      {item.keterangan && item.judul && (
-                        <div style="font-size: 0.8rem; color: #475569; margin-top: 0.2rem; background-color: #fff; padding: 0.4rem; border-radius: 4px; border: 1px dashed #cbd5e1;">
-                          {item.keterangan}
+                    <li style="font-size: 0.875rem; color: #0f172a; line-height: 1.5;">
+                      <a
+                        href={item.url || `/pencarian?q=${encodeURIComponent(item.label || item.judul)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="color: #0f172a; font-weight: 700; text-decoration: underline;"
+                      >
+                        {item.judul || item.label || 'Lihat Dokumen'}
+                      </a>
+                      {item.keterangan && (
+                        <div style="margin-top: 0.5rem; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 0.65rem 0.85rem; background-color: #ffffff; color: #334155; font-size: 0.825rem; line-height: 1.6;">
+                          {renderKeteranganWithLinks(item.keterangan)}
                         </div>
                       )}
                     </li>
@@ -384,6 +430,9 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
                 </ul>
               </div>
             ))
+          ) : peraturan.status_detail && peraturan.status_detail.trim() ? (
+            // Fallback: parse teks status_detail jadi segmen-segmen
+            <FallbackStatusDetail statusDetail={peraturan.status_detail} />
           ) : (
             <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 1rem;">
               Tidak ada data status tambahan tersedia.
@@ -402,6 +451,55 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Render keterangan dengan mengubah pasal-pasal yang disebutkan menjadi link yang bisa diklik
+function renderKeteranganWithLinks(keterangan: string) {
+  if (!keterangan) return null;
+
+  // Regex mencari pola sebutan pasal (misal: "Pasal 238", "Pasal 15", "Pasal 21 s.d. Pasal 25", "Pasal 1 angka 30")
+  const regex = /(Pasal\s+\d+(?:\s*(?:s\.d\.|sampai dengan|-)\s*(?:Pasal\s*)?\d+)?(?:\s+ayat\s*\(\d+\))?(?:\s+huruf\s+[a-z])?(?:\s+angka\s+\d+)?)/gi;
+  const parts = keterangan.split(regex);
+
+  return parts.map((part) => {
+    if (/^Pasal\s+\d+/i.test(part.trim())) {
+      return (
+        <a
+          href={`/pencarian?q=${encodeURIComponent(part.trim())}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Cari ${part.trim()} di sistem`}
+          style="color: var(--primary-navy); font-weight: 700; text-decoration: underline; background-color: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 4px; display: inline-block; margin: 0 0.15rem;"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
+// Komponen fallback: parse teks status_detail menjadi segmen terstruktur dengan link pencarian
+function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
+  const segments = statusDetail
+    .split(/[;]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  return (
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: var(--radius-md);">
+      <h4 style="font-size: 0.9rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+        KETERANGAN STATUS:
+      </h4>
+      <ul style="list-style-type: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; margin: 0;">
+        {segments.map((seg) => (
+          <li style="font-size: 0.875rem; color: #0f172a; line-height: 1.6;">
+            {renderKeteranganWithLinks(seg)}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

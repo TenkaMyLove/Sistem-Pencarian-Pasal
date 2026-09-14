@@ -21,13 +21,13 @@ interface JadwalViewProps {
 }
 
 export function JadwalView({ user, jadwalList, editItem = null, showModal = false }: JadwalViewProps) {
-  const canEdit = user.peran === 'Pengelola';
+  const canEdit = user.peran === 'Pengelola' || user.peran === 'Perancang';
 
   return (
     <Layout title="Manajemen Jadwal Rapat Harmonisasi" activeNav="jadwal" user={user}>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
         <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary-navy);">
-          Daftar Jadwal Rapat Harmonisasi Ranperda &amp; Ranperkada
+          Daftar Jadwal Rapat Harmonisasi Ranperda &amp; Ranpergub
         </h3>
 
         {canEdit && (
@@ -44,15 +44,6 @@ export function JadwalView({ user, jadwalList, editItem = null, showModal = fals
         )}
       </div>
 
-      {user.peran === 'Perancang' && (
-        <div class="alert alert-success" style="margin-bottom: 1.5rem;">
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span>Anda masuk sebagai <strong>Perancang (Read-Only)</strong>. Anda dapat melihat seluruh daftar jadwal rapat harmonisasi.</span>
-        </div>
-      )}
-
       {/* Main Table Container */}
       <div id="jadwal-table-container">
         <JadwalTablePartial user={user} jadwalList={jadwalList} />
@@ -67,13 +58,13 @@ export function JadwalView({ user, jadwalList, editItem = null, showModal = fals
 }
 
 export function JadwalTablePartial({ user, jadwalList }: { user: UserSession; jadwalList: JadwalItem[] }) {
-  const canEdit = user.peran === 'Pengelola';
+  const canEdit = user.peran === 'Pengelola' || user.peran === 'Perancang';
 
   if (!jadwalList || jadwalList.length === 0) {
     return (
       <div class="empty-state">
         <h3>Belum Ada Jadwal Rapat Harmonisasi</h3>
-        <p>Silakan tambahkan jadwal rapat baru untuk memantau proses harmonisasi Ranperda/Ranperkada.</p>
+        <p>Silakan tambahkan jadwal rapat baru untuk memantau proses harmonisasi Ranperda/Ranpergub.</p>
       </div>
     );
   }
@@ -210,7 +201,7 @@ export function JadwalModalPartial({ editItem = null }: { editItem?: JadwalItem 
             <label for="jenis_rancangan">Jenis Rancangan</label>
             <select id="jenis_rancangan" name="jenis_rancangan" class="form-control" required>
               <option value="Ranperda" selected={editItem?.jenis_rancangan === 'Ranperda'}>Ranperda (Rancangan Peraturan Daerah)</option>
-              <option value="Ranperkada" selected={editItem?.jenis_rancangan === 'Ranperkada'}>Ranperkada (Rancangan Peraturan Kepala Daerah)</option>
+              <option value="Ranpergub" selected={editItem?.jenis_rancangan === 'Ranpergub' || editItem?.jenis_rancangan === 'Ranperkada'}>Ranpergub (Rancangan Peraturan Gubernur)</option>
             </select>
           </div>
 

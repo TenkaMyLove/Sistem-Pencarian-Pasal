@@ -1,15 +1,16 @@
 import { Hono } from 'hono';
 import { query } from '../db/index.js';
-import { requireAuth, getSession, Env } from '../middleware/auth.js';
+import { requireStaff, getSession, Env } from '../middleware/auth.js';
 import { JadwalView, JadwalTablePartial, JadwalModalPartial, JadwalItem } from '../views/jadwal.js';
 
 export const jadwalRoutes = new Hono<Env>();
 
-jadwalRoutes.use('*', requireAuth);
+jadwalRoutes.use('/jadwal', requireStaff);
+jadwalRoutes.use('/jadwal/*', requireStaff);
 
-// Pengelola can write, Perancang is read-only
+// Pengelola and Perancang can write
 function canWrite(peran: string) {
-  return peran === 'Pengelola';
+  return peran === 'Pengelola' || peran === 'Perancang';
 }
 
 async function fetchJadwalList(): Promise<JadwalItem[]> {

@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { query } from '../db/index.js';
-import { requireAuth, Env } from '../middleware/auth.js';
+import { allowGuestOrAuth, Env } from '../middleware/auth.js';
 import { SearchView, SearchResultsPartial, SearchResultItem, StatusDetailModal } from '../views/search.js';
 
 export const searchRoutes = new Hono<Env>();
 
-searchRoutes.use('*', requireAuth);
+searchRoutes.use('*', allowGuestOrAuth);
 
 export interface PaginatedSearchResults {
   items: SearchResultItem[];

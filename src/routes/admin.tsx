@@ -6,7 +6,8 @@ import { AdminView } from '../views/admin.js';
 
 export const adminRoutes = new Hono<Env>();
 
-adminRoutes.use('*', requireAdmin);
+adminRoutes.use('/kelola-akun', requireAdmin);
+adminRoutes.use('/kelola-akun/*', requireAdmin);
 
 async function fetchUserAccounts() {
   return await query<{ username: string; peran: string; diubah_terakhir_oleh: string; tanggal_kata_sandi_diubah: string }>(`

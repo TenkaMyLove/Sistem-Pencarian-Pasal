@@ -9,10 +9,24 @@ export const authRoutes = new Hono();
 // GET /login
 authRoutes.get('/login', (c) => {
   const existingUser = getSession(c);
-  if (existingUser) {
+  // If already logged in as a registered staff member (not Tamu), redirect to app
+  if (existingUser && existingUser.peran !== 'Tamu') {
+    if (existingUser.peran === 'Admin') {
+      return c.redirect('/kelola-akun');
+    }
     return c.redirect('/pencarian');
   }
   return c.html(<LoginView />);
+});
+
+// GET /tamu (Masuk sebagai Mode Tamu)
+authRoutes.get('/tamu', (c) => {
+  setSession(c, {
+    id: 0,
+    username: 'Tamu / Publik',
+    peran: 'Tamu',
+  });
+  return c.redirect('/pencarian');
 });
 
 // POST /login
@@ -32,7 +46,6 @@ authRoutes.post('/login', async (c) => {
   );
 
   if (users.length === 0) {
-    // PRD USER-4 requirement: General error message without revealing specific username/password failure
     return c.html(<LoginView error="Username atau kata sandi salah" />, 401);
   }
 
