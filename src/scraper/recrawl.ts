@@ -23,24 +23,24 @@ export async function runRecrawlCheck(): Promise<RecrawlResult> {
       if (isBroken) {
         brokenFound++;
         await query(
-          "UPDATE peraturan SET status_tautan = 'tautan_bermasalah', tanggal_dicek_terakhir = NOW() WHERE id = $1;",
+          "UPDATE peraturan SET status_tautan = 'tautan_bermasalah', tanggal_dicek_terakhir = NOW() WHERE id = ?;",
           [reg.id]
         );
 
-        // SCRP-9: Attempt fuzzy matching using pg_trgm & levenshtein
-        const matches = await query<{ id: number; similarity: number }>(`
-          SELECT id, similarity(judul, $1) AS similarity
+        // Attempt basic title match (MySQL doesn't have pg_trgm, use LIKE as fallback)
+        const matches = await query<{ id: number }>(`
+          SELECT id
           FROM peraturan
-          WHERE id != $2 AND status_tautan = 'normal'
-          ORDER BY similarity DESC LIMIT 1;
-        `, [reg.judul, reg.id]);
+          WHERE id != ? AND status_tautan = 'normal' AND judul LIKE ?
+          LIMIT 1;
+        `, [reg.id, `%${reg.judul.slice(0, 30)}%`]);
 
-        if (matches.length > 0 && matches[0].similarity >= 0.4) {
-          console.log(`Candidate replacement found for ID ${reg.id} with similarity score ${matches[0].similarity.toFixed(2)}`);
+        if (matches.length > 0) {
+          console.log(`Candidate replacement found for ID ${reg.id}`);
         }
       } else {
         await query(
-          "UPDATE peraturan SET status_tautan = 'normal', tanggal_dicek_terakhir = NOW() WHERE id = $1;",
+          "UPDATE peraturan SET status_tautan = 'normal', tanggal_dicek_terakhir = NOW() WHERE id = ?;",
           [reg.id]
         );
       }
@@ -48,7 +48,7 @@ export async function runRecrawlCheck(): Promise<RecrawlResult> {
       console.error(`Error checking regulation ID ${reg.id}:`, err?.message || err);
       await query(
         `INSERT INTO log_kegagalan_crawl (sumber_scraping_id, waktu_kegagalan, pesan_error)
-         VALUES (1, NOW(), $1);`,
+         VALUES (1, NOW(), ?);`,
         [`Gagal memeriksa tautan ID ${reg.id}: ${err?.message || 'Network error'}`]
       );
     }

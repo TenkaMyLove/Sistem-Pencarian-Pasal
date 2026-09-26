@@ -15,7 +15,7 @@ function canWrite(peran: string) {
 
 async function fetchJadwalList(): Promise<JadwalItem[]> {
   return await query<JadwalItem>(`
-    SELECT id, jenis_rancangan, tentang, tanggal::text, jam::text, nama_kompilator, tim_pokja, dibuat_oleh
+    SELECT id, jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh
     FROM jadwal_rapat_harmonisasi
     ORDER BY tanggal ASC, jam ASC;
   `);
@@ -45,8 +45,8 @@ jadwalRoutes.get('/jadwal/modal/edit/:id', async (c) => {
   }
   const id = parseInt(c.req.param('id'), 10);
   const rows = await query<JadwalItem>(`
-    SELECT id, jenis_rancangan, tentang, tanggal::text, jam::text, nama_kompilator, tim_pokja, dibuat_oleh
-    FROM jadwal_rapat_harmonisasi WHERE id = $1;
+    SELECT id, jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh
+    FROM jadwal_rapat_harmonisasi WHERE id = ?;
   `, [id]);
 
   if (rows.length === 0) {
@@ -73,7 +73,7 @@ jadwalRoutes.post('/jadwal', async (c) => {
 
   await query(`
     INSERT INTO jadwal_rapat_harmonisasi (jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh)
-    VALUES ($1, $2, $3, $4, $5, $6, $7);
+    VALUES (?, ?, ?, ?, ?, ?, ?);
   `, [jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, user.username]);
 
   const jadwalList = await fetchJadwalList();
@@ -98,8 +98,8 @@ jadwalRoutes.post('/jadwal/:id/edit', async (c) => {
 
   await query(`
     UPDATE jadwal_rapat_harmonisasi
-    SET jenis_rancangan = $1, tentang = $2, tanggal = $3, jam = $4, nama_kompilator = $5, tim_pokja = $6, updated_at = NOW()
-    WHERE id = $7;
+    SET jenis_rancangan = ?, tentang = ?, tanggal = ?, jam = ?, nama_kompilator = ?, tim_pokja = ?, updated_at = NOW()
+    WHERE id = ?;
   `, [jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, id]);
 
   const jadwalList = await fetchJadwalList();
@@ -114,7 +114,7 @@ jadwalRoutes.post('/jadwal/:id/delete', async (c) => {
   }
 
   const id = parseInt(c.req.param('id'), 10);
-  await query('DELETE FROM jadwal_rapat_harmonisasi WHERE id = $1;', [id]);
+  await query('DELETE FROM jadwal_rapat_harmonisasi WHERE id = ?;', [id]);
 
   const jadwalList = await fetchJadwalList();
   return c.html(<JadwalTablePartial user={user} jadwalList={jadwalList} />);

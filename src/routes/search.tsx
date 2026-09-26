@@ -27,30 +27,27 @@ async function fetchSearchResults(
 
   let baseWhere = ' FROM pasal pas JOIN peraturan per ON pas.peraturan_id = per.id WHERE 1=1';
   const params: any[] = [];
-  let paramIdx = 1;
 
   if (q.trim()) {
     baseWhere += ` AND (
-      pas.teks_pasal ILIKE $${paramIdx} OR
-      pas.nomor_pasal ILIKE $${paramIdx} OR
-      per.judul ILIKE $${paramIdx} OR
-      per.jenis_peraturan ILIKE $${paramIdx} OR
-      per.nomor ILIKE $${paramIdx}
+      pas.teks_pasal LIKE ? OR
+      pas.nomor_pasal LIKE ? OR
+      per.judul LIKE ? OR
+      per.jenis_peraturan LIKE ? OR
+      per.nomor LIKE ?
     )`;
-    params.push(`%${q.trim()}%`);
-    paramIdx++;
+    const likeVal = `%${q.trim()}%`;
+    params.push(likeVal, likeVal, likeVal, likeVal, likeVal);
   }
 
   if (sektor.trim()) {
-    baseWhere += ` AND per.sektor = $${paramIdx}`;
+    baseWhere += ` AND per.sektor = ?`;
     params.push(sektor.trim());
-    paramIdx++;
   }
 
   if (wilayah.trim()) {
-    baseWhere += ` AND per.wilayah = $${paramIdx}`;
+    baseWhere += ` AND per.wilayah = ?`;
     params.push(wilayah.trim());
-    paramIdx++;
   }
 
   // 1. Get total count
@@ -78,7 +75,7 @@ async function fetchSearchResults(
       per.sektor,
       per.url_dokumen_asli,
       per.status_tautan
-    ` + baseWhere + ` ORDER BY per.tahun DESC, per.id DESC, pas.id ASC LIMIT $${paramIdx} OFFSET $${paramIdx + 1};`;
+    ` + baseWhere + ` ORDER BY per.tahun DESC, per.id DESC, pas.id ASC LIMIT ? OFFSET ?;`;
 
   const itemParams = [...params, pageSize, offset];
   const items = await query<SearchResultItem>(itemsSql, itemParams);
@@ -141,7 +138,7 @@ searchRoutes.get('/search-results', async (c) => {
 // GET /pencarian/status-modal/:peraturan_id
 searchRoutes.get('/pencarian/status-modal/:peraturan_id', async (c) => {
   const regId = parseInt(c.req.param('peraturan_id'), 10);
-  const rows = await query<SearchResultItem>('SELECT * FROM peraturan WHERE id = $1', [regId]);
+  const rows = await query<SearchResultItem>('SELECT * FROM peraturan WHERE id = ?', [regId]);
 
   if (!rows || rows.length === 0) {
     return c.text('Peraturan tidak ditemukan', 404);

@@ -40,10 +40,6 @@ export function TambahPeraturanView({ user, result, formValues, error }: TambahP
 
         <div class="search-hero" style="margin-bottom: 2rem; padding: 1.75rem 2rem;">
           <h2 style="margin-bottom: 0.4rem;">Tambah Peraturan via URL</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Masukkan URL peraturan secara absolut. Sistem akan mengambil teks pasal dan status peraturan
-            secara otomatis. URL diperlakukan apa adanya tanpa modifikasi.
-          </p>
         </div>
 
         {/* Error global */}
@@ -129,9 +125,6 @@ export function TambahPeraturanView({ user, result, formValues, error }: TambahP
                 placeholder="https://peraturan.bpk.go.id/Details/12345/..."
                 required
               />
-              <small style="color: var(--text-muted); font-size: 0.78rem; margin-top: 0.3rem; display: block;">
-                URL diperlakukan sebagai absolut. Bisa dari BPK, JDIH, atau sumber hukum manapun.
-              </small>
             </div>
 
             {/* Jenis & Nomor & Tahun */}

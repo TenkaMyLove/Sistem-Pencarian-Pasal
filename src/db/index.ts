@@ -1,26 +1,21 @@
-import pg from 'pg';
+import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { Pool } = pg;
-
-export const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  port: parseInt(process.env.PGPORT || '5432', 10),
-  database: process.env.PGDATABASE || 'p3h_kemenkum_kalsel',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || '',
-  max: 10,
-  idleTimeoutMillis: 30000,
+export const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST || 'localhost',
+  port: parseInt(process.env.MYSQL_PORT || '3306', 10),
+  database: process.env.MYSQL_DATABASE || 'p3h_kemenkum_kalsel',
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || '',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  timezone: '+00:00',
 });
 
 export async function query<T = any>(text: string, params?: any[]): Promise<T[]> {
-  const client = await pool.connect();
-  try {
-    const res = await client.query(text, params);
-    return res.rows;
-  } finally {
-    client.release();
-  }
+  const [rows] = await pool.execute(text, params ?? []);
+  return rows as T[];
 }

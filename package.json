@@ -8,8 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:schema": "cmd.exe /c \"C:\\laragon\\bin\\postgresql\\postgresql\\bin\\psql.exe -U postgres -d p3h_kemenkum_kalsel -f src/db/schema.sql\"",
-    "db:seed": "tsx src/db/seed.ts",
+    "db:schema": "cmd.exe /c \"C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin\\mysql.exe -u root p3h_kemenkum_kalsel < src/db/schema_mysql.sql\"",
     "recrawl": "tsx src/scraper/recrawlRunner.ts"
   },
   "dependencies": {
@@ -18,13 +17,12 @@
     "cheerio": "^1.2.0",
     "dotenv": "^16.4.7",
     "hono": "^4.6.14",
-    "node-fetch": "^3.3.2",
-    "pg": "^8.13.1"
+    "mysql2": "^3.11.3",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.17.10",
-    "@types/pg": "^8.11.10",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

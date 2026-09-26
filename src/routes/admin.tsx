@@ -11,7 +11,7 @@ adminRoutes.use('/kelola-akun/*', requireAdmin);
 
 async function fetchUserAccounts() {
   return await query<{ username: string; peran: string; diubah_terakhir_oleh: string; tanggal_kata_sandi_diubah: string }>(`
-    SELECT username, peran, diubah_terakhir_oleh, tanggal_kata_sandi_diubah::text
+    SELECT username, peran, diubah_terakhir_oleh, tanggal_kata_sandi_diubah
     FROM pengguna ORDER BY id ASC;
   `);
 }
@@ -65,8 +65,8 @@ adminRoutes.post('/kelola-akun', async (c) => {
   const hashed = await bcrypt.hash(kata_sandi_baru, 10);
   await query(`
     UPDATE pengguna
-    SET kata_sandi_terenkripsi = $1, diubah_terakhir_oleh = 'Admin', tanggal_kata_sandi_diubah = NOW()
-    WHERE username = $2;
+    SET kata_sandi_terenkripsi = ?, diubah_terakhir_oleh = 'Admin', tanggal_kata_sandi_diubah = NOW()
+    WHERE username = ?;
   `, [hashed, target_username]);
 
   const updatedAccounts = await fetchUserAccounts();

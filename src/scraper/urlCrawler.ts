@@ -142,11 +142,19 @@ async function tryFetchStatusJson(url: string, html: string): Promise<{ json: an
     const LABEL_TO_KEY: Record<string, string> = {
       'mencabut': 'mencabut',
       'mencabut sebagian': 'mencabut_sebagian',
+      'mencabut sebagian dengan': 'mencabut_sebagian_dengan',
+      'diubah': 'diubah_dengan',
       'diubah dengan': 'diubah_dengan',
+      'dicabut': 'dicabut_dengan',
       'dicabut dengan': 'dicabut_dengan',
+      'dicabut sebagian': 'dicabut_sebagian_dengan',
       'dicabut sebagian dengan': 'dicabut_sebagian_dengan',
       'mengubah': 'mengubah',
+      'mengubah sebagian': 'mengubah',
       'ditetapkan': 'ditetapkan',
+      'menetapkan': 'ditetapkan',
+      'terkait': 'peraturan_terkait',
+      'peraturan terkait': 'peraturan_terkait',
     };
 
     const result: Record<string, any[]> = {};
@@ -160,11 +168,42 @@ async function tryFetchStatusJson(url: string, html: string): Promise<{ json: an
       const items: any[] = [];
 
       itemsContainer.find('li.mb-4').each((_, li) => {
-        const $a = $(li).find('a').first();
+        const $li = $(li);
+        const $a = $li.find('a').first();
         const href = $a.attr('href') || '';
         const label = $a.text().trim();
         const fullUrl = href.startsWith('http') ? href : href ? `https://peraturan.bpk.go.id${href}` : '';
-        if (label || fullUrl) items.push({ label, url: fullUrl });
+
+        // Get keterangan from <br><span>...</span>
+        let keterangan = '';
+        const $keteranganSpan = $li.find('br').next('span');
+        if ($keteranganSpan.length > 0) {
+          keterangan = $keteranganSpan.text().trim();
+        } else {
+          const extraSpans = $li.find('span').not('.text-muted');
+          extraSpans.each((_, sp) => {
+            const t = $(sp).text().trim();
+            if (t && t !== label) keterangan = t;
+          });
+        }
+
+        // Title: clone li, remove keterangan span and br, get clean text
+        const $clone = $li.clone();
+        $clone.find('br').next('span').remove();
+        $clone.find('br').remove();
+        const judul = $clone.text().replace(/\s+/g, ' ').trim();
+
+        const item: any = {
+          label: label || judul,
+          judul: judul || label,
+          url: fullUrl,
+        };
+        if (keterangan) {
+          item.keterangan = keterangan;
+        }
+        if (label || fullUrl || judul) {
+          items.push(item);
+        }
       });
 
       if (items.length > 0) result[key] = items;
@@ -223,18 +262,17 @@ export async function crawlFromUrl(input: CrawlInput): Promise<CrawlResult> {
   }
 
   // 3. Save to DB
-  const client = await pool.connect();
+  const client = await pool.getConnection();
   let peraturanId: number | null = null;
 
   try {
-    await client.query('BEGIN');
+    await client.query('START TRANSACTION');
 
-    const insReg = await client.query<{ id: number }>(`
+    await client.query(`
       INSERT INTO peraturan
         (jenis_peraturan, nomor, tahun, judul, status, status_detail, status_detail_json,
          wilayah, sektor, url_dokumen_asli, status_tautan, tanggal_diambil, tanggal_dicek_terakhir)
-      VALUES ($1, $2, $3, $4, 'berlaku', $5, $6::jsonb, $7, $8, $9, $10, NOW(), NOW())
-      RETURNING id;
+      VALUES (?, ?, ?, ?, 'berlaku', ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `, [
       jenis_peraturan,
       nomor,
@@ -248,13 +286,14 @@ export async function crawlFromUrl(input: CrawlInput): Promise<CrawlResult> {
       statusTautan,
     ]);
 
-    peraturanId = insReg.rows[0]?.id ?? null;
+    const [[{ insertId }]] = await client.query<any>('SELECT LAST_INSERT_ID() AS insertId');
+    peraturanId = insertId ?? null;
 
     if (peraturanId && parsedPasal.length > 0) {
       for (const p of parsedPasal) {
         await client.query(`
           INSERT INTO pasal (peraturan_id, nomor_pasal, nomor_ayat, teks_pasal)
-          VALUES ($1, $2, $3, $4);
+          VALUES (?, ?, ?, ?);
         `, [peraturanId, p.nomor_pasal, p.nomor_ayat || '', p.teks_pasal]);
       }
     }

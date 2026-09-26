@@ -41,7 +41,7 @@ authRoutes.post('/login', async (c) => {
 
   // Query user from DB
   const users = await query<any>(
-    'SELECT id, username, kata_sandi_terenkripsi, peran FROM pengguna WHERE LOWER(username) = LOWER($1)',
+    'SELECT id, username, kata_sandi_terenkripsi, peran FROM pengguna WHERE LOWER(username) = LOWER(?)',
     [username]
   );
 
