@@ -7,3 +7,5 @@ bpk_detail_debug.html
 .agents/
 skills-lock.json
 app.cjs
+mobile/build/
+mobile/.dart_tool/

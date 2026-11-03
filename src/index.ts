@@ -8,6 +8,7 @@ import { searchRoutes } from './routes/search.js';
 import { jadwalRoutes } from './routes/jadwal.js';
 import { adminRoutes } from './routes/admin.js';
 import { tambahPeraturanRoutes } from './routes/tambah-peraturan.js';
+import { apiRoutes } from './routes/api.js';
 import { runRecrawlCheck } from './scraper/recrawl.js';
 
 dotenv.config();
@@ -21,6 +22,9 @@ app.use('/favicon.ico', serveStatic({ path: './public/favicon.ico' }));
 
 // Health check endpoint (Public)
 app.get('/api/health', (c) => c.json({ status: 'ok', app: 'P3H Kemenkum Kalsel', timestamp: new Date() }));
+
+// Mobile & Web REST API endpoints
+app.route('/api', apiRoutes);
 
 // cPanel Cron Job Trigger Endpoint (Public - SCRP-7 / SCRP-10)
 app.get('/api/cron/recrawl', async (c) => {

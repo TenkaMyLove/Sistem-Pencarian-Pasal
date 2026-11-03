@@ -108,7 +108,7 @@ export function SearchView({ user, initialQuery = '', searchData, sektorList, wi
               hx-include="[name='q'], [name='sektor']"
               hx-indicator="#loading-indicator"
             >
-              <option value="">-- Semua Wilayah (Nasional & Kalsel) --</option>
+              <option value="">-- Semua Wilayah (Nasional &amp; Kalsel) --</option>
               {wilayahList.map((w) => (
                 <option value={w}>{w}</option>
               ))}
@@ -481,6 +481,38 @@ function renderKeteranganWithLinks(keterangan: string) {
   });
 }
 
+/**
+ * Linkify regulation references in plain text.
+ * Matches patterns like: "Perda Provinsi Kalimantan Selatan No. 9 Tahun 2015"
+ * and wraps them in clickable search links.
+ */
+function linkifyRegRefs(text: string) {
+  const regPattern = /((?:UU|PP|Perpres|Permen|Perda|Pergub|Perbup|Perwal|Perppu|Inpres|Keppres|Kepmen)\b[^;.\n]*?No\.?\s*\d+\s+Tahun\s+\d{4})/g;
+  const parts: any[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+
+  const re = new RegExp(regPattern.source, 'g');
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const ref = m[1].trim();
+    parts.push(
+      <a
+        href={`/pencarian?q=${encodeURIComponent(ref)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={`Cari "${ref}" di sistem`}
+        style="color: var(--primary-navy); font-weight: 700; text-decoration: underline; background-color: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 4px; display: inline-block; margin: 0 0.15rem;"
+      >
+        {ref}
+      </a>
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length > 0 ? parts : [text];
+}
+
 // Komponen fallback: parse teks status_detail menjadi segmen terstruktur dengan link pencarian
 function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
   const segments = statusDetail
@@ -496,7 +528,7 @@ function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
       <ul style="list-style-type: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; margin: 0;">
         {segments.map((seg) => (
           <li style="font-size: 0.875rem; color: #0f172a; line-height: 1.6;">
-            {renderKeteranganWithLinks(seg)}
+            {linkifyRegRefs(seg)}
           </li>
         ))}
       </ul>

@@ -86,7 +86,7 @@ export function TambahPeraturanView({ user, result, formValues, error }: TambahP
                 <div><strong>Pasal Ditemukan:</strong> {result.pasal_count} pasal</div>
                 {result.pasal_count === 0 && (
                   <div style="color: #92400e; margin-top: 0.25rem;">
-                    ⚠ Tidak ada pasal yang berhasil di-parse secara otomatis. Anda dapat menambahkan pasal secara manual dari database jika diperlukan.
+                    ⚠ Tidak ada pasal yang berhasil di-parse. Coba tempel teks isi peraturan di kolom "Teks Isi Peraturan" lalu tambahkan ulang.
                   </div>
                 )}
                 {result.peraturan_id && (
@@ -195,6 +195,25 @@ export function TambahPeraturanView({ user, result, formValues, error }: TambahP
                   ))}
                 </select>
               </div>
+            </div>
+
+            {/* Teks Pasal Manual */}
+            <div class="form-group" style="margin-top: 1rem;">
+              <label for="teks_pasal_manual">
+                Teks Isi Peraturan{' '}
+                <span style="color: var(--text-muted); font-weight: 400;">(Opsional — untuk ekstraksi pasal otomatis)</span>
+              </label>
+              <textarea
+                id="teks_pasal_manual"
+                name="teks_pasal_manual"
+                class="form-control"
+                rows={10}
+                placeholder={"Tempel teks lengkap isi peraturan di sini.\nSistem akan mendeteksi baris 'Pasal N' dan mengekstrak isinya secara otomatis.\nBiarkan kosong jika URL sudah dapat di-parse otomatis (halaman HTML biasa)."}
+                style="font-family: monospace; font-size: 0.85rem; resize: vertical;"
+              />
+              <small style="color: var(--text-muted); font-size: 0.8rem;">
+                💡 Berguna untuk dokumen PDF atau halaman yang tidak dapat di-parse otomatis. Salin teks dari PDF viewer lalu tempel di sini.
+              </small>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">

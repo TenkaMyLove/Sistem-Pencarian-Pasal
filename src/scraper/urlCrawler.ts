@@ -37,6 +37,7 @@ export interface CrawlInput {
   wilayah: string;
   sektor: string;
   ditambahkan_oleh: string;
+  teks_manual?: string;
 }
 
 export interface CrawlResult {
@@ -126,6 +127,44 @@ function extractPasal($: cheerio.CheerioAPI): ParsedPasal[] {
       if (teks.length > 10) {
         results.push({ nomor_pasal: currentPasal, nomor_ayat: '', teks_pasal: teks });
       }
+    }
+  }
+
+  return results.slice(0, 200);
+}
+
+/**
+ * Extract pasal items from raw plain text (e.g. pasted PDF content).
+ * Same line-by-line strategy as extractPasal Strategy 2, but operates on raw string.
+ */
+export function extractPasalFromText(rawText: string): ParsedPasal[] {
+  const results: ParsedPasal[] = [];
+  const pasalPattern = /^Pasal\s+(\d+[A-Z]?)$/i;
+
+  const lines = rawText.replace(/\r/g, '').split('\n');
+  let currentPasal = '';
+  let currentLines: string[] = [];
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (pasalPattern.test(line)) {
+      if (currentPasal && currentLines.length > 0) {
+        const teks = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+        if (teks.length > 10) {
+          results.push({ nomor_pasal: currentPasal, nomor_ayat: '', teks_pasal: teks });
+        }
+      }
+      currentPasal = line;
+      currentLines = [];
+    } else if (currentPasal && line.length > 0) {
+      currentLines.push(line);
+    }
+  }
+
+  if (currentPasal && currentLines.length > 0) {
+    const teks = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+    if (teks.length > 10) {
+      results.push({ nomor_pasal: currentPasal, nomor_ayat: '', teks_pasal: teks });
     }
   }
 
@@ -259,6 +298,11 @@ export async function crawlFromUrl(input: CrawlInput): Promise<CrawlResult> {
       statusJson = statusData.json;
       statusDetail = statusData.summary;
     }
+  }
+
+  // Fallback: if HTML parsing got 0 pasal but user provided raw text, use that
+  if (parsedPasal.length === 0 && input.teks_manual?.trim()) {
+    parsedPasal = extractPasalFromText(input.teks_manual);
   }
 
   // 3. Save to DB

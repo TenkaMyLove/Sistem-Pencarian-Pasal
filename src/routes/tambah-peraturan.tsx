@@ -26,6 +26,7 @@ tambahPeraturanRoutes.post('/tambah-peraturan', async (c) => {
   const judul = String(body.judul || '').trim();
   const wilayah = String(body.wilayah || 'Nasional').trim();
   const sektor = String(body.sektor || 'Lainnya').trim();
+  const teks_manual = String(body.teks_pasal_manual || '').trim();
 
   const formValues: Record<string, string> = {
     url, jenis_peraturan, nomor, tahun: String(tahun), judul, wilayah, sektor,
@@ -58,6 +59,7 @@ tambahPeraturanRoutes.post('/tambah-peraturan', async (c) => {
       wilayah,
       sektor,
       ditambahkan_oleh: user.username,
+      teks_manual: teks_manual || undefined,
     });
   } catch (err: any) {
     return c.html(

@@ -1,0 +1,31 @@
+name: p3h_mobile
+description: "Sistem Pencarian Pasal untuk Harmonisasi Ranperda - Kanwil Kemenkumham Kalsel Mobile App"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  skeletonizer: ^3.0.0
+  http: ^1.6.0
+  url_launcher: ^6.3.3
+  google_fonts: ^8.2.1
+  shared_preferences: ^2.5.6
+  intl: ^0.20.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/

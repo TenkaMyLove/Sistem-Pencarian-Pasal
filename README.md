@@ -21,6 +21,7 @@ Sistem pencarian pasal peraturan perundang-undangan berbasis web untuk mendukung
   - **Pengelola**: Hak akses penuh (Pencarian Pasal, CRUD Jadwal Harmonisasi Rapat, dan Tambah Peraturan via URL).
   - **Perancang**: Hak akses operasional staf (Pencarian Pasal dan Jadwal Harmonisasi Rapat *Read-Only*).
   - **Tamu / Publik**: Akses cepat pencarian pasal tanpa harus login.
+- **Versi Mobile Flutter Multi-Platform** — Dilengkapi aplikasi mobile Flutter dengan efek shimmer/loading modern menggunakan **Skeletonizer**, siap dijalankan di browser (Chrome/Edge) maupun emulator Android Studio.
 
 ---
 
@@ -47,9 +48,10 @@ Sistem pencarian pasal peraturan perundang-undangan berbasis web untuk mendukung
 | Layer | Stack |
 |---|---|
 | Runtime | Node.js (v20+ / v22+) (ESM) |
-| Web Framework | [Hono](https://hono.dev/) (SSR JSX) |
+| Web Framework | [Hono](https://hono.dev/) (SSR JSX & REST API) |
 | Database | MySQL 8.x (Full-Text Search Indexing & `mysql2`) |
-| Frontend | HTMX + Vanilla CSS (Responsive & Modern) |
+| Frontend Web | HTMX + Vanilla CSS (Responsive & Modern) |
+| Mobile App | [Flutter](https://flutter.dev/) + Dart (Material 3 & Skeletonizer) |
 | Crawler & Ingestion | `cheerio` + Custom Link Crawler & Verifier |
 | Type Safety & Compiler | TypeScript (`tsc`) + `tsx` |
 
@@ -66,6 +68,7 @@ src/
 ├── middleware/
 │   └── auth.ts                # Session cookie & RBAC middleware
 ├── routes/
+│   ├── api.ts                 # REST API endpoints untuk Flutter Mobile & Web
 │   ├── auth.tsx               # Login, Logout, dan Tamu / Publik
 │   ├── search.tsx             # Mesin pencari pasal & modal detail status
 │   ├── jadwal.tsx             # Manajemen jadwal rapat harmonisasi (CRUD)
@@ -83,6 +86,10 @@ src/
 │   ├── admin.tsx              # Tampilan administrasi akun pengguna
 │   └── tambah-peraturan.tsx   # Antarmuka input URL peraturan baru
 └── index.ts                   # Entry point server Hono
+mobile/                        # Aplikasi Mobile Flutter
+├── lib/                       # Kode sumber Dart (Screens, Models, Services)
+├── android/                   # Konfigurasi native Android (usesCleartextTraffic, Internet)
+└── web/                       # Konfigurasi browser web
 public/
 ├── css/style.css              # Tata letak & styling antarmuka
 └── images/logo.png            # Logo Pengayoman Kemenkumham
@@ -90,82 +97,28 @@ public/
 
 ---
 
-## Instalasi & Menjalankan
+## Menjalankan Aplikasi Mobile (Flutter)
 
-### Prasyarat
-- **Node.js** v20 atau v22+
-- **MySQL** 8.x (Laragon, XAMPP, atau Native MySQL Server)
-- **Git**
+Aplikasi mobile berada pada direktori `mobile`.
 
-### Langkah Setup
-
+### Jalankan di Web Browser (Chrome/Edge):
 ```bash
-# 1. Clone repository & install dependencies
-git clone https://github.com/TenkaMyLove/Sistem-Pencarian-Pasal.git
-cd Sistem-Pencarian-Pasal
-npm install
-
-# 2. Konfigurasi Lingkungan (.env)
-cp .env.example .env
+cd mobile
+flutter run -d chrome
 ```
 
-Buka file `.env` dan sesuaikan parameter koneksi database MySQL Anda:
-
-```env
-PORT=3000
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_DATABASE=p3h_kemenkum_kalsel
-MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_password
-SESSION_SECRET=your_secure_session_secret
-```
-
-### 3. Setup Database MySQL
-
-Buat database `p3h_kemenkum_kalsel` di MySQL, kemudian import data awal dari dump SQL:
-
-- **Opsi A (Melalui Command Line / Laragon Batch Script):**
-  ```bash
-  # Jika menggunakan Laragon / MySQL CLI:
-  setup_mysql.bat
-  ```
-  *Atau manual via command line:*
-  ```bash
-  mysql -u root -p p3h_kemenkum_kalsel < database_dump_mysql.sql
-  ```
-
-- **Opsi B (Melalui GUI Client):**
-  Impor file `database_dump_mysql.sql` melalui phpMyAdmin, HeidiSQL, atau DBeaver ke dalam database `p3h_kemenkum_kalsel`.
-
-- **Verifikasi Data Terimport:**
-  Jalankan `check_mysql.bat` untuk memverifikasi jumlah data tabel `peraturan`, `pasal`, `pengguna`, dan `jadwal`.
-
-### 4. Menjalankan Aplikasi
-
+### Jalankan di Emulator Android Studio:
+1. Nyalakan emulator Android Studio (AVD) Anda.
+2. Jalankan perintah:
 ```bash
-# Mode Pengembangan (Watch mode dengan tsx):
-npm run dev
-
-# Mode Produksi (Build ke dist & jalankan):
-npm run build
-npm run start
+cd mobile
+flutter run -d android
 ```
 
-Aplikasi dapat diakses melalui peramban web di: `http://localhost:3000`.
-
----
-
-## Peran & Akses Pengguna
-
-| Peran | Deskripsi | Hak Akses |
-|---|---|---|
-| **Admin** | Administrator Sistem | Mengelola kata sandi akun staf melalui menu Kelola Akun. |
-| **Pengelola** | Kompilator & Tim Harmonisasi | Pencarian pasal, CRUD penuh agenda rapat harmonisasi, dan tambah peraturan via tautan. |
-| **Perancang** | Perancang Peraturan Perundang-Undangan | Pencarian pasal dan melihat agenda jadwal rapat (*Read-Only*). |
-| **Tamu** | Pengguna Publik / Tamu | Pencarian pasal tanpa hak modifikasi jadwal maupun administrasi. |
-
-> **Catatan Kredensial**: Informasi akun operasional dikelola secara internal oleh Administrator Kanwil Kemenkumham Kalsel. Untuk keamanan, kredensial pengguna tidak disertakan dalam dokumentasi publik.
+> **Catatan Koneksi Server**:
+> - Pada Web Browser, aplikasi otomatis terhubung ke `http://localhost:3000`.
+> - Pada Emulator Android Studio, aplikasi otomatis terhubung ke `http://10.0.2.2:3000`.
+> - Alamat server juga dapat diubah secara instan kapan saja melalui menu pengaturan pada aplikasi.
 
 ---
 
