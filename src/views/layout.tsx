@@ -8,8 +8,18 @@ interface LayoutProps {
   children: any;
 }
 
+// Map peran → label yang lebih ramah dibaca
+const PERAN_LABEL: Record<string, string> = {
+  Admin:     'Administrator',
+  Pengelola: 'Pengelola & Kompilator',
+  Perancang: 'Perancang Perundangan',
+  Tamu:      'Mode Tamu',
+};
+
 export function Layout({ title, activeNav, user, children }: LayoutProps) {
   const isGuest = user.peran === 'Tamu';
+  const displayName = isGuest ? 'Tamu / Publik' : user.username;
+  const displayRole = PERAN_LABEL[user.peran] ?? user.peran;
 
   return (
     <html lang="id">
@@ -57,7 +67,7 @@ export function Layout({ title, activeNav, user, children }: LayoutProps) {
                 </li>
               )}
 
-              {user.peran === 'Pengelola' && (
+              {(user.peran === 'Pengelola' || user.peran === 'Admin') && (
                 <li class={`nav-item ${activeNav === 'tambah-peraturan' ? 'active' : ''}`}>
                   <a href="/tambah-peraturan">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,15 +93,33 @@ export function Layout({ title, activeNav, user, children }: LayoutProps) {
             <div class="sidebar-footer">
               <div class="user-profile">
                 <div class="user-info">
-                  <span class="user-name">{isGuest ? 'Tamu / Publik' : user.username}</span>
+                  <span class="user-name">{displayName}</span>
                   <span class="user-role" style={isGuest ? 'background-color: #475569; color: #fff;' : ''}>
-                    {isGuest ? 'Mode Tamu' : user.peran}
+                    {displayRole}
                   </span>
                 </div>
                 {isGuest ? (
-                  <a href="/login" class="btn-logout" style="background-color: var(--gold-accent); color: #000; font-weight: 700;" title="Login sebagai Petugas">Masuk</a>
+                  <a
+                    href="/login"
+                    class="btn-logout btn-login"
+                    title="Login sebagai Petugas"
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    Masuk
+                  </a>
                 ) : (
-                  <a href="/logout" class="btn-logout" title="Keluar dari sistem">Keluar</a>
+                  <a
+                    href="/logout"
+                    class="btn-logout"
+                    title="Keluar dari sistem"
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Keluar
+                  </a>
                 )}
               </div>
             </div>

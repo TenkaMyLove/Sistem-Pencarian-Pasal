@@ -385,9 +385,20 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
   const keys = Object.keys(json).filter((key) => Array.isArray(json[key]) && json[key].length > 0);
 
   return (
-    <div class="modal-backdrop" id="status-modal">
-      <div class="modal-content" style="max-width: 750px; max-height: 85vh; overflow-y: auto;">
-        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1rem;">
+    <div class="modal-backdrop" id="status-modal" onclick="if(event.target===this)this.remove()">
+      <div class="modal-content" style="max-width: 750px; max-height: 85vh; overflow-y: auto; position: relative;">
+
+        {/* Tombol X pojok kanan atas */}
+        <button
+          type="button"
+          onclick="document.getElementById('status-modal').remove()"
+          class="modal-close-btn"
+          title="Tutup"
+        >
+          ✕
+        </button>
+
+        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1rem; padding-right: 2.5rem;">
           <div>
             <h3 style="font-size: 1.15rem; color: var(--primary-navy); font-weight: 800;">
               Detil Status Peraturan
@@ -412,14 +423,23 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
                 <ul style="list-style-type: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin: 0;">
                   {json[key].map((item: any) => (
                     <li style="font-size: 0.875rem; color: #0f172a; line-height: 1.5;">
-                      <a
-                        href={item.url || `/pencarian?q=${encodeURIComponent(item.label || item.judul)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style="color: #0f172a; font-weight: 700; text-decoration: underline;"
-                      >
-                        {item.judul || item.label || 'Lihat Dokumen'}
-                      </a>
+                      {item.url ? (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style="color: var(--blue-accent); font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 0.3rem;"
+                        >
+                          {item.judul || item.label || 'Lihat Dokumen'}
+                          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; opacity: 0.7;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                          </svg>
+                        </a>
+                      ) : (
+                        <span style="color: #0f172a; font-weight: 600;">
+                          {item.judul || item.label || '-'}
+                        </span>
+                      )}
                       {item.keterangan && (
                         <div style="margin-top: 0.5rem; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 0.65rem 0.85rem; background-color: #ffffff; color: #334155; font-size: 0.825rem; line-height: 1.6;">
                           {renderKeteranganWithLinks(item.keterangan)}
@@ -431,7 +451,6 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
               </div>
             ))
           ) : peraturan.status_detail && peraturan.status_detail.trim() ? (
-            // Fallback: parse teks status_detail jadi segmen-segmen
             <FallbackStatusDetail statusDetail={peraturan.status_detail} />
           ) : (
             <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 1rem;">
