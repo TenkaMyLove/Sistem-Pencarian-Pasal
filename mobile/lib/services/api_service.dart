@@ -20,19 +20,31 @@ class ApiService {
     return _cachedBaseUrl!;
   }
 
-  Future<void> setBaseUrl(String url) async {
+  String _normalizeUrl(String url) {
     String cleanUrl = url.trim();
-    if (cleanUrl.endsWith('/')) {
+    if (cleanUrl.isNotEmpty &&
+        !cleanUrl.startsWith('http://') &&
+        !cleanUrl.startsWith('https://')) {
+      cleanUrl = 'http://$cleanUrl';
+    }
+    while (cleanUrl.endsWith('/')) {
       cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
     }
+    return cleanUrl;
+  }
+
+  Future<void> setBaseUrl(String url) async {
+    final cleanUrl = _normalizeUrl(url);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.prefBaseUrl, cleanUrl);
     _cachedBaseUrl = cleanUrl;
   }
 
-  // Check backend connection health
-  Future<Map<String, dynamic>> checkHealth() async {
-    final baseUrl = await getBaseUrl();
+  // Check backend connection health (optionally without overwriting saved URL)
+  Future<Map<String, dynamic>> checkHealth({String? baseUrlOverride}) async {
+    final baseUrl = baseUrlOverride != null && baseUrlOverride.trim().isNotEmpty
+        ? _normalizeUrl(baseUrlOverride)
+        : await getBaseUrl();
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/health'),

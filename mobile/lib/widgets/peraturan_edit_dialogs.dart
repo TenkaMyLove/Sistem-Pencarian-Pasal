@@ -3,531 +3,955 @@ import '../services/api_service.dart';
 import '../utils/constants.dart';
 
 const List<String> kJenisPeraturanOptions = [
-  'UU',
-  'PP',
-  'Perpres',
-  'Permen',
-  'Perda',
-  'Pergub',
-  'Perbup',
-  'Perwal',
-  'Inpres',
-  'Keppres',
-  'Kepmen',
-  'SE',
-  'Perppu',
-  'UUD 1945',
+  'Undang-Undang',
+  'Peraturan Pemerintah',
+  'Peraturan Presiden',
+  'Peraturan Menteri',
+  'Peraturan Daerah',
+  'Peraturan Gubernur',
+  'Peraturan Bupati/Walikota',
 ];
 
 const List<String> kWilayahOptions = [
   'Nasional',
-  'Kalimantan Selatan',
+  'Provinsi Kalimantan Selatan',
+  'Kota Banjarmasin',
+  'Kota Banjarbaru',
   'Kabupaten Banjar',
   'Kabupaten Barito Kuala',
+  'Kabupaten Tapin',
   'Kabupaten Hulu Sungai Selatan',
   'Kabupaten Hulu Sungai Tengah',
   'Kabupaten Hulu Sungai Utara',
-  'Kabupaten Kotabaru',
-  'Kabupaten Tabalong',
-  'Kabupaten Tanah Bumbu',
-  'Kabupaten Tanah Laut',
-  'Kabupaten Tapin',
   'Kabupaten Balangan',
-  'Kota Banjarbaru',
-  'Kota Banjarmasin',
+  'Kabupaten Tabalong',
+  'Kabupaten Tanah Laut',
+  'Kabupaten Tanah Bumbu',
+  'Kabupaten Kotabaru',
 ];
 
 const List<String> kSektorOptions = [
-  'Keuangan Daerah',
+  'Umum / Pemerintahan',
   'Otonomi Daerah',
-  'Tata Ruang',
-  'Lingkungan Hidup',
-  'Pendidikan',
+  'Tata Ruang & Lingkungan',
   'Kesehatan',
-  'Ketenagakerjaan',
-  'Pertanahan',
-  'Perpajakan',
-  'Perdagangan',
-  'Pertanian',
-  'Perikanan',
-  'Infrastruktur',
-  'Pemerintahan',
-  'Hukum',
-  'Lainnya',
+  'Pendidikan',
+  'Perizinan & Investasi',
+  'Keuangan & Pajak Daerah',
+  'Sosial & Ketenagakerjaan',
+  'Infrastruktur & Perhubungan',
 ];
 
-const List<Map<String, String>> kStatusOptions = [
-  {'value': 'berlaku', 'label': 'Berlaku'},
-  {'value': 'diubah', 'label': 'Diubah'},
-  {'value': 'dicabut_sebagian', 'label': 'Dicabut Sebagian'},
-  {'value': 'dicabut', 'label': 'Dicabut / Tidak Berlaku'},
+const List<String> kStatusOptions = [
+  'Berlaku',
+  'Diubah',
+  'Dicabut',
+  'Tidak Berlaku',
 ];
 
-List<String> _mergeOption(List<String> base, String current) {
+List<String> _mergeWithCurrent(List<String> defaults, String current) {
   final trimmed = current.trim();
-  if (trimmed.isEmpty || base.contains(trimmed)) {
-    return base;
-  }
-  return [trimmed, ...base];
-}
-
-String _normalizeStatusValue(String? rawStatus) {
-  final s = (rawStatus ?? 'berlaku').trim().toLowerCase();
-  if (s == 'dicabut_sebagian' || s.contains('sebagian')) return 'dicabut_sebagian';
-  if (s == 'dicabut' || s.contains('cabut') || s.contains('tidak')) return 'dicabut';
-  if (s == 'diubah' || s.contains('ubah')) return 'diubah';
-  return 'berlaku';
+  if (trimmed.isEmpty) return defaults;
+  if (defaults.contains(trimmed)) return defaults;
+  return [trimmed, ...defaults];
 }
 
 Future<bool> showEditPeraturanDialog(
   BuildContext context,
   Map<String, dynamic> peraturan,
 ) async {
-  final id = int.tryParse((peraturan['id'] ?? peraturan['peraturan_id'] ?? '0').toString()) ?? 0;
+  final id = int.tryParse(peraturan['id']?.toString() ?? '') ?? 0;
   if (id <= 0) return false;
-
-  final formKey = GlobalKey<FormState>();
-  final currentJenis = (peraturan['jenis_peraturan'] ?? 'UU').toString();
-  final currentWilayah = (peraturan['wilayah'] ?? 'Nasional').toString();
-  final currentSektor = (peraturan['sektor'] ?? 'Lainnya').toString();
-
-  final jenisItems = _mergeOption(kJenisPeraturanOptions, currentJenis);
-  final wilayahItems = _mergeOption(kWilayahOptions, currentWilayah);
-  final sektorItems = _mergeOption(kSektorOptions, currentSektor);
-
-  String selectedJenis = currentJenis.isNotEmpty ? currentJenis : jenisItems.first;
-  String selectedWilayah = currentWilayah.isNotEmpty ? currentWilayah : wilayahItems.first;
-  String selectedSektor = currentSektor.isNotEmpty ? currentSektor : sektorItems.first;
-  String selectedStatus = _normalizeStatusValue(peraturan['status']?.toString());
-
-  final nomorCtrl = TextEditingController(text: (peraturan['nomor'] ?? '').toString());
-  final tahunCtrl = TextEditingController(text: (peraturan['tahun'] ?? '').toString());
-  final judulCtrl = TextEditingController(text: (peraturan['judul'] ?? '').toString());
-  final urlCtrl = TextEditingController(text: (peraturan['url_dokumen_asli'] ?? '').toString());
-  final detailCtrl = TextEditingController(text: (peraturan['status_detail'] ?? '').toString());
-
-  bool isSaving = false;
-  String? errorMsg;
 
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (dialogCtx) {
-      return StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return AlertDialog(
-            title: const Text('Edit Peraturan', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-            content: SizedBox(
-              width: 480,
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (errorMsg != null) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.dangerBg,
-                            border: Border.all(color: AppColors.dangerBorder),
-                            borderRadius: AppRadius.controlR,
-                          ),
-                          child: Text(
-                            errorMsg!,
-                            style: const TextStyle(color: AppColors.danger, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedJenis,
-                        isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Jenis Peraturan *'),
-                        items: jenisItems
-                            .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
-                            .toList(),
-                        onChanged: isSaving
-                            ? null
-                            : (val) {
-                                if (val != null) setDialogState(() => selectedJenis = val);
-                              },
+    builder: (_) => _EditPeraturanDialog(peraturan: peraturan, id: id),
+  );
+  return result == true;
+}
+
+class _EditPeraturanDialog extends StatefulWidget {
+  final Map<String, dynamic> peraturan;
+  final int id;
+
+  const _EditPeraturanDialog({
+    required this.peraturan,
+    required this.id,
+  });
+
+  @override
+  State<_EditPeraturanDialog> createState() => _EditPeraturanDialogState();
+}
+
+class _EditPeraturanDialogState extends State<_EditPeraturanDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late String _jenis;
+  late String _wilayah;
+  late String _sektor;
+  late String _status;
+  late TextEditingController _nomorCtrl;
+  late TextEditingController _tahunCtrl;
+  late TextEditingController _judulCtrl;
+  late TextEditingController _statusDetailCtrl;
+  late TextEditingController _urlCtrl;
+
+  bool _isSaving = false;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.peraturan;
+    final rawJenis =
+        (p['jenis_peraturan'] ?? p['jenis'] ?? '').toString().trim();
+    final rawWilayah = (p['wilayah'] ?? '').toString().trim();
+    final rawSektor = (p['sektor'] ?? '').toString().trim();
+    final rawStatus = (p['status'] ?? '').toString().trim();
+
+    _jenis =
+        rawJenis.isNotEmpty ? rawJenis : kJenisPeraturanOptions.first;
+    _wilayah = rawWilayah.isNotEmpty ? rawWilayah : kWilayahOptions.first;
+    _sektor = rawSektor.isNotEmpty ? rawSektor : kSektorOptions.first;
+    _status = rawStatus.isNotEmpty ? rawStatus : kStatusOptions.first;
+
+    _nomorCtrl = TextEditingController(text: p['nomor']?.toString() ?? '');
+    _tahunCtrl = TextEditingController(text: p['tahun']?.toString() ?? '');
+    _judulCtrl = TextEditingController(
+      text: (p['judul'] ?? p['tentang'] ?? '').toString(),
+    );
+    _statusDetailCtrl = TextEditingController(
+      text: p['status_detail']?.toString() ?? '',
+    );
+    _urlCtrl = TextEditingController(
+      text: (p['url_dokumen_asli'] ?? p['url'] ?? '').toString(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nomorCtrl.dispose();
+    _tahunCtrl.dispose();
+    _judulCtrl.dispose();
+    _statusDetailCtrl.dispose();
+    _urlCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isSaving = true;
+      _errorText = null;
+    });
+
+    try {
+      await ApiService().updatePeraturan(widget.id, {
+        'jenis_peraturan': _jenis,
+        'nomor': _nomorCtrl.text.trim(),
+        'tahun': int.tryParse(_tahunCtrl.text.trim()) ?? DateTime.now().year,
+        'judul': _judulCtrl.text.trim(),
+        'wilayah': _wilayah,
+        'sektor': _sektor,
+        'status': _status,
+        'status_detail': _statusDetailCtrl.text.trim(),
+        'url_dokumen_asli': _urlCtrl.text.trim(),
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Metadata peraturan berhasil diperbarui.'),
+          backgroundColor: AppColors.statusBerlakuText,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorText = e.toString().replaceAll('Exception: ', '');
+        _isSaving = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final jenisOpts = _mergeWithCurrent(kJenisPeraturanOptions, _jenis);
+    final wilayahOpts = _mergeWithCurrent(kWilayahOptions, _wilayah);
+    final sektorOpts = _mergeWithCurrent(kSektorOptions, _sektor);
+    final statusOpts = _mergeWithCurrent(kStatusOptions, _status);
+
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.infoBg,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(height: 12),
-                      Row(
+                      child: const Icon(
+                        Icons.edit_document,
+                        size: 20,
+                        color: AppColors.primaryLight,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: nomorCtrl,
-                              enabled: !isSaving,
-                              decoration: const InputDecoration(labelText: 'Nomor *'),
-                              validator: (v) => v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
+                          Text(
+                            'Edit Metadata Peraturan',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TextFormField(
-                              controller: tahunCtrl,
-                              enabled: !isSaving,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Tahun *'),
-                              validator: (v) {
-                                final parsed = int.tryParse((v ?? '').trim());
-                                if (parsed == null || parsed < 1900) return 'Tahun tidak valid';
-                                return null;
-                              },
+                          Text(
+                            'Perbarui klasifikasi, status, atau sumber peraturan',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: judulCtrl,
-                        enabled: !isSaving,
-                        maxLines: 3,
-                        decoration: const InputDecoration(labelText: 'Judul / Tentang Peraturan *'),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      color: AppColors.textMuted,
+                      onPressed:
+                          _isSaving ? null : () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                if (_errorText != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.deleteBg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _errorText!,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: AppColors.danger,
                       ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedStatus,
-                        isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Status Hukum'),
-                        items: kStatusOptions
-                            .map((opt) => DropdownMenuItem(
-                                  value: opt['value'],
-                                  child: Text(opt['label']!),
-                                ))
-                            .toList(),
-                        onChanged: isSaving
-                            ? null
-                            : (val) {
-                                if (val != null) setDialogState(() => selectedStatus = val);
-                              },
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedWilayah,
-                        isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Wilayah'),
-                        items: wilayahItems
-                            .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
-                            .toList(),
-                        onChanged: isSaving
-                            ? null
-                            : (val) {
-                                if (val != null) setDialogState(() => selectedWilayah = val);
-                              },
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedSektor,
-                        isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Sektor'),
-                        items: sektorItems
-                            .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
-                            .toList(),
-                        onChanged: isSaving
-                            ? null
-                            : (val) {
-                                if (val != null) setDialogState(() => selectedSektor = val);
-                              },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: urlCtrl,
-                        enabled: !isSaving,
-                        decoration: const InputDecoration(labelText: 'URL Dokumen Asli *'),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'URL wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: detailCtrl,
-                        enabled: !isSaving,
-                        maxLines: 2,
-                        decoration: const InputDecoration(labelText: 'Keterangan Status (Opsional)'),
-                      ),
-                    ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                const Text(
+                  'Jenis Peraturan',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
                   ),
                 ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isSaving ? null : () => Navigator.of(dialogCtx).pop(false),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                onPressed: isSaving
-                    ? null
-                    : () async {
-                        if (!formKey.currentState!.validate()) return;
-                        setDialogState(() {
-                          isSaving = true;
-                          errorMsg = null;
-                        });
-                        try {
-                          await ApiService().updatePeraturan(id, {
-                            'jenis_peraturan': selectedJenis,
-                            'nomor': nomorCtrl.text.trim(),
-                            'tahun': int.parse(tahunCtrl.text.trim()),
-                            'judul': judulCtrl.text.trim(),
-                            'status': selectedStatus,
-                            'status_detail': detailCtrl.text.trim(),
-                            'wilayah': selectedWilayah,
-                            'sektor': selectedSektor,
-                            'url_dokumen_asli': urlCtrl.text.trim(),
-                          });
-                          if (dialogCtx.mounted) Navigator.of(dialogCtx).pop(true);
-                        } catch (e) {
-                          setDialogState(() {
-                            isSaving = false;
-                            errorMsg = e.toString().replaceAll('Exception: ', '');
-                          });
-                        }
-                      },
-                child: isSaving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Simpan Perubahan'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: _jenis,
+                  isExpanded: true,
+                  items: jenisOpts
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: _isSaving
+                      ? null
+                      : (v) {
+                          if (v != null) setState(() => _jenis = v);
+                        },
+                ),
+                const SizedBox(height: 12),
 
-  nomorCtrl.dispose();
-  tahunCtrl.dispose();
-  judulCtrl.dispose();
-  urlCtrl.dispose();
-  detailCtrl.dispose();
-  return result == true;
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Nomor',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _nomorCtrl,
+                            enabled: !_isSaving,
+                            validator: (v) =>
+                                v == null || v.trim().isEmpty ? 'Wajib' : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tahun',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _tahunCtrl,
+                            enabled: !_isSaving,
+                            keyboardType: TextInputType.number,
+                            validator: (v) =>
+                                int.tryParse((v ?? '').trim()) == null
+                                    ? 'Invalid'
+                                    : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                const Text(
+                  'Judul / Tentang',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _judulCtrl,
+                  enabled: !_isSaving,
+                  maxLines: 3,
+                  minLines: 2,
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Judul wajib diisi' : null,
+                ),
+                const SizedBox(height: 12),
+
+                const Text(
+                  'Wilayah',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: _wilayah,
+                  isExpanded: true,
+                  items: wilayahOpts
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: _isSaving
+                      ? null
+                      : (v) {
+                          if (v != null) setState(() => _wilayah = v);
+                        },
+                ),
+                const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Sektor',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<String>(
+                            initialValue: _sektor,
+                            isExpanded: true,
+                            items: sektorOpts
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: _isSaving
+                                ? null
+                                : (v) {
+                                    if (v != null) setState(() => _sektor = v);
+                                  },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Status',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<String>(
+                            initialValue: _status,
+                            isExpanded: true,
+                            items: statusOpts
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: _isSaving
+                                ? null
+                                : (v) {
+                                    if (v != null) setState(() => _status = v);
+                                  },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                const Text(
+                  'Keterangan Status / Relasi (Opsional)',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _statusDetailCtrl,
+                  enabled: !_isSaving,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    hintText: 'Mis. Diubah sebagian oleh Pasal 238...',
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                const Text(
+                  'Tautan Sumber Dokumen',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _urlCtrl,
+                  enabled: !_isSaving,
+                  keyboardType: TextInputType.url,
+                  decoration: const InputDecoration(hintText: 'https://...'),
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Tautan sumber dokumen wajib diisi'
+                      : null,
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed:
+                            _isSaving ? null : () => Navigator.of(context).pop(),
+                        child: const Text('Batal'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _submit,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.save_outlined, size: 18),
+                        label: Text(_isSaving ? 'Menyimpan...' : 'Simpan'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 Future<bool> showEditPasalDialog(
   BuildContext context,
   Map<String, dynamic> pasal,
 ) async {
-  final id = int.tryParse((pasal['id'] ?? pasal['pasal_id'] ?? '0').toString()) ?? 0;
+  final id =
+      int.tryParse((pasal['id'] ?? pasal['pasal_id'])?.toString() ?? '') ?? 0;
   if (id <= 0) return false;
-
-  final formKey = GlobalKey<FormState>();
-  final nomorPasalCtrl = TextEditingController(text: (pasal['nomor_pasal'] ?? '').toString());
-  final nomorAyatCtrl = TextEditingController(text: (pasal['nomor_ayat'] ?? '').toString());
-  final teksCtrl = TextEditingController(text: (pasal['teks_pasal'] ?? '').toString());
-
-  bool isSaving = false;
-  String? errorMsg;
 
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (dialogCtx) {
-      return StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return AlertDialog(
-            title: const Text('Edit Pasal', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-            content: SizedBox(
-              width: 480,
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (errorMsg != null) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.dangerBg,
-                            border: Border.all(color: AppColors.dangerBorder),
-                            borderRadius: AppRadius.controlR,
-                          ),
-                          child: Text(
-                            errorMsg!,
-                            style: const TextStyle(color: AppColors.danger, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                      TextFormField(
-                        controller: nomorPasalCtrl,
-                        enabled: !isSaving,
-                        decoration: const InputDecoration(
-                          labelText: 'Nomor Pasal *',
-                          hintText: 'Contoh: Pasal 18',
-                        ),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Nomor pasal wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: nomorAyatCtrl,
-                        enabled: !isSaving,
-                        decoration: const InputDecoration(
-                          labelText: 'Nomor Ayat (Opsional)',
-                          hintText: 'Contoh: Ayat (1)',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: teksCtrl,
-                        enabled: !isSaving,
-                        maxLines: 6,
-                        decoration: const InputDecoration(labelText: 'Isi / Teks Pasal *'),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Teks pasal wajib diisi' : null,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isSaving ? null : () => Navigator.of(dialogCtx).pop(false),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                onPressed: isSaving
-                    ? null
-                    : () async {
-                        if (!formKey.currentState!.validate()) return;
-                        setDialogState(() {
-                          isSaving = true;
-                          errorMsg = null;
-                        });
-                        try {
-                          await ApiService().updatePasal(id, {
-                            'nomor_pasal': nomorPasalCtrl.text.trim(),
-                            'nomor_ayat': nomorAyatCtrl.text.trim(),
-                            'teks_pasal': teksCtrl.text.trim(),
-                          });
-                          if (dialogCtx.mounted) Navigator.of(dialogCtx).pop(true);
-                        } catch (e) {
-                          setDialogState(() {
-                            isSaving = false;
-                            errorMsg = e.toString().replaceAll('Exception: ', '');
-                          });
-                        }
-                      },
-                child: isSaving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Simpan Pasal'),
-              ),
-            ],
-          );
-        },
-      );
-    },
+    builder: (_) => _EditPasalDialog(pasal: pasal, id: id),
   );
-
-  nomorPasalCtrl.dispose();
-  nomorAyatCtrl.dispose();
-  teksCtrl.dispose();
   return result == true;
 }
 
-Future<bool> _confirmDeleteDialog({
-  required BuildContext context,
-  required String title,
-  required String message,
-  required Future<void> Function() onDelete,
-}) async {
-  bool isDeleting = false;
-  String? errorMsg;
+class _EditPasalDialog extends StatefulWidget {
+  final Map<String, dynamic> pasal;
+  final int id;
 
-  final result = await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (dialogCtx) {
-      return StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return AlertDialog(
-            title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-            content: Column(
+  const _EditPasalDialog({required this.pasal, required this.id});
+
+  @override
+  State<_EditPasalDialog> createState() => _EditPasalDialogState();
+}
+
+class _EditPasalDialogState extends State<_EditPasalDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nomorCtrl;
+  late TextEditingController _ayatCtrl;
+  late TextEditingController _teksCtrl;
+  bool _isSaving = false;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _nomorCtrl = TextEditingController(
+      text: (widget.pasal['nomor_pasal'] ?? widget.pasal['pasal_nomor'] ?? '')
+          .toString(),
+    );
+    _ayatCtrl = TextEditingController(
+      text: (widget.pasal['nomor_ayat'] ?? '').toString(),
+    );
+    _teksCtrl = TextEditingController(
+      text: (widget.pasal['teks_pasal'] ??
+              widget.pasal['isi_pasal'] ??
+              widget.pasal['isi'] ??
+              '')
+          .toString(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nomorCtrl.dispose();
+    _ayatCtrl.dispose();
+    _teksCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isSaving = true;
+      _errorText = null;
+    });
+
+    try {
+      await ApiService().updatePasal(widget.id, {
+        'nomor_pasal': _nomorCtrl.text.trim(),
+        'nomor_ayat': _ayatCtrl.text.trim(),
+        'teks_pasal': _teksCtrl.text.trim(),
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Isi pasal berhasil diperbarui.'),
+          backgroundColor: AppColors.statusBerlakuText,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorText = e.toString().replaceAll('Exception: ', '');
+        _isSaving = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(message),
-                if (errorMsg != null) ...[
-                  const SizedBox(height: 12),
-                  Text(errorMsg!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.infoBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.gavel_outlined,
+                        size: 20,
+                        color: AppColors.primaryLight,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Edit Teks Pasal',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      color: AppColors.textMuted,
+                      onPressed:
+                          _isSaving ? null : () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                if (_errorText != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.deleteBg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _errorText!,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: AppColors.danger,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                 ],
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Nomor Pasal',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _nomorCtrl,
+                            enabled: !_isSaving,
+                            decoration: const InputDecoration(
+                              hintText: 'Contoh: Pasal 14',
+                            ),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Nomor pasal wajib diisi'
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Ayat (Opsional)',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _ayatCtrl,
+                            enabled: !_isSaving,
+                            decoration: const InputDecoration(
+                              hintText: 'Contoh: Ayat (1)',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                const Text(
+                  'Isi Pasal',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _teksCtrl,
+                  enabled: !_isSaving,
+                  maxLines: 8,
+                  minLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: 'Masukkan bunyi lengkap pasal...',
+                  ),
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Isi pasal wajib diisi'
+                      : null,
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed:
+                            _isSaving ? null : () => Navigator.of(context).pop(),
+                        child: const Text('Batal'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _submit,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.save_outlined, size: 18),
+                        label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Pasal'),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: isDeleting ? null : () => Navigator.of(dialogCtx).pop(false),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-                onPressed: isDeleting
-                    ? null
-                    : () async {
-                        setDialogState(() {
-                          isDeleting = true;
-                          errorMsg = null;
-                        });
-                        try {
-                          await onDelete();
-                          if (dialogCtx.mounted) Navigator.of(dialogCtx).pop(true);
-                        } catch (e) {
-                          setDialogState(() {
-                            isDeleting = false;
-                            errorMsg = e.toString().replaceAll('Exception: ', '');
-                          });
-                        }
-                      },
-                child: isDeleting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Hapus'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-
-  return result == true;
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 Future<bool> confirmDeletePeraturanDialog(
   BuildContext context,
   int peraturanId,
   String titleLabel,
-) =>
-    _confirmDeleteDialog(
-      context: context,
-      title: 'Hapus Peraturan',
-      message: 'Hapus $titleLabel beserta seluruh pasalnya? Tindakan ini tidak dapat dibatalkan.',
-      onDelete: () => ApiService().deletePeraturan(peraturanId),
-    );
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      title: const Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: AppColors.danger),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Hapus Peraturan',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Text(
+        'Yakin ingin menghapus "$titleLabel" beserta seluruh pasalnya? Tindakan ini tidak dapat dibatalkan.',
+        style: const TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.danger,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Hapus Peraturan'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true) return false;
+  try {
+    await ApiService().deletePeraturan(peraturanId);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Peraturan berhasil dihapus.'),
+          backgroundColor: AppColors.statusBerlakuText,
+        ),
+      );
+    }
+    return true;
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal menghapus: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+    return false;
+  }
+}
 
 Future<bool> confirmDeletePasalDialog(
   BuildContext context,
   int pasalId,
   String pasalLabel,
-) =>
-    _confirmDeleteDialog(
-      context: context,
-      title: 'Hapus Pasal',
-      message: 'Hapus $pasalLabel secara permanen?',
-      onDelete: () => ApiService().deletePasal(pasalId),
-    );
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      title: const Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: AppColors.danger),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Hapus Pasal',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Text(
+        'Hapus "$pasalLabel" dari daftar pasal peraturan ini?',
+        style: const TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.danger,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Hapus Pasal'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true) return false;
+  try {
+    await ApiService().deletePasal(pasalId);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pasal berhasil dihapus.'),
+          backgroundColor: AppColors.statusBerlakuText,
+        ),
+      );
+    }
+    return true;
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal menghapus: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+    return false;
+  }
+}

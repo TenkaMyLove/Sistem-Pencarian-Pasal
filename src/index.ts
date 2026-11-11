@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import dotenv from 'dotenv';
@@ -20,10 +21,14 @@ app.use('/css/*', serveStatic({ root: './public' }));
 app.use('/images/*', serveStatic({ root: './public' }));
 app.use('/favicon.ico', serveStatic({ path: './public/favicon.ico' }));
 
-// Health check endpoint (Public)
-app.get('/api/health', (c) => c.json({ status: 'ok', app: 'P3H Kemenkum Kalsel', timestamp: new Date() }));
+// Ensure CORS headers are applied to ALL /api/* endpoints including /api/health
+app.use('/api/*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+}));
 
-// Mobile & Web REST API endpoints
+// Mobile & Web REST API endpoints (includes GET /api/health)
 app.route('/api', apiRoutes);
 
 // cPanel Cron Job Trigger Endpoint (Public - SCRP-7 / SCRP-10)

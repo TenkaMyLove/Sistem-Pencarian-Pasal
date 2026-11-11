@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/constants.dart';
+import '../widgets/peraturan_edit_dialogs.dart';
 
 class TambahPeraturanScreen extends StatefulWidget {
   const TambahPeraturanScreen({super.key});
@@ -12,313 +13,589 @@ class TambahPeraturanScreen extends StatefulWidget {
 
 class _TambahPeraturanScreenState extends State<TambahPeraturanScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _urlController = TextEditingController();
   final _nomorController = TextEditingController();
-  final _tahunController = TextEditingController(text: DateTime.now().year.toString());
+  final _tahunController = TextEditingController(
+    text: DateTime.now().year.toString(),
+  );
   final _judulController = TextEditingController();
   final _teksManualController = TextEditingController();
 
-  String _jenisPeraturan = 'Peraturan Daerah';
-  String _wilayah = 'Provinsi Kalimantan Selatan';
-  String _sektor = 'Otonomi & Pemerintahan Daerah';
+  String _selectedJenis = kJenisPeraturanOptions.first;
+  String _selectedWilayah = kWilayahOptions.first;
+  String _selectedSektor = kSektorOptions.first;
 
-  bool _isLoading = false;
-  String? _errorMessage;
+  bool _isSubmitting = false;
 
-  final List<String> _jenisOptions = [
-    'Undang-Undang',
-    'Peraturan Pemerintah Pengganti Undang-Undang',
-    'Peraturan Pemerintah',
-    'Peraturan Presiden',
-    'Peraturan Daerah',
-    'Peraturan Kepala Daerah',
-  ];
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _nomorController.dispose();
+    _tahunController.dispose();
+    _judulController.dispose();
+    _teksManualController.dispose();
+    super.dispose();
+  }
 
-  final List<String> _wilayahOptions = [
-    'Nasional',
-    'Provinsi Kalimantan Selatan',
-    'Kota Banjarmasin',
-    'Kota Banjarbaru',
-    'Kabupaten Banjar',
-    'Kabupaten Barito Kuala',
-    'Kabupaten Tanah Laut',
-    'Kabupaten Tanah Bumbu',
-    'Kabupaten Kotabaru',
-    'Kabupaten Tapin',
-    'Kabupaten Hulu Sungai Selatan',
-    'Kabupaten Hulu Sungai Tengah',
-    'Kabupaten Hulu Sungai Utara',
-    'Kabupaten Balangan',
-    'Kabupaten Tabalong',
-  ];
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    _urlController.clear();
+    _nomorController.clear();
+    _tahunController.text = DateTime.now().year.toString();
+    _judulController.clear();
+    _teksManualController.clear();
+    setState(() {
+      _selectedJenis = kJenisPeraturanOptions.first;
+      _selectedWilayah = kWilayahOptions.first;
+      _selectedSektor = kSektorOptions.first;
+    });
+  }
 
-  final List<String> _sektorOptions = [
-    'Otonomi & Pemerintahan Daerah',
-    'Investasi & Perizinan',
-    'Keuangan Daerah',
-    'Tata Ruang & Bangunan',
-    'Lingkungan Hidup',
-    'Pajak & Retribusi Daerah',
-    'Ketenagakerjaan',
-    'Kesehatan',
-    'Pendidikan',
-    'Hukum Pidana & Jasa Konstruksi',
-    'Lainnya',
-  ];
-
-  Future<void> _submitCrawler() async {
+  Future<void> _submit() async {
+    FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    final urlText = _urlController.text.trim();
+    final manualText = _teksManualController.text.trim();
+
+    setState(() => _isSubmitting = true);
 
     try {
-      final data = {
-        'url': _urlController.text.trim(),
-        'jenis_peraturan': _jenisPeraturan,
+      final user = AuthService().currentUser;
+      final res = await ApiService().tambahPeraturan({
+        'url': urlText,
+        'jenis_peraturan': _selectedJenis,
         'nomor': _nomorController.text.trim(),
-        'tahun': int.tryParse(_tahunController.text.trim()) ?? DateTime.now().year,
+        'tahun': int.tryParse(_tahunController.text.trim()) ??
+            DateTime.now().year,
         'judul': _judulController.text.trim(),
-        'wilayah': _wilayah,
-        'sektor': _sektor,
-        'teks_manual': _teksManualController.text.trim(),
-        'ditambahkan_oleh': AuthService().currentUser?.username ?? 'Pengelola',
-      };
-
-      final result = await ApiService().tambahPeraturan(data);
-
-      setState(() {
-        _isLoading = false;
+        'wilayah': _selectedWilayah,
+        'sektor': _selectedSektor,
+        'teks_manual': manualText,
+        'ditambahkan_oleh': user?.displayName ?? 'Pengelola',
       });
 
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: AppColors.statusBerlakuText),
-                SizedBox(width: 8),
-                Text('Berhasil Diindeks!'),
-              ],
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      _showResultDialog(success: true, data: res);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      _showResultDialog(
+        success: false,
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+      );
+    }
+  }
+
+  void _showResultDialog({
+    required bool success,
+    Map<String, dynamic>? data,
+    String? errorMessage,
+  }) {
+    final payload = (data?['data'] is Map)
+        ? Map<String, dynamic>.from(data!['data'])
+        : data;
+    final pasalCount =
+        payload?['pasal_count'] ??
+        payload?['total_pasal'] ??
+        payload?['jumlah_pasal'] ??
+        payload?['inserted_pasal'];
+    final message =
+        data?['message']?.toString() ??
+        payload?['message']?.toString() ??
+        (success
+            ? 'Peraturan berhasil diproses dan diindeks ke basis data.'
+            : (errorMessage ?? 'Gagal memproses peraturan.'));
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: success ? const Color(0xFFECFDF5) : AppColors.deleteBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                success ? Icons.check_circle_outline : Icons.error_outline,
+                color: success ? const Color(0xFF15803D) : AppColors.danger,
+              ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Peraturan: ${result['judul'] ?? 'Tersimpan'}'),
-                const SizedBox(height: 6),
-                Text('Jumlah Pasal Terindeks: ${result['pasal_count'] ?? 0} pasal'),
-                const SizedBox(height: 6),
-                Text('Status Tautan Dokumen: ${result['status_tautan'] ?? 'normal'}'),
-              ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                success ? 'Peraturan Tersimpan' : 'Proses Gagal',
+                style: const TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _urlController.clear();
-                  _nomorController.clear();
-                  _judulController.clear();
-                  _teksManualController.clear();
-                },
-                child: const Text('OK'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: AppColors.textSecondary,
+                height: 1.45,
+              ),
+            ),
+            if (success && pasalCount != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.infoBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.gavel_outlined,
+                      size: 18,
+                      color: AppColors.primaryLight,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Total Pasal Terindeks: $pasalCount pasal',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
+          ],
+        ),
+        actions: [
+          if (success)
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _resetForm();
+              },
+              child: const Text('Input Peraturan Lain'),
+            ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Tutup'),
           ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
-      });
-    }
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Form(
+      key: _formKey,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+        children: [
+          const Row(
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.travel_explore, color: AppColors.primary, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Web Crawler Peraturan Baru',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Masukkan URL portal hukum resmi (JDIH BPK/Pemda) untuk mengindeks pasal secara otomatis.',
-                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              Icon(
+                Icons.library_add_outlined,
+                size: 14,
+                color: AppColors.textSecondary,
               ),
-              const SizedBox(height: 16),
-
-              if (_errorMessage != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.dangerBg,
-                    border: Border.all(color: AppColors.dangerBorder),
-                    borderRadius: AppRadius.controlR,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: AppColors.danger),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // URL Field
-              TextFormField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'URL Peraturan (JDIH BPK / Portal Resmi) *',
-                  hintText: 'https://peraturan.bpk.go.id/Details/...',
-                  prefixIcon: Icon(Icons.link),
-                ),
-                validator: (v) => v == null || v.trim().isEmpty ? 'URL wajib diisi' : null,
-              ),
-              const SizedBox(height: 12),
-
-              // Jenis Peraturan Dropdown
-              const Text('Jenis Peraturan', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _jenisPeraturan,
-                isExpanded: true,
-                items: _jenisOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _jenisPeraturan = val);
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Nomor & Tahun
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _nomorController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nomor *',
-                        hintText: 'Contoh: 12',
-                      ),
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _tahunController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Tahun *',
-                        hintText: '2024',
-                      ),
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Judul / Tentang
-              TextFormField(
-                controller: _judulController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Judul / Tentang Peraturan',
-                  hintText: 'Contoh: Pajak Daerah dan Retribusi Daerah',
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Wilayah Dropdown
-              const Text('Cakupan Wilayah', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _wilayah,
-                isExpanded: true,
-                items: _wilayahOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _wilayah = val);
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Sektor Dropdown
-              const Text('Sektor Hukum', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _sektor,
-                isExpanded: true,
-                items: _sektorOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _sektor = val);
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Manual text fallback
-              TextFormField(
-                controller: _teksManualController,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Teks Peraturan Manual (Opsional)',
-                  hintText: 'Salin-tempel teks pasal di sini jika website asal memerlukan entri manual.',
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _submitCrawler,
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
-                        )
-                      : const Icon(Icons.cloud_download),
-                  label: Text(_isLoading ? 'Sedang Mengindeks...' : 'Mulai Crawl & Simpan Peraturan'),
+              SizedBox(width: 6),
+              Text(
+                'INDEKSASI DOKUMEN HUKUM',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.9,
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 6),
+          const Text(
+            'Tambah Peraturan Baru',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Ekstrak pasal otomatis dari tautan sumber JDIH atau tempel naskah peraturan secara manual.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Card 1: Parameter Web Crawler
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: AppColors.infoBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.travel_explore,
+                        size: 18,
+                        color: AppColors.primaryLight,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Parameter Web Crawler',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputFill,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Otomatis',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'URL Peraturan (JDIH / Peraturan.go.id)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _urlController,
+                  enabled: !_isSubmitting,
+                  keyboardType: TextInputType.url,
+                  decoration: const InputDecoration(
+                    hintText: 'https://peraturan.bpk.go.id/Details/...',
+                    prefixIcon: Icon(Icons.link, size: 19),
+                  ),
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return 'URL sumber peraturan wajib diisi';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Apabila halaman sumber berbasis PDF atau tidak dapat diekstrak otomatis, isi juga teks naskah manual di kolom bawah.',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Card 2: Metadata & Klasifikasi Peraturan
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: AppColors.infoBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.article_outlined,
+                        size: 18,
+                        color: AppColors.primaryLight,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Metadata & Klasifikasi Peraturan',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Jenis Peraturan',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedJenis,
+                  isExpanded: true,
+                  items: kJenisPeraturanOptions
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (val) {
+                          if (val != null) setState(() => _selectedJenis = val);
+                        },
+                ),
+                const SizedBox(height: 14),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Nomor',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _nomorController,
+                            enabled: !_isSubmitting,
+                            decoration: const InputDecoration(
+                              hintText: 'Mis. 23',
+                            ),
+                            validator: (val) =>
+                                val == null || val.trim().isEmpty
+                                    ? 'Wajib diisi'
+                                    : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tahun',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _tahunController,
+                            enabled: !_isSubmitting,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              hintText: '2026',
+                            ),
+                            validator: (val) {
+                              final yr = int.tryParse((val ?? '').trim());
+                              if (yr == null || yr < 1945 || yr > 2100) {
+                                return 'Tahun invalid';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                const Text(
+                  'Judul / Tentang Peraturan',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _judulController,
+                  enabled: !_isSubmitting,
+                  maxLines: 3,
+                  minLines: 2,
+                  decoration: const InputDecoration(
+                    hintText: 'Masukkan judul lengkap peraturan...',
+                  ),
+                  validator: (val) =>
+                      val == null || val.trim().isEmpty
+                          ? 'Judul peraturan wajib diisi'
+                          : null,
+                ),
+                const SizedBox(height: 14),
+
+                const Text(
+                  'Wilayah',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedWilayah,
+                  isExpanded: true,
+                  items: kWilayahOptions
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (val) {
+                          if (val != null) {
+                            setState(() => _selectedWilayah = val);
+                          }
+                        },
+                ),
+                const SizedBox(height: 14),
+
+                const Text(
+                  'Sektor',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedSektor,
+                  isExpanded: true,
+                  items: kSektorOptions
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (val) {
+                          if (val != null) {
+                            setState(() => _selectedSektor = val);
+                          }
+                        },
+                ),
+                const SizedBox(height: 14),
+
+                const Text(
+                  'Teks Naskah Manual (Opsional)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _teksManualController,
+                  enabled: !_isSubmitting,
+                  maxLines: 5,
+                  minLines: 4,
+                  decoration: const InputDecoration(
+                    hintText:
+                        'Tempel teks isi peraturan (Pasal 1, Pasal 2, dst.) apabila URL gagal diparsing otomatis...',
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSubmitting ? null : _submit,
+                    icon: _isSubmitting
+                        ? const SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.cloud_upload_outlined, size: 19),
+                    label: Text(
+                      _isSubmitting
+                          ? 'Memproses & Mengekstrak...'
+                          : 'Simpan & Proses Peraturan',
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
