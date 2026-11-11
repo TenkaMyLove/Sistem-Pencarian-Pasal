@@ -211,9 +211,6 @@ export function TambahPeraturanView({ user, result, formValues, error }: TambahP
                 placeholder={"Tempel teks lengkap isi peraturan di sini.\nSistem akan mendeteksi baris 'Pasal N' dan mengekstrak isinya secara otomatis.\nBiarkan kosong jika URL sudah dapat di-parse otomatis (halaman HTML biasa)."}
                 style="font-family: monospace; font-size: 0.85rem; resize: vertical;"
               />
-              <small style="color: var(--text-muted); font-size: 0.8rem;">
-                💡 Berguna untuk dokumen PDF atau halaman yang tidak dapat di-parse otomatis. Salin teks dari PDF viewer lalu tempel di sini.
-              </small>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">

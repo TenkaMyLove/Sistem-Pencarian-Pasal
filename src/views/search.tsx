@@ -47,6 +47,15 @@ interface SearchViewProps {
   wilayahList: string[];
 }
 
+// Pasal row shape used for edit modal
+interface PasalRow {
+  id: number;
+  nomor_pasal: string;
+  nomor_ayat: string;
+  teks_pasal: string;
+  peraturan_id: number;
+}
+
 export function SearchView({ user, initialQuery = '', searchData, sektorList, wilayahList }: SearchViewProps) {
   return (
     <Layout title="Pencarian Pasal Peraturan" activeNav="pencarian" user={user}>
@@ -123,7 +132,7 @@ export function SearchView({ user, initialQuery = '', searchData, sektorList, wi
 
       {/* Results Container */}
       <div id="results-container">
-        <SearchResultsPartial query={initialQuery} searchData={searchData} />
+        <SearchResultsPartial query={initialQuery} searchData={searchData} user={user} />
       </div>
 
       {/* Modal Container for Dynamic HTMX Modals */}
@@ -137,12 +146,15 @@ export function SearchResultsPartial({
   sektor = '',
   wilayah = '',
   searchData,
+  user,
 }: {
   query?: string;
   sektor?: string;
   wilayah?: string;
   searchData: PaginatedSearchResults;
+  user?: UserSession;
 }) {
+  const isPengelola = user?.peran === 'Pengelola' || user?.peran === 'Admin';
   const { items, totalCount, currentPage, pageSize, totalPages } = searchData;
 
   if (!items || items.length === 0) {
@@ -206,7 +218,7 @@ export function SearchResultsPartial({
       <div class="results-scroll-container">
         <div class="results-list">
           {items.map((item) => (
-            <div class="result-card">
+            <div class="result-card" id={`result-card-${item.pasal_id}`}>
               <div class="result-card-header">
                 <h4 class="result-title">
                   {item.jenis_peraturan} No. {item.nomor} Tahun {item.tahun}
@@ -300,18 +312,51 @@ export function SearchResultsPartial({
                   Lihat Detil Status Peraturan &raquo;
                 </button>
 
-                <a
-                  href={item.url_dokumen_asli}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn-link-pdf"
-                  title="Buka PDF Asli di Situs Resmi Sumber"
-                >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                  </svg>
-                  Lihat Dokumen PDF Asli
-                </a>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  {isPengelola && item.pasal_id && (
+                    <>
+                      <button
+                        type="button"
+                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; background-color: #fff7ed; color: #c2410c; border: 1px solid #fdba74; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                        hx-get={`/pencarian/edit-pasal-modal/${item.pasal_id}`}
+                        hx-target="#modal-container"
+                        title="Edit teks pasal ini"
+                      >
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; background-color: #fff1f2; color: #be123c; border: 1px solid #fda4af; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                        hx-post={`/pencarian/hapus-pasal/${item.pasal_id}`}
+                        hx-target={`#result-card-${item.pasal_id}`}
+                        hx-swap="outerHTML"
+                        hx-confirm={`Hapus ${item.nomor_pasal} dari ${item.jenis_peraturan} No. ${item.nomor} Tahun ${item.tahun}? Tindakan ini tidak dapat dibatalkan.`}
+                        title="Hapus pasal ini dari database"
+                      >
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Hapus
+                      </button>
+                    </>
+                  )}
+
+                  <a
+                    href={item.url_dokumen_asli}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn-link-pdf"
+                    title="Buka PDF Asli di Situs Resmi Sumber"
+                  >
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    Lihat Dokumen PDF Asli
+                  </a>
+                </div>
               </div>
             </div>
           ))}
@@ -474,7 +519,7 @@ export function StatusDetailModal({ peraturan }: { peraturan: any }) {
   );
 }
 
-// Render keterangan dengan mengubah pasal-pasal yang disebutkan menjadi link yang bisa diklik
+// Render keterangan dengan menghighlight referensi pasal (bukan clickable link)
 function renderKeteranganWithLinks(keterangan: string) {
   if (!keterangan) return null;
 
@@ -485,15 +530,11 @@ function renderKeteranganWithLinks(keterangan: string) {
   return parts.map((part) => {
     if (/^Pasal\s+\d+/i.test(part.trim())) {
       return (
-        <a
-          href={`/pencarian?q=${encodeURIComponent(part.trim())}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={`Cari ${part.trim()} di sistem`}
-          style="color: var(--primary-navy); font-weight: 700; text-decoration: underline; background-color: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 4px; display: inline-block; margin: 0 0.15rem;"
+        <span
+          style="color: #92400e; font-weight: 700; background-color: #fef9c3; padding: 0.1rem 0.35rem; border-radius: 4px; display: inline-block; margin: 0 0.1rem;"
         >
           {part}
-        </a>
+        </span>
       );
     }
     return part;
@@ -551,6 +592,108 @@ function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// Modal Edit Pasal — hanya untuk Pengelola/Admin
+export function EditPasalModal({ pasal }: { pasal: any }) {
+  return (
+    <div class="modal-backdrop" id="edit-pasal-modal" onclick="if(event.target===this)this.remove()">
+      <div class="modal-content" style="max-width: 640px; position: relative;">
+
+        {/* Tombol X pojok kanan atas */}
+        <button
+          type="button"
+          onclick="document.getElementById('edit-pasal-modal').remove()"
+          class="modal-close-btn"
+          title="Tutup"
+        >
+          ✕
+        </button>
+
+        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem; padding-right: 2.5rem;">
+          <h3 style="font-size: 1.1rem; color: var(--primary-navy); font-weight: 800;">
+            Edit Pasal
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Pasal ID #{pasal.id} · Peraturan ID #{pasal.peraturan_id}
+          </p>
+        </div>
+
+        <form
+          hx-post={`/pencarian/edit-pasal/${pasal.id}`}
+          hx-target="#edit-pasal-modal"
+          hx-swap="outerHTML"
+          hx-on--htmx-after-request="if(event.detail.successful){ document.getElementById('edit-pasal-modal')?.remove(); }"
+        >
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="ep-nomor-pasal" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
+              Nomor Pasal <span style="color: var(--danger-color);">*</span>
+            </label>
+            <input
+              type="text"
+              id="ep-nomor-pasal"
+              name="nomor_pasal"
+              class="form-control"
+              value={pasal.nomor_pasal || ''}
+              placeholder="Contoh: Pasal 1"
+              required
+            />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="ep-nomor-ayat" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
+              Nomor Ayat <span style="color: var(--text-muted); font-weight: 400;">(opsional)</span>
+            </label>
+            <input
+              type="text"
+              id="ep-nomor-ayat"
+              name="nomor_ayat"
+              class="form-control"
+              value={pasal.nomor_ayat || ''}
+              placeholder="Contoh: Ayat (1)"
+            />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="ep-teks-pasal" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
+              Teks Pasal <span style="color: var(--danger-color);">*</span>
+            </label>
+            <textarea
+              id="ep-teks-pasal"
+              name="teks_pasal"
+              class="form-control"
+              rows={8}
+              style="font-family: monospace; font-size: 0.85rem; resize: vertical;"
+              required
+            >
+              {pasal.teks_pasal || ''}
+            </textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <button
+              type="button"
+              class="btn-action"
+              style="background-color: #f1f5f9; color: var(--text-main);"
+              onclick="document.getElementById('edit-pasal-modal').remove()"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="btn-search"
+              style="gap: 0.5rem;"
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Simpan Perubahan
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

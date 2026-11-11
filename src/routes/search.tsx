@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { query } from '../db/index.js';
-import { allowGuestOrAuth, Env } from '../middleware/auth.js';
-import { SearchView, SearchResultsPartial, SearchResultItem, StatusDetailModal } from '../views/search.js';
+import { allowGuestOrAuth, requirePengelola, Env } from '../middleware/auth.js';
+import { SearchView, SearchResultsPartial, SearchResultItem, StatusDetailModal, EditPasalModal } from '../views/search.js';
 
 export const searchRoutes = new Hono<Env>();
 
@@ -152,8 +152,9 @@ searchRoutes.get('/search-results', async (c) => {
   const page = parseInt(c.req.query('page') || '1', 10);
 
   const searchData = await fetchSearchResults(q, sektor, wilayah, page, 5);
+  const user = c.get('user');
 
-  return c.html(<SearchResultsPartial query={q} sektor={sektor} wilayah={wilayah} searchData={searchData} />);
+  return c.html(<SearchResultsPartial query={q} sektor={sektor} wilayah={wilayah} searchData={searchData} user={user} />);
 });
 
 // GET /pencarian/status-modal/:peraturan_id
@@ -166,4 +167,63 @@ searchRoutes.get('/pencarian/status-modal/:peraturan_id', async (c) => {
   }
 
   return c.html(<StatusDetailModal peraturan={rows[0]} />);
+});
+
+// GET /pencarian/edit-pasal-modal/:pasal_id — Pengelola/Admin only
+searchRoutes.get('/pencarian/edit-pasal-modal/:pasal_id', requirePengelola, async (c) => {
+  const pasalId = parseInt(c.req.param('pasal_id') ?? '0', 10);
+  const rows = await query<any>('SELECT * FROM pasal WHERE id = ?', [pasalId]);
+
+  if (!rows || rows.length === 0) {
+    return c.text('Pasal tidak ditemukan', 404);
+  }
+
+  return c.html(<EditPasalModal pasal={rows[0]} />);
+});
+
+// POST /pencarian/edit-pasal/:pasal_id — Pengelola/Admin only
+searchRoutes.post('/pencarian/edit-pasal/:pasal_id', requirePengelola, async (c) => {
+  const pasalId = parseInt(c.req.param('pasal_id') ?? '0', 10);
+  const body = await c.req.parseBody();
+  const nomor_pasal = (body['nomor_pasal'] as string || '').trim();
+  const nomor_ayat  = (body['nomor_ayat']  as string || '').trim();
+  const teks_pasal  = (body['teks_pasal']  as string || '').trim();
+
+  if (!nomor_pasal || !teks_pasal) {
+    return c.text('Nomor pasal dan teks pasal tidak boleh kosong', 400);
+  }
+
+  await query(
+    'UPDATE pasal SET nomor_pasal = ?, nomor_ayat = ?, teks_pasal = ? WHERE id = ?',
+    [nomor_pasal, nomor_ayat, teks_pasal, pasalId]
+  );
+
+  // Return HTMX trigger to close modal and refresh results
+  return c.html(
+    <div id="edit-success-toast" hx-swap-oob="true">
+      <span style="display:none" id="close-edit-modal" data-close="true"></span>
+    </div>,
+    200,
+    {
+      'HX-Trigger': JSON.stringify({ closeEditModal: pasalId, refreshResults: true }),
+    }
+  );
+});
+
+// POST /pencarian/hapus-pasal/:pasal_id — Pengelola/Admin only
+searchRoutes.post('/pencarian/hapus-pasal/:pasal_id', requirePengelola, async (c) => {
+  const pasalId = parseInt(c.req.param('pasal_id') ?? '0', 10);
+
+  const rows = await query<any>('SELECT id FROM pasal WHERE id = ?', [pasalId]);
+  if (!rows || rows.length === 0) {
+    return c.text('Pasal tidak ditemukan', 404);
+  }
+
+  await query('DELETE FROM pasal WHERE id = ?', [pasalId]);
+
+  return c.html(
+    <div style="display:none"></div>,
+    200,
+    { 'HX-Trigger': JSON.stringify({ pasalDeleted: pasalId }) }
+  );
 });

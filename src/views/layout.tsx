@@ -11,14 +11,14 @@ interface LayoutProps {
 // Map peran → label yang lebih ramah dibaca
 const PERAN_LABEL: Record<string, string> = {
   Admin:     'Administrator',
-  Pengelola: 'Pengelola & Kompilator',
-  Perancang: 'Perancang Perundangan',
-  Tamu:      'Mode Tamu',
+  Pengelola: 'Pengelola',
+  Perancang: 'Perancang',
+  Tamu:      'Akses Publik',
 };
 
 export function Layout({ title, activeNav, user, children }: LayoutProps) {
   const isGuest = user.peran === 'Tamu';
-  const displayName = isGuest ? 'Tamu / Publik' : user.username;
+  const displayName = isGuest ? 'Tamu' : user.username;
   const displayRole = PERAN_LABEL[user.peran] ?? user.peran;
 
   return (
@@ -94,7 +94,13 @@ export function Layout({ title, activeNav, user, children }: LayoutProps) {
               <div class="user-profile">
                 <div class="user-info">
                   <span class="user-name">{displayName}</span>
-                  <span class="user-role" style={isGuest ? 'background-color: #475569; color: #fff;' : ''}>
+                  <span class="user-role" style={
+                    isGuest
+                      ? 'background-color: #64748b; color: #fff; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 500; letter-spacing: 0.3px; display: inline-block;'
+                      : user.peran === 'Admin'
+                        ? 'background-color: #1e3a5f; color: #f0c040; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 500; letter-spacing: 0.3px; display: inline-block;'
+                        : 'background-color: #1e3a5f; color: #fff; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 500; letter-spacing: 0.3px; display: inline-block;'
+                  }>
                     {displayRole}
                   </span>
                 </div>
@@ -129,11 +135,6 @@ export function Layout({ title, activeNav, user, children }: LayoutProps) {
           <main class="main-content">
             <header class="top-bar">
               <h2 class="top-bar-title">{title}</h2>
-              {isGuest && (
-                <div class="top-bar-badge" style="background-color: #e2e8f0; color: #334155; border: 1px solid #cbd5e1;">
-                  Mode Tamu (Akses Publik)
-                </div>
-              )}
             </header>
 
             <div class="content-body">
