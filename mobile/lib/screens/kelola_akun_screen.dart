@@ -71,10 +71,11 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFDE8E8),
-                        borderRadius: BorderRadius.circular(6),
+                        color: AppColors.dangerBg,
+                        border: Border.all(color: AppColors.dangerBorder),
+                        borderRadius: AppRadius.controlR,
                       ),
-                      child: Text(localError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                      child: Text(localError!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
                     ),
                     const SizedBox(height: 10),
                   ],
@@ -174,7 +175,6 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Card(
-                color: const Color(0xFFEFF6FF),
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Row(
@@ -206,8 +206,12 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
               if (_errorMessage != null && !_isLoading)
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: const Color(0xFFFDE8E8), borderRadius: BorderRadius.circular(10)),
-                  child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  decoration: BoxDecoration(
+                    color: AppColors.dangerBg,
+                    border: Border.all(color: AppColors.dangerBorder),
+                    borderRadius: AppRadius.controlR,
+                  ),
+                  child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
                 ),
 
               const Text('Daftar Akun Operasional', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -248,13 +252,18 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: AppColors.badgeBlueBg,
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                border: Border.all(color: AppColors.border),
+                borderRadius: AppRadius.controlR,
+              ),
               child: Icon(
                 user.peran == 'Admin'
-                    ? Icons.shield
-                    : (user.peran == 'Pengelola' ? Icons.manage_accounts : Icons.edit_document),
+                    ? Icons.shield_outlined
+                    : (user.peran == 'Pengelola' ? Icons.manage_accounts_outlined : Icons.edit_document),
                 color: AppColors.primary,
               ),
             ),
@@ -271,10 +280,19 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(4),
+                      color: AppColors.surfaceVariant,
+                      border: Border.all(color: AppColors.border),
+                      borderRadius: AppRadius.tagR,
                     ),
-                    child: Text('Peran: ${user.peran}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                    child: Text(
+                      user.peran.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.55,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                   if (user.tanggalKataSandiDiubah != null) ...[
                     const SizedBox(height: 4),

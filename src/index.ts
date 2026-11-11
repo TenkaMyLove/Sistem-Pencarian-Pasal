@@ -52,10 +52,10 @@ app.notFound((c) => {
         <link rel="icon" type="image/png" href="/images/logo.png">
       </head>
       <body style="display:flex; align-items:center; justify-content:center; min-height:100vh;">
-        <div class="empty-state">
+        <div class="panel empty-state" style="max-width:480px;">
           <h3>404 - Halaman Tidak Ditemukan</h3>
           <p>Halaman yang Anda cari tidak tersedia pada sistem P3H Kemenkum Kalsel.</p>
-          <a href="/pencarian" class="btn-search" style="display:inline-flex; text-decoration:none; margin-top:1rem;">Kembali ke Utama</a>
+          <a href="/pencarian" class="btn btn-primary" style="margin-top:1rem;">Kembali ke Utama</a>
         </div>
       </body>
     </html>

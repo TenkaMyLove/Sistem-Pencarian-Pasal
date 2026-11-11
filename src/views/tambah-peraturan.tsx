@@ -31,131 +31,118 @@ interface TambahPeraturanViewProps {
   error?: string;
 }
 
+const ALERT_ICON = 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+const OK_ICON = 'M5 13l4 4L19 7';
+
+function Icon({ d, size = 18 }: { d: string; size?: number }) {
+  return (
+    <svg width={size} height={size} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={d}></path>
+    </svg>
+  );
+}
+
 export function TambahPeraturanView({ user, result, formValues, error }: TambahPeraturanViewProps) {
   const v = formValues || {};
 
   return (
-    <Layout title="Tambah Peraturan Manual" activeNav="tambah-peraturan" user={user}>
-      <div style="max-width: 860px; margin: 0 auto;">
-
-        <div class="search-hero" style="margin-bottom: 2rem; padding: 1.75rem 2rem;">
-          <h2 style="margin-bottom: 0.4rem;">Tambah Peraturan via URL</h2>
+    <Layout title="Tambah Peraturan" activeNav="tambah-peraturan" user={user}>
+      <div class="page-head">
+        <div>
+          <h2>Tambah Peraturan via Tautan</h2>
+          <p>Indeks peraturan dan pasal baru dari tautan resmi portal hukum, atau lengkapi dengan teks manual.</p>
         </div>
+      </div>
 
-        {/* Error global */}
-        {error && (
-          <div class="alert alert-danger" style="margin-bottom: 1.5rem;">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
+      {error && (
+        <div class="alert alert-danger" role="alert">
+          <Icon d={ALERT_ICON} size={20} />
+          <span>{error}</span>
+        </div>
+      )}
 
-        {/* Hasil crawl */}
-        {result && (
-          <div class={result.ok ? 'alert alert-success' : 'alert alert-danger'} style="margin-bottom: 1.5rem; flex-direction: column; align-items: flex-start; gap: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem;">
-              {result.ok ? (
-                <>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  Peraturan berhasil ditambahkan!
-                </>
-              ) : (
-                <>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Gagal menyimpan: {result.error}
-                </>
-              )}
-            </div>
-            {result.ok && (
-              <div style="font-size: 0.875rem; line-height: 1.6;">
-                <div><strong>Judul:</strong> {result.judul}</div>
-                <div>
-                  <strong>Status Tautan:</strong>{' '}
-                  <span class={result.status_tautan === 'normal' ? 'badge badge-sektor' : 'badge badge-status-dicabut'}>
-                    {result.status_tautan === 'normal' ? 'Tautan Valid (HTTP 200)' : 'Tautan Bermasalah'}
-                  </span>
-                </div>
-                <div><strong>Pasal Ditemukan:</strong> {result.pasal_count} pasal</div>
+      {result && (
+        <div class={result.ok ? 'alert alert-success' : 'alert alert-danger'} role="status">
+          <Icon d={result.ok ? OK_ICON : ALERT_ICON} size={20} />
+          <div class="alert-body" style="flex: 1;">
+            {result.ok ? (
+              <>
+                <span class="alert-title">Peraturan berhasil ditambahkan</span>
+                <dl class="kv">
+                  <dt>Judul</dt>
+                  <dd>{result.judul}</dd>
+                  <dt>Status Tautan</dt>
+                  <dd>
+                    <span class={result.status_tautan === 'normal' ? 'tag tag-berlaku' : 'tag tag-dicabut'}>
+                      {result.status_tautan === 'normal' ? 'Tautan Valid (HTTP 200)' : 'Tautan Bermasalah'}
+                    </span>
+                  </dd>
+                  <dt>Pasal Ditemukan</dt>
+                  <dd>{result.pasal_count} pasal</dd>
+                </dl>
                 {result.pasal_count === 0 && (
-                  <div style="color: #92400e; margin-top: 0.25rem;">
-                    ⚠ Tidak ada pasal yang berhasil di-parse. Coba tempel teks isi peraturan di kolom "Teks Isi Peraturan" lalu tambahkan ulang.
-                  </div>
+                  <span>
+                    Tidak ada pasal yang berhasil diekstrak. Tempel teks isi peraturan pada kolom Teks Isi Peraturan, lalu tambahkan ulang.
+                  </span>
                 )}
                 {result.peraturan_id && (
                   <div style="margin-top: 0.5rem;">
-                    <a href={`/pencarian?q=${encodeURIComponent(result.judul.substring(0, 40))}`}
-                      class="btn-action btn-primary"
-                      style="display: inline-flex; text-decoration: none; padding: 0.4rem 0.9rem; font-size: 0.85rem; margin-top: 0.25rem;">
+                    <a
+                      href={`/pencarian?q=${encodeURIComponent(result.judul.substring(0, 40))}`}
+                      class="btn btn-sm btn-primary"
+                    >
                       Cari di Pencarian Pasal
                     </a>
                   </div>
                 )}
-              </div>
+              </>
+            ) : (
+              <span class="alert-title">Gagal menyimpan: {result.error}</span>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Form */}
-        <div class="result-card" style="padding: 2rem;">
-          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-navy); margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-            Form Tambah Peraturan
-          </h3>
+      <div class="split">
+        <form class="panel" action="/tambah-peraturan" method="post">
+          <div class="panel-head">
+            <h3>Metadata Peraturan</h3>
+          </div>
 
-          <form action="/tambah-peraturan" method="post">
-
-            {/* URL */}
-            <div class="form-group">
-              <label for="url">
-                URL Peraturan <span style="color: var(--danger-color);">*</span>
-              </label>
+          <div class="panel-pad">
+            <div class="field">
+              <label for="url">URL Peraturan <span class="req">*</span></label>
               <input
                 type="url"
                 id="url"
                 name="url"
-                class="form-control"
+                class="input"
                 value={v.url || ''}
                 placeholder="https://peraturan.bpk.go.id/Details/12345/..."
                 required
               />
             </div>
 
-            {/* Jenis & Nomor & Tahun */}
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-              <div class="form-group">
-                <label for="jenis_peraturan">Jenis Peraturan <span style="color: var(--danger-color);">*</span></label>
-                <select id="jenis_peraturan" name="jenis_peraturan" class="form-control" required>
+            <div class="grid-3">
+              <div class="field">
+                <label for="jenis_peraturan">Jenis Peraturan <span class="req">*</span></label>
+                <select id="jenis_peraturan" name="jenis_peraturan" class="select" required>
                   {JENIS_OPTIONS.map(j => (
                     <option value={j} selected={v.jenis_peraturan === j}>{j}</option>
                   ))}
                 </select>
               </div>
-              <div class="form-group">
-                <label for="nomor">Nomor <span style="color: var(--danger-color);">*</span></label>
-                <input
-                  type="text"
-                  id="nomor"
-                  name="nomor"
-                  class="form-control"
-                  value={v.nomor || ''}
-                  placeholder="Contoh: 23"
-                  required
-                />
+              <div class="field">
+                <label for="nomor">Nomor <span class="req">*</span></label>
+                <input type="text" id="nomor" name="nomor" class="input" value={v.nomor || ''} placeholder="23" required />
               </div>
-              <div class="form-group">
-                <label for="tahun">Tahun <span style="color: var(--danger-color);">*</span></label>
+              <div class="field">
+                <label for="tahun">Tahun <span class="req">*</span></label>
                 <input
                   type="number"
                   id="tahun"
                   name="tahun"
-                  class="form-control"
+                  class="input"
                   value={v.tahun || String(new Date().getFullYear())}
                   min="1900"
                   max={String(new Date().getFullYear() + 1)}
@@ -164,32 +151,30 @@ export function TambahPeraturanView({ user, result, formValues, error }: TambahP
               </div>
             </div>
 
-            {/* Judul */}
-            <div class="form-group">
-              <label for="judul">Judul Peraturan</label>
+            <div class="field">
+              <label for="judul">Judul Peraturan <span class="label-hint">(opsional)</span></label>
               <input
                 type="text"
                 id="judul"
                 name="judul"
-                class="form-control"
+                class="input"
                 value={v.judul || ''}
-                placeholder="Opsional — akan diambil otomatis dari halaman jika dikosongkan"
+                placeholder="Diambil dari halaman sumber jika dikosongkan"
               />
             </div>
 
-            {/* Wilayah & Sektor */}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group">
-                <label for="wilayah">Wilayah <span style="color: var(--danger-color);">*</span></label>
-                <select id="wilayah" name="wilayah" class="form-control" required>
+            <div class="grid-2">
+              <div class="field">
+                <label for="wilayah">Wilayah <span class="req">*</span></label>
+                <select id="wilayah" name="wilayah" class="select" required>
                   {WILAYAH_OPTIONS.map(w => (
                     <option value={w} selected={v.wilayah === w || (!v.wilayah && w === 'Nasional')}>{w}</option>
                   ))}
                 </select>
               </div>
-              <div class="form-group">
-                <label for="sektor">Sektor <span style="color: var(--danger-color);">*</span></label>
-                <select id="sektor" name="sektor" class="form-control" required>
+              <div class="field">
+                <label for="sektor">Sektor <span class="req">*</span></label>
+                <select id="sektor" name="sektor" class="select" required>
                   {SEKTOR_OPTIONS.map(s => (
                     <option value={s} selected={v.sektor === s}>{s}</option>
                   ))}
@@ -197,37 +182,40 @@ export function TambahPeraturanView({ user, result, formValues, error }: TambahP
               </div>
             </div>
 
-            {/* Teks Pasal Manual */}
-            <div class="form-group" style="margin-top: 1rem;">
-              <label for="teks_pasal_manual">
-                Teks Isi Peraturan{' '}
-                <span style="color: var(--text-muted); font-weight: 400;">(Opsional — untuk ekstraksi pasal otomatis)</span>
-              </label>
+            <div class="field">
+              <label for="teks_pasal_manual">Teks Isi Peraturan <span class="label-hint">(opsional)</span></label>
               <textarea
                 id="teks_pasal_manual"
                 name="teks_pasal_manual"
-                class="form-control"
+                class="textarea textarea-mono"
                 rows={10}
-                placeholder={"Tempel teks lengkap isi peraturan di sini.\nSistem akan mendeteksi baris 'Pasal N' dan mengekstrak isinya secara otomatis.\nBiarkan kosong jika URL sudah dapat di-parse otomatis (halaman HTML biasa)."}
-                style="font-family: monospace; font-size: 0.85rem; resize: vertical;"
+                placeholder={"Tempel teks lengkap peraturan.\nBaris 'Pasal N' akan dideteksi dan diekstrak otomatis."}
               />
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
-              <a href="/pencarian" class="btn-action" style="background-color: #f1f5f9; color: var(--text-main); text-decoration: none; display: inline-flex; align-items: center;">
-                Batal
-              </a>
-              <button type="submit" class="btn-search" style="gap: 0.5rem;">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                </svg>
-                 Tambahkan
+            <div class="form-actions">
+              <a href="/pencarian" class="btn">Batal</a>
+              <button type="submit" class="btn btn-primary">
+                <Icon d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                Tambahkan
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
 
+        <aside class="panel">
+          <div class="panel-head">
+            <h3>Ketentuan Pengisian</h3>
+          </div>
+          <div class="panel-pad">
+            <ul class="hint-list">
+              <li>Gunakan tautan resmi JDIH BPK atau JDIH pemerintah daerah.</li>
+              <li>Metadata dan relasi status diekstrak otomatis dari halaman JDIH BPK.</li>
+              <li>Isi teks manual jika halaman sumber tidak dapat diurai otomatis, misalnya berkas PDF.</li>
+              <li>Peraturan tanpa pasal tetap muncul di pencarian dengan tautan dokumen asli.</li>
+            </ul>
+          </div>
+        </aside>
       </div>
     </Layout>
   );

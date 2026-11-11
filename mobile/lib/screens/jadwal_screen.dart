@@ -57,7 +57,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Hapus'),
           ),
@@ -77,7 +77,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: AppColors.danger),
           );
         }
       }
@@ -124,7 +124,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                            const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
                             const SizedBox(height: 12),
                             Text(_errorMessage!, textAlign: TextAlign.center),
                             const SizedBox(height: 16),
@@ -146,7 +146,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.event_busy, size: 56, color: Colors.grey.shade400),
+                                      const Icon(Icons.event_busy, size: 48, color: AppColors.textMuted),
                                       const SizedBox(height: 12),
                                       const Text(
                                         'Belum ada jadwal rapat harmonisasi',
@@ -196,18 +196,16 @@ class _JadwalScreenState extends State<JadwalScreen> {
       selected: isSelected,
       onSelected: (_) => setState(() => _selectedTab = label),
       selectedColor: AppColors.primary,
+      showCheckmark: false,
       labelStyle: TextStyle(
         color: isSelected ? Colors.white : AppColors.textPrimary,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontWeight: FontWeight.w600,
         fontSize: 12,
       ),
     );
   }
 
   Widget _buildCard(JadwalItem item, bool canWrite) {
-    final isRanperda = item.jenisRancangan.toLowerCase().contains('perda') &&
-        !item.jenisRancangan.toLowerCase().contains('perkada');
-
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -220,17 +218,19 @@ class _JadwalScreenState extends State<JadwalScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
                   decoration: BoxDecoration(
-                    color: isRanperda ? const Color(0xFFE0E7FF) : const Color(0xFFEDE9FE),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.surfaceVariant,
+                    border: Border.all(color: AppColors.borderStrong),
+                    borderRadius: AppRadius.tagR,
                   ),
                   child: Text(
-                    item.jenisRancangan,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    item.jenisRancangan.toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.55,
                       fontSize: 11,
-                      color: isRanperda ? const Color(0xFF3730A3) : const Color(0xFF6B21A8),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -239,7 +239,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blueGrey),
+                        icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
                         tooltip: 'Ubah Jadwal',
                         onPressed: () async {
                           final res = await JadwalFormDialog.show(context, editItem: item);
@@ -247,7 +247,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                        icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
                         tooltip: 'Hapus Jadwal',
                         onPressed: () => _deleteItem(item),
                       ),
@@ -279,11 +279,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.access_time, size: 14, color: AppColors.accent),
+                const Icon(Icons.access_time, size: 14, color: AppColors.primary),
                 const SizedBox(width: 6),
                 Text(
                   item.jam,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accent),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
                 ),
               ],
             ),

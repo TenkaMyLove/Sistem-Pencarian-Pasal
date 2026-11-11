@@ -104,19 +104,20 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           if (!isTamu)
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              margin: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.accent),
+                borderRadius: AppRadius.tagR,
               ),
               child: Center(
                 child: Text(
-                  user?.displayName ?? '',
+                  (user?.displayName ?? '').toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.55,
                   ),
                 ),
               ),
@@ -133,13 +134,15 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: screens,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
-        destinations: navItems,
-        backgroundColor: Colors.white,
-        elevation: 8,
-        indicatorColor: AppColors.badgeBlueBg,
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
+        child: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
+          destinations: navItems,
+        ),
       ),
     );
   }

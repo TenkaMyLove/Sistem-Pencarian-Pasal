@@ -45,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Keluar'),
           ),
@@ -80,26 +80,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: AppColors.primary,
+                    Container(
+                      width: 72,
+                      height: 72,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: AppRadius.containerR,
+                      ),
                       child: Text(
                         (user?.displayName.isNotEmpty == true ? user!.displayName[0].toUpperCase() : 'T'),
-                        style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.w700),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       user?.displayName ?? 'Tamu',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      user?.roleSubtitle ?? 'Akses Publik',
+                      (user?.roleSubtitle ?? 'Akses Publik').toUpperCase(),
                       style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.accent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.55,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -125,24 +131,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: _isOnline ? const Color(0xFFDEF7EC) : const Color(0xFFFDE8E8),
-                            borderRadius: BorderRadius.circular(6),
+                            color: _isOnline ? AppColors.statusBerlakuBg : AppColors.dangerBg,
+                            border: Border.all(
+                              color: _isOnline ? AppColors.statusBerlakuBorder : AppColors.dangerBorder,
+                            ),
+                            borderRadius: AppRadius.tagR,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _isOnline ? Icons.check_circle : Icons.error,
+                                _isOnline ? Icons.check_circle_outline : Icons.error_outline,
                                 size: 12,
-                                color: _isOnline ? Colors.green : Colors.red,
+                                color: _isOnline ? AppColors.statusBerlakuText : AppColors.danger,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                _healthStatus,
+                                _healthStatus.toUpperCase(),
                                 style: TextStyle(
                                   fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isOnline ? const Color(0xFF03543F) : const Color(0xFF9B1C1C),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.55,
+                                  color: _isOnline ? AppColors.statusBerlakuText : AppColors.danger,
                                 ),
                               ),
                             ],
@@ -201,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isTamu ? AppColors.primary : Colors.red.shade700,
+                  backgroundColor: isTamu ? AppColors.primary : AppColors.danger,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 icon: Icon(isTamu ? Icons.login : Icons.logout),
@@ -222,8 +232,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Row(
         children: [
           Icon(
-            granted ? Icons.check_circle : Icons.cancel,
-            color: granted ? Colors.green : Colors.grey.shade400,
+            granted ? Icons.check_circle_outline : Icons.remove_circle_outline,
+            color: granted ? AppColors.statusBerlakuText : AppColors.textMuted,
             size: 18,
           ),
           const SizedBox(width: 8),

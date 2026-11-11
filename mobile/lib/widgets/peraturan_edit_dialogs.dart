@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../utils/constants.dart';
 
 const List<String> kJenisPeraturanOptions = [
   'UU',
@@ -131,12 +132,13 @@ Future<bool> showEditPeraturanDialog(
                           padding: const EdgeInsets.all(10),
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFDE8E8),
-                            borderRadius: BorderRadius.circular(8),
+                            color: AppColors.dangerBg,
+                            border: Border.all(color: AppColors.dangerBorder),
+                            borderRadius: AppRadius.controlR,
                           ),
                           child: Text(
                             errorMsg!,
-                            style: const TextStyle(color: Color(0xFF9B1C1C), fontSize: 12),
+                            style: const TextStyle(color: AppColors.danger, fontSize: 12),
                           ),
                         ),
                       ],
@@ -346,12 +348,13 @@ Future<bool> showEditPasalDialog(
                           padding: const EdgeInsets.all(10),
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFDE8E8),
-                            borderRadius: BorderRadius.circular(8),
+                            color: AppColors.dangerBg,
+                            border: Border.all(color: AppColors.dangerBorder),
+                            borderRadius: AppRadius.controlR,
                           ),
                           child: Text(
                             errorMsg!,
-                            style: const TextStyle(color: Color(0xFF9B1C1C), fontSize: 12),
+                            style: const TextStyle(color: AppColors.danger, fontSize: 12),
                           ),
                         ),
                       ],
@@ -459,7 +462,7 @@ Future<bool> _confirmDeleteDialog({
                 Text(message),
                 if (errorMsg != null) ...[
                   const SizedBox(height: 12),
-                  Text(errorMsg!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                  Text(errorMsg!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
                 ],
               ],
             ),
@@ -469,7 +472,7 @@ Future<bool> _confirmDeleteDialog({
                 child: const Text('Batal'),
               ),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
                 onPressed: isDeleting
                     ? null
                     : () async {

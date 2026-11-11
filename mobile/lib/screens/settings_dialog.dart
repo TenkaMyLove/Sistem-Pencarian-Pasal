@@ -60,7 +60,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Alamat server berhasil disimpan.'),
-          backgroundColor: Colors.green,
         ),
       );
       Navigator.of(context).pop();
@@ -141,14 +140,17 @@ class _SettingsDialogState extends State<SettingsDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _testSuccess ? const Color(0xFFDEF7EC) : const Color(0xFFFDE8E8),
-                  borderRadius: BorderRadius.circular(8),
+                  color: _testSuccess ? AppColors.statusBerlakuBg : AppColors.dangerBg,
+                  border: Border.all(
+                    color: _testSuccess ? AppColors.statusBerlakuBorder : AppColors.dangerBorder,
+                  ),
+                  borderRadius: AppRadius.controlR,
                 ),
                 child: Row(
                   children: [
                     Icon(
-                      _testSuccess ? Icons.check_circle : Icons.error,
-                      color: _testSuccess ? Colors.green : Colors.red,
+                      _testSuccess ? Icons.check_circle_outline : Icons.error_outline,
+                      color: _testSuccess ? AppColors.statusBerlakuText : AppColors.danger,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
@@ -157,7 +159,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                         _testResult!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: _testSuccess ? const Color(0xFF03543F) : const Color(0xFF9B1C1C),
+                          color: _testSuccess ? AppColors.statusBerlakuText : AppColors.danger,
                         ),
                       ),
                     ),

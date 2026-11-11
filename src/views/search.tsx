@@ -48,86 +48,103 @@ interface SearchViewProps {
   wilayahList: string[];
 }
 
-// Pasal row shape used for edit modal
-interface PasalRow {
-  id: number;
-  nomor_pasal: string;
-  nomor_ayat: string;
-  teks_pasal: string;
-  peraturan_id: number;
+// Ikon inline (stroke 2) agar tidak bergantung pada font/CDN eksternal
+const ICON = {
+  search: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+  edit: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+  pencil: 'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z',
+  trash: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+  external: 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14',
+  close: 'M6 18L18 6M6 6l12 12',
+  check: 'M5 13l4 4L19 7',
+  list: 'M4 6h16M4 12h16M4 18h7',
+};
+
+function Icon({ d, size = 16 }: { d: string; size?: number }) {
+  return (
+    <svg width={size} height={size} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={d}></path>
+    </svg>
+  );
 }
 
 export function SearchView({ user, initialQuery = '', searchData, sektorList, wilayahList }: SearchViewProps) {
   return (
     <Layout title="Pencarian Pasal Peraturan" activeNav="pencarian" user={user}>
-      {/* Search Hero Box */}
-      <div class="search-hero">
-        <h2>Pencarian Pasal untuk Harmonisasi Ranperda</h2>
-        <p>Cari pasal-pasal rujukan dari Undang-Undang, Peraturan Pemerintah, Permen 9 Sektor, dan Perda/Perkada se-Kalsel.</p>
-
+      <div class="panel filter-panel">
         <form
           hx-get="/search-results"
           hx-target="#results-container"
           hx-trigger="submit"
           hx-indicator="#loading-indicator"
         >
-          <div class="search-box">
-            <input
-              type="text"
-              name="q"
-              value={initialQuery}
-              class="search-input"
-              placeholder="Ketik kata kunci pasal (contoh: tata ruang, keuangan daerah, sampah, pajak)..."
-              hx-get="/search-results"
-              hx-target="#results-container"
-              hx-trigger="keyup changed delay:350ms"
-              hx-include="[name='sektor'], [name='wilayah']"
-              hx-indicator="#loading-indicator"
-              autofocus
-            />
-            <button type="submit" class="btn-search">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
+          <div class="filter-row">
+            <div class="search-field">
+              <Icon d={ICON.search} size={20} />
+              <input
+                type="text"
+                name="q"
+                value={initialQuery}
+                class="input"
+                aria-label="Kata kunci pencarian"
+                placeholder="Nomor Undang-Undang atau Kata Kunci"
+                hx-get="/search-results"
+                hx-target="#results-container"
+                hx-trigger="keyup changed delay:350ms"
+                hx-include="[name='sektor'], [name='wilayah']"
+                hx-indicator="#loading-indicator"
+                autofocus
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <Icon d={ICON.search} size={18} />
               Cari Pasal
             </button>
           </div>
 
-          <div class="filter-bar">
-            <select
-              name="sektor"
-              class="filter-select"
-              hx-get="/search-results"
-              hx-target="#results-container"
-              hx-trigger="change"
-              hx-include="[name='q'], [name='wilayah']"
-              hx-indicator="#loading-indicator"
-            >
-              <option value="">-- Semua Sektor (9 Sektor) --</option>
-              {sektorList.map((s) => (
-                <option value={s}>{s}</option>
-              ))}
-            </select>
+          <div class="filter-grid">
+            <div class="field">
+              <label for="filter-sektor">Sektor Regulasi</label>
+              <select
+                id="filter-sektor"
+                name="sektor"
+                class="select"
+                hx-get="/search-results"
+                hx-target="#results-container"
+                hx-trigger="change"
+                hx-include="[name='q'], [name='wilayah']"
+                hx-indicator="#loading-indicator"
+              >
+                <option value="">Semua Sektor</option>
+                {sektorList.map((s) => (
+                  <option value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
 
-            <select
-              name="wilayah"
-              class="filter-select"
-              hx-get="/search-results"
-              hx-target="#results-container"
-              hx-trigger="change"
-              hx-include="[name='q'], [name='sektor']"
-              hx-indicator="#loading-indicator"
-            >
-              <option value="">-- Semua Wilayah (Nasional &amp; Kalsel) --</option>
-              {wilayahList.map((w) => (
-                <option value={w}>{w}</option>
-              ))}
-            </select>
-
-            <span id="loading-indicator" class="htmx-indicator" style="color: var(--gold-light); font-size: 0.85rem; display: none; align-self: center;">
-              Memuat hasil pencarian...
-            </span>
+            <div class="field">
+              <label for="filter-wilayah">Wilayah Kewenangan</label>
+              <select
+                id="filter-wilayah"
+                name="wilayah"
+                class="select"
+                hx-get="/search-results"
+                hx-target="#results-container"
+                hx-trigger="change"
+                hx-include="[name='q'], [name='sektor']"
+                hx-indicator="#loading-indicator"
+              >
+                <option value="">Semua Wilayah</option>
+                {wilayahList.map((w) => (
+                  <option value={w}>{w}</option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          <span id="loading-indicator" class="htmx-indicator loading-text">
+            Memuat hasil pencarian...
+          </span>
         </form>
       </div>
 
@@ -148,6 +165,39 @@ export function SearchView({ user, initialQuery = '', searchData, sektorList, wi
   );
 }
 
+// Relasi hukum yang ditampilkan sebagai penanda ringkas pada baris hasil
+const RELASI_TAG_MAP: Record<string, { label: string; cls: string }> = {
+  mencabut: { label: 'Mencabut', cls: 'tag-dicabut' },
+  mencabut_sebagian: { label: 'Mencabut Sebagian', cls: 'tag-dicabut' },
+  mengubah: { label: 'Mengubah', cls: 'tag-ubah' },
+  dicabut_dengan: { label: 'Dicabut', cls: 'tag-dicabut' },
+  dicabut_sebagian_dengan: { label: 'Dicabut Sebagian', cls: 'tag-dicabut' },
+  diubah_dengan: { label: 'Diubah', cls: 'tag-ubah' },
+};
+
+function parseStatusJson(raw: any): Record<string, any[]> {
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) || {};
+    } catch {
+      return {};
+    }
+  }
+  return raw || {};
+}
+
+// Daftar nomor halaman ringkas: 1 ... n-1 n n+1 ... last
+function pageWindow(current: number, total: number): (number | null)[] {
+  const set = new Set<number>([1, total, current - 1, current, current + 1]);
+  const nums = [...set].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const out: (number | null)[] = [];
+  nums.forEach((n, i) => {
+    if (i > 0 && n - nums[i - 1] > 1) out.push(null);
+    out.push(n);
+  });
+  return out;
+}
+
 export function SearchResultsPartial({
   query = '',
   sektor = '',
@@ -166,11 +216,9 @@ export function SearchResultsPartial({
 
   if (!items || items.length === 0) {
     return (
-      <div class="empty-state">
-        <h3>Tidak ditemukan pasal yang cocok dengan kata kunci tersebut</h3>
-        <p>
-          Saran: Coba gunakan kata kunci yang lebih umum, periksa ejaan, atau atur kembali filter sektor dan wilayah Anda.
-        </p>
+      <div class="panel empty-state">
+        <h3>Tidak ditemukan pasal yang sesuai dengan kata kunci</h3>
+        <p>Gunakan kata kunci yang lebih umum, periksa ejaan, atau atur kembali filter sektor dan wilayah.</p>
       </div>
     );
   }
@@ -208,238 +256,206 @@ export function SearchResultsPartial({
     });
   };
 
-  const pages: number[] = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pages.push(i);
-  }
+  const pageUrl = (p: number) =>
+    `/search-results?q=${encodeURIComponent(query)}&sektor=${encodeURIComponent(sektor)}&wilayah=${encodeURIComponent(wilayah)}&page=${p}`;
 
   return (
-    <div class="search-results-wrapper">
+    <div class="panel">
       <input type="hidden" name="active_page" value={String(currentPage)} />
-      <div class="results-header">
-        <span class="results-count">
-          Menampilkan {startItem} - {endItem} dari total {totalCount} pasal rujukan {query ? `untuk kata kunci "${query}"` : ''}
+
+      <div class="results-summary" style="padding: 1rem 1.5rem;">
+        <span>
+          Menampilkan <strong>{startItem} - {endItem}</strong> dari <strong>{totalCount}</strong> pasal rujukan
+          {query ? <> untuk kata kunci <span class="kw-chip">{query}</span></> : ''}
         </span>
       </div>
 
-      {/* Scrollable Container Box for Cards */}
-      <div class="results-scroll-container">
-        <div class="results-list">
-          {items.map((item) => (
-            <div class="result-card" id={item.pasal_id ? `card-pasal-${item.pasal_id}` : `card-peraturan-${item.peraturan_id}`}>
-              <div class="result-card-header">
-                <h4 class="result-title">
-                  {item.jenis_peraturan} No. {item.nomor} Tahun {item.tahun}
-                </h4>
+      <div class="results-scroll">
+        {items.map((item) => {
+          const json = parseStatusJson(item.status_detail_json);
+          const relasiTags = Object.entries(RELASI_TAG_MAP)
+            .filter(([key]) => Array.isArray(json[key]) && json[key].length > 0)
+            .map(([key, { label, cls }]) => (
+              <span class={`tag ${cls}`} title={`${label}: ${json[key].length} peraturan`}>
+                {label} ({json[key].length})
+              </span>
+            ));
+          const hasKeterangan = relasiTags.length === 0 && item.status_detail && item.status_detail.trim();
+          const statusCls =
+            item.status === 'berlaku' ? 'tag-berlaku' : item.status === 'diubah' ? 'tag-ubah' : 'tag-dicabut';
 
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-                  <span class={`badge ${item.status === 'berlaku' ? 'badge-status-berlaku' : item.status === 'diubah' ? 'badge-rel-diubah' : 'badge-status-dicabut'}`}>
-                    {item.status.toUpperCase()}
+          return (
+            <article
+              class="result-row"
+              id={item.pasal_id ? `card-pasal-${item.pasal_id}` : `card-peraturan-${item.peraturan_id}`}
+            >
+              <div class="meta-line">
+                <span class={`tag ${statusCls}`}>{item.status}</span>
+                {relasiTags}
+                {hasKeterangan && (
+                  <span class="tag tag-neutral" title={item.status_detail}>Ada Keterangan</span>
+                )}
+                {item.sektor && <span>Sektor: {item.sektor}</span>}
+                {item.sektor && <span class="meta-sep">/</span>}
+                <span>Wilayah: {item.wilayah}</span>
+                <span class="meta-sep">/</span>
+                {item.status_tautan === 'tautan_bermasalah' ? (
+                  <span class="meta-bad" title="Tautan dokumen asli di situs sumber mengalami kendala HTTP 404/Error">
+                    Tautan Bermasalah
                   </span>
+                ) : (
+                  <span class="meta-ok">Tautan Aktif</span>
+                )}
+              </div>
 
-                  {(() => {
-                    const json: Record<string, any[]> = typeof item.status_detail_json === 'string'
-                      ? (() => { try { return JSON.parse(item.status_detail_json); } catch { return {}; } })()
-                      : (item.status_detail_json || {});
+              <h4 class="result-title">
+                {item.jenis_peraturan} Nomor {item.nomor} Tahun {item.tahun}
+              </h4>
+              <p class="result-sub">{item.judul}</p>
 
-                    const relasiBadgeMap: Record<string, { label: string; cls: string }> = {
-                      mencabut:             { label: 'Mencabut',          cls: 'badge-rel-mencabut' },
-                      mencabut_sebagian:    { label: 'Mencabut Sebagian', cls: 'badge-rel-mencabut' },
-                      mengubah:             { label: 'Mengubah',          cls: 'badge-rel-mengubah' },
-                      dicabut_dengan:       { label: 'Dicabut',           cls: 'badge-rel-dicabut' },
-                      dicabut_sebagian_dengan: { label: 'Dicabut Sebagian', cls: 'badge-rel-dicabut' },
-                      diubah_dengan:        { label: 'Diubah',            cls: 'badge-rel-diubah' },
-                    };
-
-                    const relasiBadges = Object.entries(relasiBadgeMap)
-                      .filter(([key]) => Array.isArray(json[key]) && json[key].length > 0)
-                      .map(([key, { label, cls }]) => (
-                        <span
-                          class={`badge ${cls}`}
-                          title={`${label}: ${json[key].length} peraturan`}
-                        >
-                          {label} ({json[key].length})
-                        </span>
-                      ));
-
-                    // Fallback: jika JSON kosong tapi ada teks status_detail
-                    if (relasiBadges.length === 0 && item.status_detail && item.status_detail.trim()) {
-                      return (
-                        <span
-                          class="badge badge-rel-keterangan"
-                          title={item.status_detail}
-                        >
-                          Ada Keterangan
-                        </span>
-                      );
-                    }
-
-                    return relasiBadges;
-                  })()}
-
-                  {item.status_tautan === 'tautan_bermasalah' ? (
-                    <span class="badge badge-tautan-bermasalah" title="Tautan dokumen asli di situs sumber mengalami kendala HTTP 404/Error">
-                      Tautan Bermasalah
-                    </span>
-                  ) : (
-                    <span class="badge badge-tautan-normal">
-                      Tautan Aktif
-                    </span>
-                  )}
+              {item.pasal_id ? (
+                <div class="quote">
+                  <div class="quote-label">
+                    {item.nomor_pasal} {item.nomor_ayat ? item.nomor_ayat : ''}
+                  </div>
+                  <div class="quote-text">{highlightText(item.teks_pasal, query)}</div>
                 </div>
-              </div>
-
-              <p style="font-size: 0.95rem; color: var(--text-main); font-weight: 600; margin-top: 0.4rem; margin-bottom: 0.95rem; line-height: 1.65; letter-spacing: 0.2px;">
-                {item.judul}
-              </p>
-
-              <div class="result-meta">
-                <span class="badge badge-jenis">{item.jenis_peraturan}</span>
-                {item.sektor && <span class="badge badge-sektor">Sektor: {item.sektor}</span>}
-                <span class="badge badge-wilayah">Wilayah: {item.wilayah}</span>
-                <span class="badge" style="background-color: #f1f5f9; color: var(--text-main); font-weight: 700;">
-                  {item.nomor_pasal} {item.nomor_ayat ? item.nomor_ayat : ''}
-                </span>
-              </div>
-
-              <div class="result-snippet">
-                <strong>Kutipan Pasal:</strong>
-                <div style="margin-top: 0.4rem;">
-                  {highlightText(item.teks_pasal, query)}
+              ) : (
+                <div class="note-box">
+                  <strong>Dokumen Peraturan Terindeks</strong>
+                  Peraturan ini belum memiliki entri pasal. Naskah utuh dapat ditelaah melalui dokumen resmi.
                 </div>
-              </div>
+              )}
 
-              <div class="result-actions" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-                <button
-                  type="button"
-                  class="btn-edit"
-                  style="padding: 0.45rem 0.85rem; font-size: 0.825rem; font-weight: 600; background-color: #fff; color: var(--primary-navy); border: 1px solid var(--primary-navy); cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease;"
-                  hx-get={`/pencarian/status-modal/${item.peraturan_id}`}
-                  hx-target="#modal-container"
-                >
-                  Lihat Detil Status Peraturan &raquo;
-                </button>
+              <div class="row-actions">
+                <div class="row-actions-group">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline"
+                    hx-get={`/pencarian/status-modal/${item.peraturan_id}`}
+                    hx-target="#modal-container"
+                  >
+                    <Icon d={ICON.list} />
+                    Lihat Detil Status
+                  </button>
 
-                <div style="display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap;">
                   {isPengelola && (
                     <>
                       <button
                         type="button"
-                        style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                        class="btn btn-sm"
                         hx-get={`/pencarian/edit-peraturan-modal/${item.peraturan_id}`}
                         hx-target="#modal-container"
                         title="Edit data peraturan ini"
                       >
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
+                        <Icon d={ICON.edit} />
                         Edit Peraturan
                       </button>
+
+                      {item.pasal_id && (
+                        <button
+                          type="button"
+                          class="btn btn-sm"
+                          hx-get={`/pencarian/edit-pasal-modal/${item.pasal_id}`}
+                          hx-target="#modal-container"
+                          title="Edit teks pasal ini"
+                        >
+                          <Icon d={ICON.pencil} />
+                          Edit Pasal
+                        </button>
+                      )}
+
                       <button
                         type="button"
-                        style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                        class="btn btn-sm btn-danger-outline"
                         hx-post={`/pencarian/hapus-peraturan/${item.peraturan_id}`}
                         hx-swap="none"
                         hx-confirm={`Hapus peraturan ${item.jenis_peraturan} No. ${item.nomor} Tahun ${item.tahun} beserta seluruh pasalnya? Tindakan ini tidak dapat dibatalkan.`}
                         title="Hapus peraturan ini beserta seluruh pasalnya"
                       >
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
+                        <Icon d={ICON.trash} />
                         Hapus Peraturan
                       </button>
 
                       {item.pasal_id && (
-                        <>
-                          <button
-                            type="button"
-                            style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #fff7ed; color: #c2410c; border: 1px solid #fdba74; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
-                            hx-get={`/pencarian/edit-pasal-modal/${item.pasal_id}`}
-                            hx-target="#modal-container"
-                            title="Edit teks pasal ini"
-                          >
-                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                            </svg>
-                            Edit Pasal
-                          </button>
-                          <button
-                            type="button"
-                            style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #fff1f2; color: #be123c; border: 1px solid #fda4af; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
-                            hx-post={`/pencarian/hapus-pasal/${item.pasal_id}`}
-                            hx-swap="none"
-                            hx-confirm={`Hapus ${item.nomor_pasal} dari ${item.jenis_peraturan} No. ${item.nomor} Tahun ${item.tahun}? Tindakan ini tidak dapat dibatalkan.`}
-                            title="Hapus pasal ini dari database"
-                          >
-                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Hapus Pasal
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-danger-outline"
+                          hx-post={`/pencarian/hapus-pasal/${item.pasal_id}`}
+                          hx-swap="none"
+                          hx-confirm={`Hapus ${item.nomor_pasal} dari ${item.jenis_peraturan} No. ${item.nomor} Tahun ${item.tahun}? Tindakan ini tidak dapat dibatalkan.`}
+                          title="Hapus pasal ini dari database"
+                        >
+                          <Icon d={ICON.close} />
+                          Hapus Pasal
+                        </button>
                       )}
                     </>
                   )}
-
-                  <a
-                    href={item.url_dokumen_asli}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn-link-pdf"
-                    title="Buka PDF Asli di Situs Resmi Sumber"
-                  >
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                    </svg>
-                    Lihat Dokumen PDF Asli
-                  </a>
                 </div>
+
+                <a
+                  href={item.url_dokumen_asli}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-sm"
+                  title="Buka dokumen asli di situs resmi sumber"
+                >
+                  <Icon d={ICON.external} />
+                  Dokumen Asli
+                </a>
               </div>
-            </div>
-          ))}
-        </div>
+            </article>
+          );
+        })}
       </div>
 
-      {/* Pinned Numbered Pagination Control Bar */}
       {totalPages > 1 && (
-        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; pt: 1rem; border-top: 1px solid var(--border-color); flex-wrap: wrap;">
-          {/* Previous Page Button */}
-          <button
-            class="btn-action"
-            style={`background-color: #fff; border: 1px solid var(--border-color); color: var(--text-main); opacity: ${currentPage === 1 ? '0.5' : '1'};`}
-            disabled={currentPage === 1}
-            hx-get={`/search-results?q=${encodeURIComponent(query)}&sektor=${encodeURIComponent(sektor)}&wilayah=${encodeURIComponent(wilayah)}&page=${currentPage - 1}`}
-            hx-target="#results-container"
-            hx-indicator="#loading-indicator"
-          >
-            &laquo; Sebelumnya
-          </button>
-
-          {/* Page Numbers */}
-          {pages.map((p) => (
+        <nav class="pager" style="border-top: 1px solid var(--border);" aria-label="Halaman hasil pencarian">
+          <div class="pager-info">
+            Halaman <strong>{currentPage}</strong> dari <strong>{totalPages}</strong>
+          </div>
+          <div class="pager-pages">
             <button
-              class="btn-action"
-              style={p === currentPage ? 'background-color: var(--gold-accent); color: #fff; font-weight: 700;' : 'background-color: #fff; border: 1px solid var(--border-color); color: var(--text-main);'}
-              hx-get={`/search-results?q=${encodeURIComponent(query)}&sektor=${encodeURIComponent(sektor)}&wilayah=${encodeURIComponent(wilayah)}&page=${p}`}
+              type="button"
+              class="pager-btn"
+              disabled={currentPage === 1}
+              hx-get={pageUrl(currentPage - 1)}
               hx-target="#results-container"
               hx-indicator="#loading-indicator"
             >
-              {p}
+              Sebelumnya
             </button>
-          ))}
 
-          {/* Next Page Button */}
-          <button
-            class="btn-action"
-            style={`background-color: #fff; border: 1px solid var(--border-color); color: var(--text-main); opacity: ${currentPage === totalPages ? '0.5' : '1'};`}
-            disabled={currentPage === totalPages}
-            hx-get={`/search-results?q=${encodeURIComponent(query)}&sektor=${encodeURIComponent(sektor)}&wilayah=${encodeURIComponent(wilayah)}&page=${currentPage + 1}`}
-            hx-target="#results-container"
-            hx-indicator="#loading-indicator"
-          >
-            Selanjutnya &raquo;
-          </button>
-        </div>
+            {pageWindow(currentPage, totalPages).map((p) =>
+              p === null ? (
+                <span class="meta-sep" style="padding: 0 0.25rem;">...</span>
+              ) : (
+                <button
+                  type="button"
+                  class={`pager-btn ${p === currentPage ? 'is-current' : ''}`}
+                  aria-current={p === currentPage ? 'page' : undefined}
+                  hx-get={pageUrl(p)}
+                  hx-target="#results-container"
+                  hx-indicator="#loading-indicator"
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            <button
+              type="button"
+              class="pager-btn"
+              disabled={currentPage === totalPages}
+              hx-get={pageUrl(currentPage + 1)}
+              hx-target="#results-container"
+              hx-indicator="#loading-indicator"
+            >
+              Selanjutnya
+            </button>
+          </div>
+        </nav>
       )}
     </div>
   );
@@ -447,105 +463,89 @@ export function SearchResultsPartial({
 
 // Modal View for Detailed Regulation Legal Status Relationships
 export function StatusDetailModal({ peraturan }: { peraturan: any }) {
-  const json: Record<string, any[]> = typeof peraturan.status_detail_json === 'string'
-    ? JSON.parse(peraturan.status_detail_json)
-    : (peraturan.status_detail_json || {});
+  const json = parseStatusJson(peraturan.status_detail_json);
 
   // Mapping readable labels for known BPK crawler keys
   const labelMap: Record<string, string> = {
-    mencabut: 'MENCABUT',
-    mencabut_sebagian: 'MENCABUT SEBAGIAN',
-    diubah_dengan: 'DIUBAH DENGAN',
-    dicabut_dengan: 'DICABUT DENGAN',
-    dicabut_sebagian_dengan: 'DICABUT SEBAGIAN DENGAN',
-    mengubah: 'MENGUBAH',
-    diubah: 'DIUBAH',
-    perubahan: 'PERUBAHAN',
-    peraturan_terkait: 'PERATURAN TERKAIT'
+    mencabut: 'Mencabut',
+    mencabut_sebagian: 'Mencabut Sebagian',
+    diubah_dengan: 'Diubah Dengan',
+    dicabut_dengan: 'Dicabut Dengan',
+    dicabut_sebagian_dengan: 'Dicabut Sebagian Dengan',
+    mengubah: 'Mengubah',
+    diubah: 'Diubah',
+    perubahan: 'Perubahan',
+    peraturan_terkait: 'Peraturan Terkait',
   };
 
   const keys = Object.keys(json).filter((key) => Array.isArray(json[key]) && json[key].length > 0);
 
   return (
     <div class="modal-backdrop" id="status-modal" onclick="if(event.target===this)this.remove()">
-      <div class="modal-content" style="max-width: 750px; max-height: 85vh; overflow-y: auto; position: relative;">
-
-        {/* Tombol X pojok kanan atas */}
-        <button
-          type="button"
-          onclick="document.getElementById('status-modal').remove()"
-          class="modal-close-btn"
-          title="Tutup"
-        >
-          ✕
-        </button>
-
-        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1rem; padding-right: 2.5rem;">
+      <div class="modal-content modal-wide" role="dialog" aria-modal="true" aria-labelledby="status-modal-title">
+        <div class="modal-header">
           <div>
-            <h3 style="font-size: 1.15rem; color: var(--primary-navy); font-weight: 800;">
-              Detil Status Peraturan
-            </h3>
-            <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.2rem;">
+            <span class="section-label">Pemeriksaan Yuridis</span>
+            <h3 id="status-modal-title">Detil Status Peraturan</h3>
+            <p>
               {peraturan.jenis_peraturan} No. {peraturan.nomor} Tahun {peraturan.tahun}
             </p>
           </div>
+          <button
+            type="button"
+            onclick="document.getElementById('status-modal').remove()"
+            class="modal-close-btn"
+            title="Tutup"
+            aria-label="Tutup"
+          >
+            <Icon d={ICON.close} size={20} />
+          </button>
         </div>
 
-        <p style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 1.25rem; line-height: 1.65; letter-spacing: 0.2px;">
-          {peraturan.judul}
-        </p>
+        <p class="cell-strong" style="margin-bottom: 1rem; line-height: 24px;">{peraturan.judul}</p>
 
-        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <div>
           {keys.length > 0 ? (
             keys.map((key) => (
-              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: var(--radius-md);">
-                <h4 style="font-size: 0.9rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                  {labelMap[key] ? `${labelMap[key]}:` : `${key.replace(/_/g, ' ').toUpperCase()}:`}
-                </h4>
-                <ul style="list-style-type: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin: 0;">
+              <section class="rel-group">
+                <h4 class="section-label">{labelMap[key] ?? key.replace(/_/g, ' ')}</h4>
+                <div class="rel-list">
                   {json[key].map((item: any) => (
-                    <li style="font-size: 0.875rem; color: #0f172a; line-height: 1.5;">
-                      {item.url ? (
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style="color: var(--blue-accent); font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 0.3rem;"
-                        >
-                          {item.judul || item.label || 'Lihat Dokumen'}
-                          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; opacity: 0.7;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                          </svg>
-                        </a>
-                      ) : (
-                        <span style="color: #0f172a; font-weight: 600;">
-                          {item.judul || item.label || '-'}
-                        </span>
-                      )}
-                      {item.keterangan && (
-                        <div style="margin-top: 0.5rem; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 0.65rem 0.85rem; background-color: #ffffff; color: #334155; font-size: 0.825rem; line-height: 1.6;">
-                          {renderKeteranganWithLinks(item.keterangan)}
+                    <div class="rel-item">
+                      <div style="min-width: 0;">
+                        <div class="rel-title">
+                          {item.url ? (
+                            <a href={item.url} target="_blank" rel="noopener noreferrer">
+                              {item.judul || item.label || 'Lihat Dokumen'}
+                              {' '}
+                              <Icon d={ICON.external} size={12} />
+                            </a>
+                          ) : (
+                            <span>{item.judul || item.label || '-'}</span>
+                          )}
                         </div>
-                      )}
-                    </li>
+                        {item.keterangan && (
+                          <div class="rel-note">{renderKeteranganWithLinks(item.keterangan)}</div>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </section>
             ))
           ) : peraturan.status_detail && peraturan.status_detail.trim() ? (
             <FallbackStatusDetail statusDetail={peraturan.status_detail} />
           ) : (
-            <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 1rem;">
+            <p class="cell-mute" style="text-align: center; padding: 1rem;">
               Tidak ada data status tambahan tersedia.
             </p>
           )}
         </div>
 
-        <div style="margin-top: 1.5rem; text-align: right;">
+        <div class="form-actions">
           <button
             type="button"
-            class="btn-action"
-            style="background-color: var(--primary-navy); color: #fff; padding: 0.5rem 1.25rem;"
+            class="btn btn-primary"
             onclick="document.getElementById('status-modal').remove()"
           >
             Tutup
@@ -566,13 +566,7 @@ function renderKeteranganWithLinks(keterangan: string) {
 
   return parts.map((part) => {
     if (/^Pasal\s+\d+/i.test(part.trim())) {
-      return (
-        <span
-          style="color: #92400e; font-weight: 700; background-color: #fef9c3; padding: 0.1rem 0.35rem; border-radius: 4px; display: inline-block; margin: 0 0.1rem;"
-        >
-          {part}
-        </span>
-      );
+      return <span class="pasal-ref">{part}</span>;
     }
     return part;
   });
@@ -599,7 +593,7 @@ function linkifyRegRefs(text: string) {
         target="_blank"
         rel="noopener noreferrer"
         title={`Cari "${ref}" di sistem`}
-        style="color: var(--primary-navy); font-weight: 700; text-decoration: underline; background-color: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 4px; display: inline-block; margin: 0 0.15rem;"
+        class="reg-link"
       >
         {ref}
       </a>
@@ -620,18 +614,16 @@ function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
     .filter((s) => s.length > 0);
 
   return (
-    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: var(--radius-md);">
-      <h4 style="font-size: 0.9rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
-        KETERANGAN STATUS:
-      </h4>
-      <ul style="list-style-type: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; margin: 0;">
+    <section class="rel-group">
+      <h4 class="section-label">Keterangan Status</h4>
+      <div class="rel-list">
         {segments.map((seg) => (
-          <li style="font-size: 0.875rem; color: #0f172a; line-height: 1.6;">
-            {linkifyRegRefs(seg)}
-          </li>
+          <div class="rel-item">
+            <div style="font-size: 14px; line-height: 22px;">{linkifyRegRefs(seg)}</div>
+          </div>
         ))}
-      </ul>
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -639,28 +631,25 @@ function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
 export function EditPasalModal({ pasal, error }: { pasal: any; error?: string }) {
   return (
     <div class="modal-backdrop" id="edit-pasal-modal" onclick="if(event.target===this)this.remove()">
-      <div class="modal-content" style="max-width: 640px; position: relative;">
-
-        <button
-          type="button"
-          onclick="document.getElementById('edit-pasal-modal').remove()"
-          class="modal-close-btn"
-          title="Tutup"
-        >
-          ✕
-        </button>
-
-        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem; padding-right: 2.5rem;">
-          <h3 style="font-size: 1.1rem; color: var(--primary-navy); font-weight: 800;">
-            Edit Pasal
-          </h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-            Pasal ID #{pasal.id} · Peraturan ID #{pasal.peraturan_id}
-          </p>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="edit-pasal-title">
+        <div class="modal-header">
+          <div>
+            <h3 id="edit-pasal-title">Edit Pasal</h3>
+            <p>Pasal ID #{pasal.id} &middot; Peraturan ID #{pasal.peraturan_id}</p>
+          </div>
+          <button
+            type="button"
+            onclick="document.getElementById('edit-pasal-modal').remove()"
+            class="modal-close-btn"
+            title="Tutup"
+            aria-label="Tutup"
+          >
+            <Icon d={ICON.close} size={20} />
+          </button>
         </div>
 
         {error && (
-          <div class="alert alert-danger" style="margin-bottom: 1rem;">
+          <div class="alert alert-danger" role="alert" style="margin-bottom: 1rem;">
             <span>{error}</span>
           </div>
         )}
@@ -670,66 +659,52 @@ export function EditPasalModal({ pasal, error }: { pasal: any; error?: string })
           hx-target="#modal-container"
           hx-swap="innerHTML"
         >
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="ep-nomor-pasal" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
-              Nomor Pasal <span style="color: var(--danger-color);">*</span>
-            </label>
+          <div class="field">
+            <label for="ep-nomor-pasal">Nomor Pasal <span class="req">*</span></label>
             <input
               type="text"
               id="ep-nomor-pasal"
               name="nomor_pasal"
-              class="form-control"
+              class="input"
               value={pasal.nomor_pasal || ''}
-              placeholder="Contoh: Pasal 1"
+              placeholder="Pasal 1"
               required
             />
           </div>
 
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="ep-nomor-ayat" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
-              Nomor Ayat <span style="color: var(--text-muted); font-weight: 400;">(opsional)</span>
-            </label>
+          <div class="field">
+            <label for="ep-nomor-ayat">Nomor Ayat <span class="label-hint">(opsional)</span></label>
             <input
               type="text"
               id="ep-nomor-ayat"
               name="nomor_ayat"
-              class="form-control"
+              class="input"
               value={pasal.nomor_ayat || ''}
-              placeholder="Contoh: Ayat (1)"
+              placeholder="Ayat (1)"
             />
           </div>
 
-          <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label for="ep-teks-pasal" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
-              Teks Pasal <span style="color: var(--danger-color);">*</span>
-            </label>
+          <div class="field">
+            <label for="ep-teks-pasal">Teks Pasal <span class="req">*</span></label>
             <textarea
               id="ep-teks-pasal"
               name="teks_pasal"
-              class="form-control"
+              class="textarea textarea-mono"
               rows={8}
-              style="font-family: monospace; font-size: 0.85rem; resize: vertical;"
               required
             >{pasal.teks_pasal || ''}</textarea>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <div class="form-actions">
             <button
               type="button"
-              class="btn-action"
-              style="background-color: #f1f5f9; color: var(--text-main);"
+              class="btn"
               onclick="document.getElementById('edit-pasal-modal').remove()"
             >
               Batal
             </button>
-            <button
-              type="submit"
-              class="btn-search"
-              style="gap: 0.5rem;"
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
+            <button type="submit" class="btn btn-primary">
+              <Icon d={ICON.check} />
               Simpan Perubahan
             </button>
           </div>
@@ -753,28 +728,25 @@ export function EditPeraturanModal({ peraturan, error }: { peraturan: any; error
 
   return (
     <div class="modal-backdrop" id="edit-peraturan-modal" onclick="if(event.target===this)this.remove()">
-      <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative;">
-
-        <button
-          type="button"
-          onclick="document.getElementById('edit-peraturan-modal').remove()"
-          class="modal-close-btn"
-          title="Tutup"
-        >
-          ✕
-        </button>
-
-        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem; padding-right: 2.5rem;">
-          <h3 style="font-size: 1.1rem; color: var(--primary-navy); font-weight: 800;">
-            Edit Data Peraturan
-          </h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-            Peraturan ID #{peraturan.id}
-          </p>
+      <div class="modal-content modal-wide" role="dialog" aria-modal="true" aria-labelledby="edit-peraturan-title">
+        <div class="modal-header">
+          <div>
+            <h3 id="edit-peraturan-title">Edit Data Peraturan</h3>
+            <p>Peraturan ID #{peraturan.id}</p>
+          </div>
+          <button
+            type="button"
+            onclick="document.getElementById('edit-peraturan-modal').remove()"
+            class="modal-close-btn"
+            title="Tutup"
+            aria-label="Tutup"
+          >
+            <Icon d={ICON.close} size={20} />
+          </button>
         </div>
 
         {error && (
-          <div class="alert alert-danger" style="margin-bottom: 1rem;">
+          <div class="alert alert-danger" role="alert" style="margin-bottom: 1rem;">
             <span>{error}</span>
           </div>
         )}
@@ -784,33 +756,33 @@ export function EditPeraturanModal({ peraturan, error }: { peraturan: any; error
           hx-target="#modal-container"
           hx-swap="innerHTML"
         >
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem;">
-            <div class="form-group">
-              <label for="er-jenis">Jenis Peraturan <span style="color: var(--danger-color);">*</span></label>
-              <select id="er-jenis" name="jenis_peraturan" class="form-control" required>
+          <div class="grid-3">
+            <div class="field">
+              <label for="er-jenis">Jenis Peraturan <span class="req">*</span></label>
+              <select id="er-jenis" name="jenis_peraturan" class="select" required>
                 {jenisList.map((j) => (
                   <option value={j} selected={peraturan.jenis_peraturan === j}>{j}</option>
                 ))}
               </select>
             </div>
-            <div class="form-group">
-              <label for="er-nomor">Nomor <span style="color: var(--danger-color);">*</span></label>
+            <div class="field">
+              <label for="er-nomor">Nomor <span class="req">*</span></label>
               <input
                 type="text"
                 id="er-nomor"
                 name="nomor"
-                class="form-control"
+                class="input"
                 value={peraturan.nomor || ''}
                 required
               />
             </div>
-            <div class="form-group">
-              <label for="er-tahun">Tahun <span style="color: var(--danger-color);">*</span></label>
+            <div class="field">
+              <label for="er-tahun">Tahun <span class="req">*</span></label>
               <input
                 type="number"
                 id="er-tahun"
                 name="tahun"
-                class="form-control"
+                class="input"
                 value={peraturan.tahun || ''}
                 min="1900"
                 max={String(new Date().getFullYear() + 1)}
@@ -819,38 +791,31 @@ export function EditPeraturanModal({ peraturan, error }: { peraturan: any; error
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="er-judul">Judul Peraturan <span style="color: var(--danger-color);">*</span></label>
-            <textarea
-              id="er-judul"
-              name="judul"
-              class="form-control"
-              rows={2}
-              style="resize: vertical;"
-              required
-            >{peraturan.judul || ''}</textarea>
+          <div class="field">
+            <label for="er-judul">Judul Peraturan <span class="req">*</span></label>
+            <textarea id="er-judul" name="judul" class="textarea" rows={2} required>{peraturan.judul || ''}</textarea>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem;">
-            <div class="form-group">
+          <div class="grid-3">
+            <div class="field">
               <label for="er-status">Status</label>
-              <select id="er-status" name="status" class="form-control">
+              <select id="er-status" name="status" class="select">
                 {buildOptions(statusOptions, peraturan.status).map((st) => (
                   <option value={st} selected={(peraturan.status || 'berlaku') === st}>{st.toUpperCase()}</option>
                 ))}
               </select>
             </div>
-            <div class="form-group">
+            <div class="field">
               <label for="er-wilayah">Wilayah</label>
-              <select id="er-wilayah" name="wilayah" class="form-control">
+              <select id="er-wilayah" name="wilayah" class="select">
                 {wilayahList.map((w) => (
                   <option value={w} selected={peraturan.wilayah === w}>{w}</option>
                 ))}
               </select>
             </div>
-            <div class="form-group">
+            <div class="field">
               <label for="er-sektor">Sektor</label>
-              <select id="er-sektor" name="sektor" class="form-control">
+              <select id="er-sektor" name="sektor" class="select">
                 {sektorList.map((s) => (
                   <option value={s} selected={peraturan.sektor === s}>{s}</option>
                 ))}
@@ -858,46 +823,33 @@ export function EditPeraturanModal({ peraturan, error }: { peraturan: any; error
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="er-url">URL Dokumen Asli <span style="color: var(--danger-color);">*</span></label>
+          <div class="field">
+            <label for="er-url">URL Dokumen Asli <span class="req">*</span></label>
             <input
               type="url"
               id="er-url"
               name="url_dokumen_asli"
-              class="form-control"
+              class="input"
               value={peraturan.url_dokumen_asli || ''}
               required
             />
           </div>
 
-          <div class="form-group" style="margin-bottom: 1.25rem;">
-            <label for="er-status-detail">Keterangan Status <span style="color: var(--text-muted); font-weight: 400;">(opsional)</span></label>
-            <textarea
-              id="er-status-detail"
-              name="status_detail"
-              class="form-control"
-              rows={2}
-              style="resize: vertical;"
-            >{peraturan.status_detail || ''}</textarea>
+          <div class="field">
+            <label for="er-status-detail">Keterangan Status <span class="label-hint">(opsional)</span></label>
+            <textarea id="er-status-detail" name="status_detail" class="textarea" rows={2}>{peraturan.status_detail || ''}</textarea>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <div class="form-actions">
             <button
               type="button"
-              class="btn-action"
-              style="background-color: #f1f5f9; color: var(--text-main);"
+              class="btn"
               onclick="document.getElementById('edit-peraturan-modal').remove()"
             >
               Batal
             </button>
-            <button
-              type="submit"
-              class="btn-search"
-              style="gap: 0.5rem;"
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
+            <button type="submit" class="btn btn-primary">
+              <Icon d={ICON.check} />
               Simpan Perubahan
             </button>
           </div>

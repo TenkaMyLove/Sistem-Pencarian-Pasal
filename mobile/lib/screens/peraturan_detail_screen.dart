@@ -134,9 +134,9 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
         TextSpan(
           text: ' ${match.group(0)} ',
           style: const TextStyle(
-            color: Color(0xFF92400E),
-            backgroundColor: Color(0xFFFEF9C3),
-            fontWeight: FontWeight.bold,
+            color: AppColors.refText,
+            backgroundColor: AppColors.refBg,
+            fontWeight: FontWeight.w600,
           ),
         ),
       );
@@ -204,20 +204,19 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.border),
+                    borderRadius: AppRadius.controlR,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$heading:',
+                        heading.toUpperCase(),
                         style: const TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: 0.4,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 0.6,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -258,14 +257,13 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                                   width: double.infinity,
                                   margin: const EdgeInsets.only(top: 6),
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: Colors.blueGrey.shade200),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.background,
+                                    border: Border(left: BorderSide(color: AppColors.accent, width: 3)),
                                   ),
                                   child: Text.rich(
                                     TextSpan(
-                                      style: const TextStyle(fontSize: 12, height: 1.5, color: Color(0xFF334155)),
+                                      style: const TextStyle(fontSize: 13, height: 1.5, color: AppColors.textBody),
                                       children: _buildHighlightedPasalSpans(keterangan),
                                     ),
                                   ),
@@ -283,9 +281,8 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.border),
+                  borderRadius: AppRadius.controlR,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,7 +295,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Text.rich(
                             TextSpan(
-                              style: const TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
+                              style: const TextStyle(fontSize: 13, height: 1.5, color: AppColors.textBody),
                               children: _buildHighlightedPasalSpans(line),
                             ),
                           ),
@@ -372,7 +369,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
                     const SizedBox(height: 12),
                     Text(_errorMessage!, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
@@ -396,27 +393,29 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: AppColors.getStatusBg(status),
-                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: AppColors.getStatusBorder(status)),
+                                  borderRadius: AppRadius.tagR,
                                 ),
                                 child: Text(
-                                  status,
+                                  status.toUpperCase(),
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.55,
+                                    fontSize: 11,
                                     color: AppColors.getStatusText(status),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  color: AppColors.surfaceVariant,
+                                  borderRadius: AppRadius.tagR,
+                                  border: Border.all(color: AppColors.border),
                                 ),
                                 child: Text(
                                   wilayah,
@@ -444,7 +443,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                           // Document Link
                           Row(
                             children: [
-                              const Icon(Icons.picture_as_pdf, color: Colors.red, size: 20),
+                              const Icon(Icons.link, color: AppColors.primary, size: 20),
                               const SizedBox(width: 8),
                               const Text('Tautan Dokumen Asli:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                               const Spacer(),
@@ -558,26 +557,19 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.badgeBlueBg,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        noPasal.isNotEmpty ? noPasal : 'Pasal',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.badgeBlueText,
-                        ),
+                    Text(
+                      noPasal.isNotEmpty ? noPasal : 'Pasal',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
                       ),
                     ),
                     if (noAyat.isNotEmpty) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       Text(
                         noAyat,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                       ),
                     ],
                   ],
@@ -594,7 +586,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                         onPressed: () => _handleEditPasal(Map<String, dynamic>.from(p as Map)),
                       ),
                       IconButton(
-                        icon: Icon(Icons.delete_outline, size: 17, color: Colors.red.shade700),
+                        icon: const Icon(Icons.delete_outline, size: 17, color: AppColors.danger),
                         tooltip: 'Hapus Pasal',
                         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                         padding: EdgeInsets.zero,
@@ -621,10 +613,18 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              teks,
-              style: const TextStyle(fontSize: 13, height: 1.4, color: AppColors.textPrimary),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: AppColors.background,
+                border: Border(left: BorderSide(color: AppColors.primary, width: 3)),
+              ),
+              child: Text(
+                teks,
+                style: const TextStyle(fontSize: 14, height: 22 / 14, color: AppColors.textBody),
+              ),
             ),
           ],
         ),

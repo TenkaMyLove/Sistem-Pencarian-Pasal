@@ -10,83 +10,115 @@ export function LoginView({ error }: LoginProps) {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Login - P3H Kanwil Kemenkumham Kalsel</title>
+        <title>Masuk - P3H Kanwil Kementerian Hukum Kalsel</title>
         <link rel="stylesheet" href="/css/style.css" />
         <link rel="icon" type="image/png" href="/images/logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <div class="login-container">
-          <div class="login-card">
-            <img src="/images/logo.png" alt="Logo Pengayoman" class="login-logo" />
-            <div class="login-title">
-              <h2>Sistem Pencarian Pasal</h2>
-              <p>Divisi P3H Kanwil Kemenkumham Kalsel</p>
+        <div class="login-page">
+          {/* Top navbar */}
+          <header class="login-brand">
+            <img src="/images/logo.png" alt="Logo Pengayoman" />
+            <div>
+              <h1>Kementerian Hukum Republik Indonesia</h1>
+              <p>Kantor Wilayah Kalimantan Selatan &middot; Divisi Pelayanan Hukum dan HAM</p>
             </div>
+            {/* Online indicator */}
+            <div class="login-status-dot" title="Sistem Aktif"></div>
+          </header>
 
-            {error && (
-              <div class="alert alert-danger">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form action="/login" method="post">
-              <div class="form-group">
-                <label for="username">Username</label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  class="form-control"
-                  placeholder="Masukkan username"
-                  required
-                  autofocus
-                />
+          <main class="login-main">
+            <div class="login-card">
+              {/* Logo inside card */}
+              <div class="login-card-logo">
+                <img src="/images/logo.png" alt="Logo Pengayoman" />
               </div>
 
-              <div class="form-group">
-                <label for="kata_sandi">Kata Sandi</label>
-                <input
-                  type="password"
-                  id="kata_sandi"
-                  name="kata_sandi"
-                  class="form-control"
-                  placeholder="Masukkan kata sandi"
-                  required
-                />
+              <div class="login-title">
+                <h2>Masuk Sistem</h2>
+                <p>Portal Pencarian Pasal &amp; Harmonisasi Regulasi Daerah</p>
               </div>
 
-              <button type="submit" class="btn-search" style="width: 100%; justify-content: center; margin-top: 1.5rem;">
-                Masuk ke Aplikasi
-              </button>
-            </form>
+              {error && (
+                <div class="alert alert-danger" role="alert">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              )}
 
-            {/* Tombol Mode Tamu */}
-            <div style="display: flex; align-items: center; margin: 1.25rem 0; color: var(--text-muted); font-size: 0.8rem;">
-              <div style="flex: 1; height: 1px; background-color: var(--border-color);"></div>
-              <span style="padding: 0 0.75rem; text-transform: uppercase; font-weight: 600; font-size: 0.75rem; color: #94a3b8;">atau</span>
-              <div style="flex: 1; height: 1px; background-color: var(--border-color);"></div>
+              <form action="/login" method="post">
+                {/* Username field with icon */}
+                <div class="field">
+                  <label for="username">Username / NIP Pegawai</label>
+                  <div class="input-icon-wrap">
+                    <svg class="input-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      class="input input-with-icon"
+                      placeholder="pengelola"
+                      autocomplete="username"
+                      required
+                      autofocus
+                    />
+                  </div>
+                </div>
+
+                {/* Password field with icon */}
+                <div class="field">
+                  <label for="kata_sandi">Kata Sandi</label>
+                  <div class="input-icon-wrap">
+                    <svg class="input-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <input
+                      type="password"
+                      id="kata_sandi"
+                      name="kata_sandi"
+                      class="input input-with-icon"
+                      placeholder="••••••••••"
+                      autocomplete="current-password"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Remember session */}
+                <label class="check login-remember">
+                  <input type="checkbox" name="remember" value="1" checked />
+                  Ingat sesi login
+                </label>
+
+                <button type="submit" class="btn btn-primary btn-block login-submit">
+                  Masuk ke Dashboard &rarr;
+                </button>
+              </form>
+
+              <div class="divider">Masyarakat umum atau pemohon harmonisasi?</div>
+
+              <a href="/tamu" class="btn btn-block btn-outline login-guest-btn">
+                Akses Pencarian Pasal Publik Tanpa Login
+              </a>
             </div>
+          </main>
 
-            <a
-              href="/tamu"
-              class="btn-guest"
-              style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.875rem; text-decoration: none; background-color: #f8fafc; color: var(--primary-navy); border: 1.5px solid #cbd5e1; transition: all 0.2s ease; gap: 0.5rem;"
-            >
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-              </svg>
-              Masuk sebagai Tamu (Pencarian Pasal)
-            </a>
-
-            <div style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.8rem; color: var(--text-muted);">
-              Hak Cipta &copy; 2026 Divisi P3H Kanwil Kemenkumham Kalsel
-            </div>
-          </div>
+          <footer class="login-footer">
+            <span>&copy; 2026 Kantor Wilayah Kementerian Hukum Kalimantan Selatan. Hak Cipta Dilindungi.</span>
+            <span class="login-footer-addr">Jl. Brigjen H. Hasan Basry No. 49, Banjarmasin</span>
+            <span class="login-footer-links">
+              <a href="#">Panduan Sistem</a>
+              <a href="#">Bantuan Teknis</a>
+              <a href="#">Kebijakan Privasi</a>
+            </span>
+          </footer>
         </div>
       </body>
     </html>

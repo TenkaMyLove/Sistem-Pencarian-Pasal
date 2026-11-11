@@ -100,7 +100,7 @@ class _TambahPeraturanScreenState extends State<TambahPeraturanScreen> {
           builder: (context) => AlertDialog(
             title: const Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green),
+                Icon(Icons.check_circle_outline, color: AppColors.statusBerlakuText),
                 SizedBox(width: 8),
                 Text('Berhasil Diindeks!'),
               ],
@@ -150,7 +150,6 @@ class _TambahPeraturanScreenState extends State<TambahPeraturanScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Card(
-                color: const Color(0xFFEFF6FF),
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Row(
@@ -183,15 +182,16 @@ class _TambahPeraturanScreenState extends State<TambahPeraturanScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFDE8E8),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.dangerBg,
+                    border: Border.all(color: AppColors.dangerBorder),
+                    borderRadius: AppRadius.controlR,
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red),
+                      const Icon(Icons.error_outline, color: AppColors.danger),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                        child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
                       ),
                     ],
                   ),

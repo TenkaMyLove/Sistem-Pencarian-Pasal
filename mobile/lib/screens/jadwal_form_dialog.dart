@@ -151,10 +151,11 @@ class _JadwalFormDialogState extends State<JadwalFormDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFDE8E8),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.dangerBg,
+                      border: Border.all(color: AppColors.dangerBorder),
+                      borderRadius: AppRadius.controlR,
                     ),
-                    child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                    child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
                   ),
                   const SizedBox(height: 12),
                 ],

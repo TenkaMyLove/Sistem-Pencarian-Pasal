@@ -85,9 +85,6 @@ class _SearchScreenState extends State<SearchScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) {
         String tempSektor = _selectedSektor;
         String tempWilayah = _selectedWilayah;
@@ -249,50 +246,40 @@ class _SearchScreenState extends State<SearchScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(20),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: TextField(
-                              controller: _searchController,
-                              textInputAction: TextInputAction.search,
-                              onSubmitted: (_) => _fetchData(page: 1),
-                              decoration: InputDecoration(
-                                hintText: 'Cari pasal, topik, undang-undang...',
-                                hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
-                                prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-                                suffixIcon: _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(Icons.clear, size: 18),
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          _fetchData(page: 1);
-                                        },
-                                      )
-                                    : null,
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              ),
+                          child: TextField(
+                            controller: _searchController,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: (_) => _fetchData(page: 1),
+                            decoration: InputDecoration(
+                              hintText: 'Nomor Undang-Undang atau Kata Kunci',
+                              hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
+                              prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, size: 18),
+                                      tooltip: 'Hapus kata kunci',
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _fetchData(page: 1);
+                                      },
+                                    )
+                                  : null,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Container(
                           decoration: BoxDecoration(
                             color: (_selectedSektor.isNotEmpty || _selectedWilayah.isNotEmpty)
                                 ? AppColors.accent
-                                : Colors.white.withAlpha(51),
-                            borderRadius: BorderRadius.circular(12),
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: (_selectedSektor.isNotEmpty || _selectedWilayah.isNotEmpty)
+                                  ? AppColors.accent
+                                  : const Color(0xFF475569),
+                            ),
+                            borderRadius: AppRadius.controlR,
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.tune, color: Colors.white),
@@ -322,6 +309,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                   },
                                   backgroundColor: Colors.white,
                                   padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
                                 ),
                               ),
                             if (_selectedWilayah.isNotEmpty)
@@ -334,6 +322,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 },
                                 backgroundColor: Colors.white,
                                 padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
                               ),
                           ],
                         ),
@@ -377,17 +366,18 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFDE8E8),
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.dangerBg,
+                      border: Border.all(color: AppColors.dangerBorder),
+                      borderRadius: AppRadius.containerR,
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.wifi_off, color: Colors.red, size: 36),
+                        const Icon(Icons.wifi_off, color: AppColors.danger, size: 32),
                         const SizedBox(height: 8),
                         Text(
                           _errorMessage!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: Color(0xFF9B1C1C), fontSize: 13),
+                          style: const TextStyle(color: AppColors.danger, fontSize: 13),
                         ),
                         const SizedBox(height: 12),
                         ElevatedButton.icon(
@@ -395,7 +385,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           icon: const Icon(Icons.refresh, size: 18),
                           label: const Text('Coba Lagi'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade700,
+                            backgroundColor: AppColors.danger,
                           ),
                         ),
                       ],
@@ -414,11 +404,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+                        const Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
                         const SizedBox(height: 12),
                         const Text(
                           'Tidak ada pasal ditemukan',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                         ),
                         const SizedBox(height: 6),
                         const Text(
@@ -463,23 +453,15 @@ class _SearchScreenState extends State<SearchScreen> {
                         onPressed: _currentPage > 1 ? () => _fetchData(page: _currentPage - 1) : null,
                         icon: const Icon(Icons.chevron_left),
                         label: const Text('Sebelumnya'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          disabledBackgroundColor: Colors.grey.shade300,
-                        ),
                       ),
                       Text(
                         '$_currentPage / $_totalPages',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       ElevatedButton.icon(
                         onPressed: _currentPage < _totalPages ? () => _fetchData(page: _currentPage + 1) : null,
                         icon: const Icon(Icons.chevron_right),
                         label: const Text('Berikutnya'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          disabledBackgroundColor: Colors.grey.shade300,
-                        ),
                       ),
                     ],
                   ),
@@ -530,16 +512,18 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
                   decoration: BoxDecoration(
                     color: AppColors.getStatusBg(item.status),
-                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.getStatusBorder(item.status)),
+                    borderRadius: AppRadius.tagR,
                   ),
                   child: Text(
-                    item.status,
+                    item.status.toUpperCase(),
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.55,
                       color: AppColors.getStatusText(item.status),
                     ),
                   ),
@@ -554,38 +538,25 @@ class _SearchScreenState extends State<SearchScreen> {
                 final hasPasal = item.pasalId > 0 || _isLoading;
                 return Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: hasPasal ? AppColors.badgeBlueBg : Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        hasPasal
-                            ? (item.nomorPasal.isNotEmpty ? item.nomorPasal : 'Pasal')
-                            : 'Belum ada pasal',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: hasPasal ? AppColors.badgeBlueText : AppColors.textSecondary,
-                        ),
+                    Text(
+                      hasPasal
+                          ? (item.nomorPasal.isNotEmpty ? item.nomorPasal : 'Pasal')
+                          : 'Belum ada pasal',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: hasPasal ? 0.3 : 0,
+                        color: hasPasal ? AppColors.primary : AppColors.textSecondary,
                       ),
                     ),
                     if (hasPasal && item.nomorAyat.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.nomorAyat,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade800,
-                          ),
+                      const SizedBox(width: 8),
+                      Text(
+                        item.nomorAyat,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -595,13 +566,21 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             const SizedBox(height: 8),
 
-            // Article text
-            Text(
-              item.teksPasal,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.45,
-                color: AppColors.textPrimary,
+            // Article text (blok kutipan hukum: border kiri 3px)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: AppColors.background,
+                border: Border(left: BorderSide(color: AppColors.primary, width: 3)),
+              ),
+              child: Text(
+                item.teksPasal,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 22 / 14,
+                  color: AppColors.textBody,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -614,9 +593,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: AppColors.surfaceVariant,
+                    borderRadius: AppRadius.tagR,
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -630,9 +609,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: AppColors.surfaceVariant,
+                    borderRadius: AppRadius.tagR,
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -714,11 +693,11 @@ class _SearchScreenState extends State<SearchScreen> {
                       if (item.pasalId > 0)
                         PopupMenuItem(
                           value: 'hapus_pasal',
-                          child: Text('Hapus Pasal', style: TextStyle(color: Colors.red.shade700)),
+                          child: const Text('Hapus Pasal', style: TextStyle(color: AppColors.danger)),
                         ),
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'hapus_peraturan',
-                        child: Text('Hapus Peraturan', style: TextStyle(color: Colors.red.shade700)),
+                        child: Text('Hapus Peraturan', style: TextStyle(color: AppColors.danger)),
                       ),
                     ],
                   ),
@@ -731,8 +710,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 if (item.urlDokumenAsli != null && item.urlDokumenAsli!.isNotEmpty)
                   TextButton.icon(
                     onPressed: () => _launchUrl(item.urlDokumenAsli),
-                    icon: const Icon(Icons.picture_as_pdf, size: 16, color: Colors.red),
-                    label: const Text('PDF Asli', style: TextStyle(fontSize: 12)),
+                    icon: const Icon(Icons.open_in_new, size: 16),
+                    label: const Text('Dokumen Asli', style: TextStyle(fontSize: 12)),
                   ),
                 const SizedBox(width: 4),
                 ElevatedButton.icon(
