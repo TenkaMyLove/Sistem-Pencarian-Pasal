@@ -7,7 +7,7 @@ Sistem pencarian pasal peraturan perundang-undangan berbasis **Web (Hono + HTMX 
 ## Fitur Utama
 
 - **Pencarian Pasal Real-Time & Cepat** — Pencarian berbasis HTMX dengan penyorotan kata kunci (*keyword highlighting*) presisi menggunakan regex tanpa memuat ulang (*reload*) halaman, didukung query `UNION ALL` agar peraturan baru tanpa pasal tetap terindeks.
-- **Edit & Hapus Pasal (Khusus Pengelola & Admin)** — Pengguna dengan peran **Pengelola** atau **Admin** dapat langsung mengubah (`Nomor Pasal`, `Nomor Ayat`, `Teks Pasal` melalui modal HTMX) maupun menghapus pasal tertentu pada kartu hasil pencarian web.
+- **Edit & Hapus Peraturan dan Pasal (Web & Mobile — Pengelola & Admin)** — Pengguna dengan peran **Pengelola** atau **Admin** dapat langsung mengubah maupun menghapus **peraturan** (`Edit Peraturan` / `Hapus Peraturan`, termasuk peraturan yang belum memiliki teks pasal) dan **pasal** (`Edit Pasal` / `Hapus Pasal`) secara *real-time* di antarmuka Web (modal HTMX + refresh otomatis) maupun Flutter Mobile.
 - **Cakupan 56 Peraturan Terindeks** — Terdiri dari UUD 1945, Undang-Undang, Perppu, Peraturan Pemerintah, hingga Peraturan Daerah Provinsi dan Kabupaten/Kota se-Kalimantan Selatan.
 - **Filter Sektor & Wilayah** — Filter pencarian cepat berdasarkan sektor hukum dan cakupan wilayah (Nasional, Provinsi Kalimantan Selatan, serta Kabupaten/Kota di Kalsel).
 - **Detil Status Relasi Hukum & Sorotan Referensi Pasal** — Modal interaktif menampilkan status hukum komprehensif (*Mencabut*, *Mencabut Sebagian*, *Mengubah*, *Dicabut Dengan*, *Dicabut Sebagian Dengan*, dan *Diubah Dengan*). Penyebutan pasal di dalam teks keterangan (misal `Pasal 238`) ditampilkan dengan **sorotan (*highlight*) kuning non-clickable** karena pasal yang dirujuk belum tentu tersedia di sistem, sedangkan tautan regulasi relasi membuka dokumen resmi JDIH.
@@ -18,11 +18,11 @@ Sistem pencarian pasal peraturan perundang-undangan berbasis **Web (Hono + HTMX 
   - Dukungan **Multi-Kompilator** (memilih beberapa kompilator dari daftar tim maupun entri manual).
 - **Kelola Akun Staf (Admin)** — Manajemen pembaruan kata sandi untuk akun operasional tim (**Pengelola** dan **Perancang**) dengan enkripsi `bcryptjs`. *(Demi keamanan, dokumentasi ini tidak mencantumkan kredensial atau kata sandi akun.)*
 - **Hak Akses Berbasis Peran (RBAC)** —
-  - **Admin** (`Administrator`): Mengelola & mereset kata sandi akun operasional tim (`Pengelola` dan `Perancang`), Tambah Peraturan via URL serta Edit/Hapus Pasal pada Web, Pencarian Pasal, dan Jadwal Harmonisasi (*Read-Only*).
-  - **Pengelola** (`Pengelola`): Pencarian Pasal, Edit & Hapus Pasal (Web), CRUD penuh Jadwal Harmonisasi Rapat (Web & Mobile), serta Tambah Peraturan via URL Crawler (Web & Mobile).
-  - **Perancang** (`Perancang`): Pencarian Pasal & Filter Peraturan, serta CRUD penuh Jadwal Harmonisasi Rapat (Web & Mobile).
-  - **Tamu** (`Akses Publik`): Akses cepat pencarian pasal, detail status peraturan, dan tautan dokumen PDF asli tanpa harus login.
-- **Versi Mobile Flutter Multi-Platform** — Dilengkapi aplikasi mobile Flutter dengan efek shimmer/loading modern menggunakan **Skeletonizer**, fitur baca seluruh pasal dalam satu peraturan, salin teks pasal, *Host Server Switcher*, dan siap dijalankan di browser (Chrome/Edge) maupun emulator Android Studio.
+  - **Admin** (`Administrator` — *Manajemen Sistem*): Kelola akun & reset kata sandi staf (`Pengelola` & `Perancang`), Tambah Peraturan via URL serta Edit/Hapus Peraturan & Pasal (Web & Mobile), Pencarian Pasal, dan Jadwal Harmonisasi (*Read-Only*).
+  - **Pengelola** (`Pengelola` — *Data & Jadwal*): Pencarian Pasal, Edit & Hapus Peraturan/Pasal (Web & Mobile), CRUD penuh Jadwal Harmonisasi Rapat (Web & Mobile), serta Tambah Peraturan via URL Crawler (Web & Mobile).
+  - **Perancang** (`Perancang` — *Tim Harmonisasi*): Pencarian Pasal & Filter Peraturan, serta CRUD penuh Jadwal Harmonisasi Rapat (Web & Mobile).
+  - **Tamu** (`Tamu` — *Akses Publik*): Akses cepat pencarian pasal, detail status peraturan, dan tautan dokumen PDF asli tanpa harus login.
+- **Versi Mobile Flutter Multi-Platform** — Dilengkapi aplikasi mobile Flutter dengan efek shimmer/loading modern menggunakan **Skeletonizer**, detail status relasi hukum beserta sorotan kuning non-clickable pada penyebutan pasal, fitur baca/kelola pasal & peraturan sesuai peran, salin teks pasal, *Host Server Switcher*, dan siap dijalankan di browser (Chrome/Edge) maupun emulator Android Studio.
 
 ---
 
@@ -95,6 +95,7 @@ mobile/                        # Aplikasi Mobile Flutter
 │   ├── screens/               # Halaman UI (Splash, Login, Home, Search, Detail, Jadwal, Tambah Peraturan, Admin, Profil, Settings)
 │   ├── services/              # ApiService (HTTP client) & AuthService (SharedPreferences)
 │   ├── utils/                 # Konstanta URL host & tema aplikasi
+│   ├── widgets/               # Dialog berbagi pakai (Edit & Hapus Peraturan / Pasal)
 │   └── main.dart              # Entry point Flutter
 ├── android/                   # Konfigurasi native Android (usesCleartextTraffic, Internet)
 └── web/                       # Konfigurasi build & run browser web

@@ -8,18 +8,21 @@ interface LayoutProps {
   children: any;
 }
 
-// Map peran → label yang lebih ramah dibaca
-const PERAN_LABEL: Record<string, string> = {
-  Admin:     'Administrator',
-  Pengelola: 'Pengelola',
-  Perancang: 'Perancang',
-  Tamu:      'Akses Publik',
+// Map peran → nama tampilan & keterangan peran yang rapi tanpa duplikasi kata
+const PERAN_PROFILE: Record<string, { name: string; subtitle: string }> = {
+  Admin:     { name: 'Administrator', subtitle: 'Manajemen Sistem' },
+  Pengelola: { name: 'Pengelola',     subtitle: 'Data & Jadwal' },
+  Perancang: { name: 'Perancang',     subtitle: 'Tim Harmonisasi' },
+  Tamu:      { name: 'Tamu',          subtitle: 'Akses Publik' },
 };
 
 export function Layout({ title, activeNav, user, children }: LayoutProps) {
   const isGuest = user.peran === 'Tamu';
-  const displayName = isGuest ? 'Tamu' : user.username;
-  const displayRole = PERAN_LABEL[user.peran] ?? user.peran;
+  const profile = PERAN_PROFILE[user.peran] ?? { name: user.username, subtitle: user.peran };
+  const isDefaultRoleUsername =
+    isGuest || user.username.toLowerCase() === user.peran.toLowerCase();
+  const displayName = isDefaultRoleUsername ? profile.name : user.username;
+  const displayRole = isDefaultRoleUsername ? profile.subtitle : profile.name;
 
   return (
     <html lang="id">
@@ -94,13 +97,7 @@ export function Layout({ title, activeNav, user, children }: LayoutProps) {
               <div class="user-profile">
                 <div class="user-info">
                   <span class="user-name">{displayName}</span>
-                  <span class="user-role" style={
-                    isGuest
-                      ? 'background-color: #64748b; color: #fff; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 500; letter-spacing: 0.3px; display: inline-block;'
-                      : user.peran === 'Admin'
-                        ? 'background-color: #1e3a5f; color: #f0c040; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 500; letter-spacing: 0.3px; display: inline-block;'
-                        : 'background-color: #1e3a5f; color: #fff; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 500; letter-spacing: 0.3px; display: inline-block;'
-                  }>
+                  <span class="user-role" style={isGuest ? 'color: #94a3b8;' : ''}>
                     {displayRole}
                   </span>
                 </div>

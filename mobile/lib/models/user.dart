@@ -14,7 +14,34 @@ class User {
   bool get isPerancang => peran == 'Perancang';
   bool get isTamu => peran == 'Tamu';
   bool get canManageJadwal => isPengelola || isPerancang;
-  bool get canTambahPeraturan => isPengelola;
+  bool get canManagePeraturan => isPengelola || isAdmin;
+  bool get canTambahPeraturan => isPengelola || isAdmin;
+
+  static const Map<String, Map<String, String>> _roleProfile = {
+    'Admin': {'name': 'Administrator', 'subtitle': 'Manajemen Sistem'},
+    'Pengelola': {'name': 'Pengelola', 'subtitle': 'Data & Jadwal'},
+    'Perancang': {'name': 'Perancang', 'subtitle': 'Tim Harmonisasi'},
+    'Tamu': {'name': 'Tamu', 'subtitle': 'Akses Publik'},
+  };
+
+  bool get _isDefaultRoleUsername =>
+      isTamu || username.trim().toLowerCase() == peran.trim().toLowerCase();
+
+  String get displayName {
+    final mapped = _roleProfile[peran];
+    if (_isDefaultRoleUsername && mapped != null) {
+      return mapped['name']!;
+    }
+    return username.isNotEmpty ? username : (mapped?['name'] ?? 'Tamu');
+  }
+
+  String get roleSubtitle {
+    final mapped = _roleProfile[peran];
+    if (_isDefaultRoleUsername && mapped != null) {
+      return mapped['subtitle']!;
+    }
+    return mapped?['name'] ?? peran;
+  }
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -33,6 +60,6 @@ class User {
   }
 
   static User guest() {
-    return User(id: 0, username: 'Tamu / Publik', peran: 'Tamu');
+    return User(id: 0, username: 'Tamu', peran: 'Tamu');
   }
 }

@@ -1,7 +1,7 @@
 # Product Requirement Document (PRD)
 ## Sistem Pencarian Pasal — P3H Kemenkum Kalsel
 
-**Versi**: 3.1  
+**Versi**: 3.2  
 **Tanggal Pembaruan**: 11 November 2026  
 **Status**: Approved & Production Ready  
 **Target Pengguna**: Divisi Peraturan Perundang-undangan dan Pembinaan Hukum (P3H), Kantor Wilayah Kementerian Hukum Kalimantan Selatan  
@@ -13,7 +13,7 @@
 Dalam proses harmonisasi Rancangan Peraturan Daerah (Ranperda) dan Rancangan Peraturan Kepala Daerah (Ranperkada / Ranpergub) di lingkungan Kantor Wilayah Kementerian Hukum Kalimantan Selatan, tim Perancang Peraturan Perundang-undangan dan Pengelola Harmonisasi membutuhkan akses cepat, akurat, dan terintegrasi untuk mencari serta mengelola pasal-pasal rujukan dari berbagai tingkatan peraturan (UUD 1945, Undang-Undang, Peraturan Pemerintah Pengganti Undang-Undang, Peraturan Pemerintah, Peraturan Presiden, hingga Peraturan Daerah Provinsi dan Kabupaten/Kota se-Kalimantan Selatan).
 
 ### Tujuan Utama Produk:
-1. **Mesin Pencari & Kurasi Pasal Real-Time**: Menyediakan pencarian pasal hukum yang instan, responsif, dan presisi (berbasis web HTMX tanpa *page reload* maupun aplikasi mobile Flutter), disertai kemampuan kurasi (Edit & Hapus pasal) bagi Pengelola/Admin.
+1. **Mesin Pencari & Kurasi Data Hukum Real-Time**: Menyediakan pencarian pasal hukum yang instan, responsif, dan presisi (berbasis web HTMX tanpa *page reload* maupun aplikasi mobile Flutter), disertai kemampuan kurasi (Edit & Hapus peraturan maupun pasal) bagi Pengelola dan Admin.
 2. **Keterhubungan Relasi Hukum Komprehensif**: Menyajikan relasi status hukum antar peraturan secara lengkap (*Mencabut*, *Dicabut Dengan*, *Diubah Dengan*, *Mengubah*, *Mencabut Sebagian*, dan *Dicabut Sebagian Dengan*) dengan penyorotan (*highlight*) referensi pasal pada keterangan.
 3. **Manajemen Agenda Rapat Harmonisasi**: Menyediakan agenda penjadwalan rapat harmonisasi Ranperda/Ranpergub yang terstruktur dengan dukungan multi-kompilator dan kontrol hak akses berbasis peran.
 4. **Ekspansi Data Otomatis (Web Crawler)**: Menyediakan alat pengindeksan peraturan dan pasal baru secara langsung melalui URL resmi portal hukum (JDIH BPK / Pemda) maupun entri teks manual.
@@ -28,10 +28,10 @@ Sistem membagi akses pengguna ke dalam 4 tingkatan peran:
 
 | Peran Pengguna | Label Tampilan Antarmuka | Deskripsi & Hak Akses |
 |---|---|---|
-| **Admin** | Administrator | • Manajemen akun operasional (`Pengelola` & `Perancang`) serta reset kata sandi (`/kelola-akun` & `/api/admin/*`)<br>• Pencarian Pasal, **Edit/Hapus Pasal**, dan **Tambah Peraturan via URL** pada antarmuka Web<br>• Akses Lihat (*Read-Only*) pada Jadwal Rapat Harmonisasi |
-| **Pengelola** | Pengelola | • Pencarian Pasal & Filter Peraturan (Web & Mobile)<br>• **Kurasi Pasal (Edit & Hapus Pasal)** langsung dari hasil pencarian (Web)<br>• Manajemen Jadwal Rapat Harmonisasi (**Full CRUD**: Tambah, Ubah, Hapus pada Web & Mobile)<br>• Tambah Peraturan & Pasal via Tautan URL Crawler (Web & Mobile) |
-| **Perancang** | Perancang | • Pencarian Pasal & Filter Peraturan (Web & Mobile)<br>• Manajemen Jadwal Rapat Harmonisasi (**Full CRUD**: Tambah, Ubah, Hapus pada Web & Mobile) |
-| **Tamu** | Tamu (`Akses Publik`) | • Akses langsung Pencarian Pasal, Detail Status Peraturan, dan Tautan Dokumen PDF Asli tanpa harus login<br>• Dibatasi dari menu internal Jadwal Harmonisasi Web, Tambah Peraturan, Edit/Hapus Pasal, dan Administrasi Akun |
+| **Admin** | `Administrator` (*Manajemen Sistem*) | • Manajemen akun operasional (`Pengelola` & `Perancang`) serta reset kata sandi (`/kelola-akun` & `/api/admin/*`)<br>• Pencarian Pasal, **Edit/Hapus Peraturan & Pasal**, serta **Tambah Peraturan via URL** (Web & Mobile)<br>• Akses Lihat (*Read-Only*) pada Jadwal Rapat Harmonisasi |
+| **Pengelola** | `Pengelola` (*Data & Jadwal*) | • Pencarian Pasal & Filter Peraturan (Web & Mobile)<br>• **Kurasi Peraturan & Pasal (Edit & Hapus Peraturan/Pasal)** pada Web & Mobile<br>• Manajemen Jadwal Rapat Harmonisasi (**Full CRUD**: Tambah, Ubah, Hapus pada Web & Mobile)<br>• Tambah Peraturan & Pasal via Tautan URL Crawler (Web & Mobile) |
+| **Perancang** | `Perancang` (*Tim Harmonisasi*) | • Pencarian Pasal & Filter Peraturan (Web & Mobile)<br>• Manajemen Jadwal Rapat Harmonisasi (**Full CRUD**: Tambah, Ubah, Hapus pada Web & Mobile) |
+| **Tamu** | `Tamu` (*Akses Publik*) | • Akses langsung Pencarian Pasal, Detail Status Peraturan, dan Tautan Dokumen PDF Asli tanpa harus login<br>• Dibatasi dari menu internal Jadwal Harmonisasi, Tambah Peraturan, Edit/Hapus data, dan Administrasi Akun |
 
 > **Kebijakan Keamanan Dokumen**: Dokumen PRD ini sengaja **tidak mencantumkan kredensial akun** (username/kata sandi) maupun kunci rahasia sistem. Pengelolaan kredensial sepenuhnya dilakukan pada basis data terenkripsi (`bcryptjs`) melalui Administrator sistem.
 
@@ -42,11 +42,12 @@ Sistem membagi akses pengguna ke dalam 4 tingkatan peran:
 ### 3.1. Mesin Pencarian Pasal, Kurasi Pasal & Filter Peraturan (Web & Mobile)
 - **Pencarian Real-Time**: Pencarian berbasis HTMX (`GET /search-results`, 5 hasil per halaman) pada Web serta REST API (`GET /api/search`, default 10 hasil per halaman, maksimal 50) pada Mobile yang memperbarui hasil secara instan.
 - **Word-Boundary Keyword Highlighting**: Penyorotan kata kunci pencarian pada teks pasal secara presisi menggunakan regex (`<mark>`) tanpa merusak struktur elemen antarmuka.
-- **Dukungan Pencarian Peraturan Kosong (`UNION ALL` Query)**: Peraturan yang baru diindeks tetapi belum memiliki pasal tetap muncul dalam hasil pencarian web dengan keterangan informatif dan tautan dokumen asli.
-- **Edit & Hapus Pasal (Khusus Pengelola & Admin — Web)**:
-  - Tombol **Edit** dan **Hapus** muncul pada kartu hasil pencarian (`result-card-{pasal_id}`) hanya untuk pengguna yang login sebagai `Pengelola` atau `Admin` (dilindungi middleware `requirePengelola`).
-  - **Edit Pasal**: Mengklik **Edit** memanggil `GET /pencarian/edit-pasal-modal/:pasal_id` untuk menampilkan `EditPasalModal` berisi input `Nomor Pasal`, `Nomor Ayat` (opsional), dan `Teks Pasal`, lalu menyimpan perubahan melalui `POST /pencarian/edit-pasal/:pasal_id`.
-  - **Hapus Pasal**: Mengklik **Hapus** menampilkan konfirmasi dialog (`hx-confirm`) dan menjalankan `POST /pencarian/hapus-pasal/:pasal_id` untuk menghapus pasal dari tabel `pasal` serta menghapus kartu dari tampilan secara langsung.
+- **Dukungan Pencarian Peraturan Kosong (`UNION ALL` Query)**: Peraturan yang baru diindeks tetapi belum memiliki pasal tetap muncul dalam hasil pencarian Web (`/search-results`) maupun Mobile (`/api/search`) dengan keterangan informatif dan tautan dokumen asli.
+- **Edit & Hapus Peraturan dan Pasal (Web & Mobile — Pengelola & Admin)**:
+  - Tombol **Edit Peraturan** dan **Hapus Peraturan** muncul pada **setiap kartu hasil pencarian** (termasuk peraturan dengan `pasal_id = NULL`) untuk peran `Pengelola` atau `Admin`, sedangkan tombol **Edit Pasal** dan **Hapus Pasal** muncul saat kartu memiliki `pasal_id`. Pada Mobile tersedia lewat menu kartu (`PopupMenuButton`) maupun layar detail (`PeraturanDetailScreen`).
+  - **Edit Peraturan**: Mengubah jenis, nomor, tahun, judul, status hukum, wilayah, sektor, URL dokumen, dan keterangan status melalui modal HTMX (`GET /pencarian/edit-peraturan-modal/:peraturan_id`, `POST /pencarian/edit-peraturan/:peraturan_id`) atau dialog Mobile (`PUT /api/peraturan/:id`).
+  - **Hapus Peraturan**: Menghapus peraturan beserta seluruh pasalnya via relasi `ON DELETE CASCADE` (`POST /pencarian/hapus-peraturan/:peraturan_id` / `DELETE /api/peraturan/:id`) dengan pembaruan daftar otomatis (`HX-Trigger: refreshResults`).
+  - **Edit & Hapus Pasal**: Mengubah (`Nomor Pasal`, `Nomor Ayat`, `Teks Pasal`) maupun menghapus pasal tertentu (`POST /pencarian/edit-pasal/:pasal_id`, `POST /pencarian/hapus-pasal/:pasal_id`, `PUT /api/pasal/:id`, `DELETE /api/pasal/:id`) lalu memicu refresh hasil pencarian & daftar pasal.
 - **Filter Sektor & Wilayah**:
   - **Sektor Hukum**: Otonomi Daerah, Keuangan Daerah, Tata Ruang, Lingkungan Hidup, Pendidikan, Kesehatan, Ketenagakerjaan, Pertanahan, Perpajakan, Perdagangan, Pertanian, Perikanan, Infrastruktur, Pemerintahan, Hukum, serta opsi sektor terindeks lainnya dari basis data.
   - **Wilayah**: Nasional, Kalimantan Selatan, serta 13 Kabupaten/Kota se-Kalimantan Selatan.
@@ -59,8 +60,8 @@ Sistem membagi akses pengguna ke dalam 4 tingkatan peran:
   - Tombol tautan langsung ke portal JDIH BPK / Pemda.
   - Indikator badge otomatis `Tautan Bermasalah` vs `Tautan Aktif` berdasarkan kolom `status_tautan`.
 - **Antarmuka Header & Profil Sidebar yang Rapi (`src/views/layout.tsx`)**:
-  - Header atas tidak menampilkan pill `"Mode Tamu (Akses Publik)"` agar tampilan tajuk tetap bersih dan konsisten untuk semua pengguna.
-  - Profil pada footer sidebar menggunakan label ringkas (`Tamu` / `Akses Publik`, `Pengelola`, `Perancang`, `Administrator`) dengan pill peran seragam dan tombol `Masuk` / `Keluar`.
+  - Header atas tidak menampilkan pill `"Mode Tamu (Akses Publik)"` agar tampilan tajuk tetap bersih dan konsisten untuk semua pengguna (termasuk AppBar mobile pada mode tamu).
+  - Profil pada footer sidebar (Web) dan tab Profil (Mobile) menampilkan nama tampilan dan subjudul peran yang bersih tanpa pengulangan kata (`Administrator / Manajemen Sistem`, `Pengelola / Data & Jadwal`, `Perancang / Tim Harmonisasi`, `Tamu / Akses Publik`).
 
 ### 3.2. Manajemen Jadwal Rapat Harmonisasi
 - **Agenda Rapat Terstruktur**: Menampilkan No, Jenis Rancangan (`Ranperda` / `Ranpergub`), Pokok Materi (`Tentang`), Hari/Tanggal, Jam (`WITA`), Nama Kompilator, Tim Pokja (`Pokja 1` / `Pokja 2`), dan Pembuat Agenda.
@@ -77,8 +78,8 @@ Sistem membagi akses pengguna ke dalam 4 tingkatan peran:
 - **Skeletonizer Shimmer Effect**: Seluruh proses pemuatan data (pencarian pasal, daftar pasal pada detail peraturan, jadwal rapat, dan daftar akun admin) menggunakan efek animasi *shimmer skeleton* (`skeletonizer ^3.0.0`).
 - **Host Switcher Terintegrasi (`SettingsDialog`)**: Dialog pengaturan alamat backend API dengan preset cepat Web (`http://localhost:3000`) dan Emulator Android (`http://10.0.2.2:3000`), serta tombol **Uji Koneksi Server** (`/api/health`).
 - **Fitur Mobile Lengkap**:
-  - Tab navigasi dinamis sesuai peran (`HomeScreen`): Pencarian, Jadwal Rapat (dengan chip filter `Semua` / `Ranperda` / `Ranperkada`), tab khusus (`Kelola Akun` untuk Admin atau `Tambah Peraturan` untuk Pengelola), serta `Profil & Host`.
-  - `PeraturanDetailScreen`: Membaca seluruh daftar pasal suatu peraturan, pencarian internal antar-pasal, tombol salin teks pasal ke clipboard, dan membuka dokumen asli eksternal.
+  - Tab navigasi dinamis sesuai peran (`HomeScreen`): Pencarian, Jadwal Rapat (disembunyikan untuk `Tamu`; chip filter `Semua` / `Ranperda` / `Ranperkada`), Tambah Peraturan (`Pengelola` & `Admin`), Kelola Akun (`Admin`), serta `Profil & Host`.
+  - `PeraturanDetailScreen`: Menampilkan kartu **Detil Status & Relasi Peraturan** lengkap dengan sorotan kuning non-clickable untuk penyebutan `Pasal N`, daftar pasal & pencarian internal, salin teks pasal, tautan dokumen eksternal, serta aksi **Edit & Hapus Peraturan / Pasal** untuk `Pengelola` & `Admin`.
 
 ### 3.5. Kelola Akun & Reset Kata Sandi (Khusus Admin)
 - Antarmuka khusus **Admin** pada Web (`/kelola-akun`) dan Mobile (`KelolaAkunScreen`) untuk memperbarui kata sandi akun operasional tim (**Pengelola** dan **Perancang**).
@@ -156,15 +157,19 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **56 Peraturan Perundang-Un
 | `GET` | `/api/health` | Pemeriksaan status server dan konektivitas | Publik |
 | `GET` | `/api/cron/recrawl` | Menjalankan verifikasi tautan dokumen peraturan (`runRecrawlCheck`) | Cron / Sistem |
 | `POST` | `/api/auth/login` | Otentikasi pengguna dan pengembalian profil peran JSON | Publik |
-| `GET` | `/api/search` | Pencarian peraturan/pasal (`q`, `sektor`, `wilayah`, `page`, `pageSize`) | Publik / Tamu |
+| `GET` | `/api/search` | Pencarian peraturan/pasal termasuk peraturan kosong via `UNION ALL` (`q`, `sektor`, `wilayah`, `page`, `pageSize`) | Publik / Tamu |
 | `GET` | `/api/peraturan/:id` | Mengambil detail peraturan beserta seluruh daftar pasalnya | Publik / Tamu |
-| `GET` | `/api/jadwal` | Mengambil daftar agenda rapat harmonisasi | Terautentikasi di klien |
+| `PUT` | `/api/peraturan/:id` | Memperbarui metadata & status peraturan | Pengelola / Admin |
+| `DELETE` | `/api/peraturan/:id` | Menghapus peraturan beserta seluruh pasalnya (`ON DELETE CASCADE`) | Pengelola / Admin |
+| `PUT` | `/api/pasal/:id` | Memperbarui nomor pasal, nomor ayat, dan teks pasal | Pengelola / Admin |
+| `DELETE` | `/api/pasal/:id` | Menghapus satu baris pasal | Pengelola / Admin |
+| `GET` | `/api/jadwal` | Mengambil daftar agenda rapat harmonisasi | Staf terautentikasi |
 | `POST` | `/api/jadwal` | Menambahkan agenda jadwal rapat baru | Pengelola / Perancang |
 | `PUT` | `/api/jadwal/:id` | Memperbarui data jadwal rapat harmonisasi | Pengelola / Perancang |
 | `DELETE` | `/api/jadwal/:id` | Menghapus agenda rapat harmonisasi | Pengelola / Perancang |
 | `GET` | `/api/admin/users` | Mengambil daftar metadata akun pengguna (tanpa hash/sandi) | Khusus Admin |
 | `POST` | `/api/admin/reset-password` | Mereset kata sandi akun staf operasional (`Pengelola` / `Perancang`) | Khusus Admin |
-| `POST` | `/api/tambah-peraturan` | Menjalankan crawler untuk mengindeks peraturan baru dari URL | Pengelola |
+| `POST` | `/api/tambah-peraturan` | Menjalankan crawler untuk mengindeks peraturan baru dari URL | Pengelola / Admin |
 
 ### 6.2. Web SSR & HTMX Routes Utama
 
@@ -173,9 +178,12 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **56 Peraturan Perundang-Un
 | `GET` / `POST` | `/login`, `/tamu`, `/logout` | Autentikasi web SSR, mode tamu, dan keluar sesi | Publik |
 | `GET` | `/`, `/pencarian`, `/search-results` | Halaman utama pencarian dan partial hasil HTMX | `allowGuestOrAuth` |
 | `GET` | `/pencarian/status-modal/:peraturan_id` | Modal detail status relasi peraturan | `allowGuestOrAuth` |
+| `GET` | `/pencarian/edit-peraturan-modal/:peraturan_id` | Modal edit peraturan | `requirePengelola` (Pengelola & Admin) |
+| `POST` | `/pencarian/edit-peraturan/:peraturan_id` | Menyimpan pembaruan metadata & status peraturan (`HX-Trigger: refreshResults`) | `requirePengelola` (Pengelola & Admin) |
+| `POST` | `/pencarian/hapus-peraturan/:peraturan_id` | Menghapus peraturan beserta seluruh pasalnya (`HX-Trigger: refreshResults`) | `requirePengelola` (Pengelola & Admin) |
 | `GET` | `/pencarian/edit-pasal-modal/:pasal_id` | Modal edit pasal | `requirePengelola` (Pengelola & Admin) |
-| `POST` | `/pencarian/edit-pasal/:pasal_id` | Menyimpan pembaruan nomor pasal, ayat, dan teks pasal | `requirePengelola` (Pengelola & Admin) |
-| `POST` | `/pencarian/hapus-pasal/:pasal_id` | Menghapus baris pasal dari basis data | `requirePengelola` (Pengelola & Admin) |
+| `POST` | `/pencarian/edit-pasal/:pasal_id` | Menyimpan pembaruan nomor pasal, ayat, dan teks pasal (`HX-Trigger: refreshResults`) | `requirePengelola` (Pengelola & Admin) |
+| `POST` | `/pencarian/hapus-pasal/:pasal_id` | Menghapus baris pasal dari basis data (`HX-Trigger: refreshResults`) | `requirePengelola` (Pengelola & Admin) |
 | `GET` / `POST` | `/jadwal`, `/jadwal/modal/*`, `/jadwal/:id/*` | Halaman & aksi CRUD jadwal rapat harmonisasi | `requireStaff` (tulis: Pengelola & Perancang) |
 | `GET` / `POST` | `/tambah-peraturan` | Formulir & eksekusi web crawler peraturan baru | `requirePengelola` (Pengelola & Admin) |
 | `GET` / `POST` | `/kelola-akun` | Kelola akun dan reset kata sandi staf operasional | `requireAdmin` (Khusus Admin) |

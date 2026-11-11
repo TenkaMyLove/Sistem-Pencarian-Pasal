@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/search_item.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../utils/constants.dart';
+import '../widgets/peraturan_edit_dialogs.dart';
 
 class PeraturanDetailScreen extends StatefulWidget {
   final int peraturanId;
@@ -22,10 +25,28 @@ class PeraturanDetailScreen extends StatefulWidget {
 
 class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
   bool _isLoading = true;
+  bool _wasModified = false;
   String? _errorMessage;
   Map<String, dynamic>? _peraturan;
   List<dynamic> _pasalList = [];
   String _filterQuery = '';
+
+  static const Map<String, String> _statusRelationLabels = {
+    'mencabut': 'MENCABUT',
+    'mencabut_sebagian': 'MENCABUT SEBAGIAN',
+    'diubah_dengan': 'DIUBAH DENGAN',
+    'dicabut_dengan': 'DICABUT DENGAN',
+    'dicabut_sebagian_dengan': 'DICABUT SEBAGIAN DENGAN',
+    'mengubah': 'MENGUBAH',
+    'diubah': 'DIUBAH',
+    'perubahan': 'PERUBAHAN',
+    'peraturan_terkait': 'PERATURAN TERKAIT',
+  };
+
+  static final RegExp _pasalHighlightRegex = RegExp(
+    r'(Pasal\s+\d+(?:\s*(?:s\.d\.|sampai dengan|-)\s*(?:Pasal\s*)?\d+)?(?:\s+ayat\s*\(\d+\))?(?:\s+huruf\s+[a-z])?(?:\s+angka\s+\d+)?)',
+    caseSensitive: false,
+  );
 
   @override
   void initState() {
@@ -62,15 +83,249 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
     }
   }
 
+  Future<void> _handleEditPeraturan() async {
+    if (_peraturan == null) return;
+    final updated = await showEditPeraturanDialog(context, _peraturan!);
+    if (!updated || !mounted) return;
+    _wasModified = true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Peraturan berhasil diperbarui'), behavior: SnackBarBehavior.floating),
+    );
+    await _fetchDetail();
+  }
+
+  Future<void> _handleDeletePeraturan(String title) async {
+    final deleted = await confirmDeletePeraturanDialog(context, widget.peraturanId, title);
+    if (!deleted || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Peraturan berhasil dihapus'), behavior: SnackBarBehavior.floating),
+    );
+    Navigator.of(context).pop(true);
+  }
+
+  Future<void> _handleEditPasal(Map<String, dynamic> p) async {
+    final updated = await showEditPasalDialog(context, p);
+    if (!updated || !mounted) return;
+    _wasModified = true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pasal berhasil diperbarui'), behavior: SnackBarBehavior.floating),
+    );
+    await _fetchDetail();
+  }
+
+  Future<void> _handleDeletePasal(int pasalId, String label) async {
+    final deleted = await confirmDeletePasalDialog(context, pasalId, label);
+    if (!deleted || !mounted) return;
+    _wasModified = true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pasal berhasil dihapus'), behavior: SnackBarBehavior.floating),
+    );
+    await _fetchDetail();
+  }
+
+  List<InlineSpan> _buildHighlightedPasalSpans(String text) {
+    final spans = <InlineSpan>[];
+    int lastEnd = 0;
+    for (final match in _pasalHighlightRegex.allMatches(text)) {
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
+      }
+      spans.add(
+        TextSpan(
+          text: ' ${match.group(0)} ',
+          style: const TextStyle(
+            color: Color(0xFF92400E),
+            backgroundColor: Color(0xFFFEF9C3),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+      lastEnd = match.end;
+    }
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd)));
+    }
+    return spans;
+  }
+
+  Map<String, dynamic>? _parseStatusDetailJson() {
+    dynamic raw = _peraturan != null ? _peraturan!['status_detail_json'] : widget.initialItem?.statusDetailJson;
+    if (raw == null) return null;
+    if (raw is String && raw.trim().isNotEmpty) {
+      try {
+        raw = jsonDecode(raw);
+      } catch (_) {
+        return null;
+      }
+    }
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return null;
+  }
+
+  Widget _buildStatusDetailCard() {
+    final jsonMap = _parseStatusDetailJson();
+    final relationKeys = jsonMap == null
+        ? <String>[]
+        : jsonMap.keys.where((k) => jsonMap[k] is List && (jsonMap[k] as List).isNotEmpty).toList();
+    final plainDetail = (_peraturan != null
+            ? _peraturan!['status_detail']
+            : widget.initialItem?.statusDetail)
+        ?.toString()
+        .trim();
+
+    if (relationKeys.isEmpty && (plainDetail == null || plainDetail.isEmpty)) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.account_tree_outlined, size: 18, color: AppColors.primary),
+                SizedBox(width: 8),
+                Text(
+                  'Detil Status & Relasi Peraturan',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.primary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (relationKeys.isNotEmpty)
+              ...relationKeys.map((key) {
+                final items = (jsonMap![key] as List);
+                final heading = _statusRelationLabels[key] ?? key.replaceAll('_', ' ').toUpperCase();
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$heading:',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...items.map((rawEntry) {
+                        final entry = rawEntry is Map ? rawEntry : <String, dynamic>{};
+                        final entryUrl = (entry['url'] ?? '').toString().trim();
+                        final entryLabel = (entry['judul'] ?? entry['label'] ?? 'Lihat Dokumen').toString();
+                        final keterangan = (entry['keterangan'] ?? '').toString().trim();
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (entryUrl.isNotEmpty)
+                                InkWell(
+                                  onTap: () => _openUrl(entryUrl),
+                                  child: Text(
+                                    entryLabel,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primaryLight,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Text(
+                                  entryLabel,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              if (keterangan.isNotEmpty)
+                                Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(top: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: Colors.blueGrey.shade200),
+                                  ),
+                                  child: Text.rich(
+                                    TextSpan(
+                                      style: const TextStyle(fontSize: 12, height: 1.5, color: Color(0xFF334155)),
+                                      children: _buildHighlightedPasalSpans(keterangan),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                );
+              })
+            else if (plainDetail != null && plainDetail.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: plainDetail
+                      .split('\n')
+                      .map((l) => l.trim())
+                      .where((l) => l.isNotEmpty)
+                      .map(
+                        (line) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text.rich(
+                            TextSpan(
+                              style: const TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
+                              children: _buildHighlightedPasalSpans(line),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final title = widget.initialItem != null
-        ? widget.initialItem!.peraturanTitle
-        : (_peraturan != null
-            ? '${_peraturan!['jenis_peraturan']} No. ${_peraturan!['nomor']} Th. ${_peraturan!['tahun']}'
-            : 'Detail Peraturan');
+    final canManage = AuthService().currentUser?.canManagePeraturan ?? false;
 
-    final status = widget.initialItem?.status ?? (_peraturan?['status'] ?? 'Berlaku');
+    final title = _peraturan != null
+        ? '${_peraturan!['jenis_peraturan']} No. ${_peraturan!['nomor']} Th. ${_peraturan!['tahun']}'
+        : (widget.initialItem?.peraturanTitle ?? 'Detail Peraturan');
+
+    final status = (_peraturan?['status'] ?? widget.initialItem?.status ?? 'Berlaku').toString();
+    final wilayah = (_peraturan?['wilayah'] ?? widget.initialItem?.wilayah ?? 'Nasional').toString();
+    final judul = (_peraturan?['judul'] ?? widget.initialItem?.judul ?? '').toString();
+    final sektor = (_peraturan?['sektor'] ?? widget.initialItem?.sektor ?? '-').toString();
+    final docUrl = (_peraturan?['url_dokumen_asli'] ?? widget.initialItem?.urlDokumenAsli)?.toString();
 
     final filteredPasal = _pasalList.where((p) {
       if (_filterQuery.isEmpty) return true;
@@ -80,18 +335,37 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
       return no.contains(q) || text.contains(q);
     }).toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontSize: 16)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Muat Ulang',
-            onPressed: _fetchDetail,
-          ),
-        ],
-      ),
-      body: _errorMessage != null && !_isLoading
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          Navigator.of(context).pop(_wasModified);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(title, style: const TextStyle(fontSize: 16)),
+          actions: [
+            if (canManage && _peraturan != null) ...[
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit Peraturan',
+                onPressed: _handleEditPeraturan,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                tooltip: 'Hapus Peraturan',
+                onPressed: () => _handleDeletePeraturan(title),
+              ),
+            ],
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Muat Ulang',
+              onPressed: _fetchDetail,
+            ),
+          ],
+        ),
+        body: _errorMessage != null && !_isLoading
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -145,7 +419,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                                   border: Border.all(color: Colors.grey.shade300),
                                 ),
                                 child: Text(
-                                  widget.initialItem?.wilayah ?? (_peraturan?['wilayah'] ?? 'Nasional'),
+                                  wilayah,
                                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                                 ),
                               ),
@@ -153,7 +427,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            widget.initialItem?.judul ?? (_peraturan?['judul'] ?? ''),
+                            judul,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -162,7 +436,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Sektor: ${widget.initialItem?.sektor ?? (_peraturan?['sektor'] ?? '-')}',
+                            'Sektor: $sektor',
                             style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                           ),
                           const Divider(height: 24),
@@ -175,10 +449,7 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                               const Text('Tautan Dokumen Asli:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                               const Spacer(),
                               ElevatedButton(
-                                onPressed: () {
-                                  final url = widget.initialItem?.urlDokumenAsli ?? _peraturan?['url_dokumen_asli'];
-                                  _openUrl(url);
-                                },
+                                onPressed: () => _openUrl(docUrl),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 ),
@@ -190,6 +461,10 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+
+                  // Status Detail & Non-clickable Pasal Highlights
+                  _buildStatusDetailCard(),
                   const SizedBox(height: 16),
 
                   // Search within articles
@@ -242,7 +517,8 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                                 padding: const EdgeInsets.all(24),
                                 alignment: Alignment.center,
                                 child: const Text(
-                                  'Tidak ada pasal yang cocok dengan pencarian.',
+                                  'Belum ada teks pasal pada peraturan ini atau tidak ada yang cocok.',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(color: AppColors.textMuted),
                                 ),
                               )
@@ -259,10 +535,13 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 
   Widget _buildPasalCard(dynamic p) {
+    final canManage = AuthService().currentUser?.canManagePeraturan ?? false;
+    final pasalId = int.tryParse((p['id'] ?? '0').toString()) ?? 0;
     final noPasal = (p['nomor_pasal'] ?? '').toString();
     final noAyat = (p['nomor_ayat'] ?? '').toString();
     final teks = (p['teks_pasal'] ?? '').toString();
@@ -303,19 +582,42 @@ class _PeraturanDetailScreenState extends State<PeraturanDetailScreen> {
                     ],
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 16),
-                  tooltip: 'Salin Pasal',
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: '$noPasal $noAyat\n\n$teks'));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('$noPasal disalin!'),
-                        duration: const Duration(seconds: 1),
-                        behavior: SnackBarBehavior.floating,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (canManage && !_isLoading && pasalId > 0) ...[
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 17, color: AppColors.primary),
+                        tooltip: 'Edit Pasal',
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        padding: EdgeInsets.zero,
+                        onPressed: () => _handleEditPasal(Map<String, dynamic>.from(p as Map)),
                       ),
-                    );
-                  },
+                      IconButton(
+                        icon: Icon(Icons.delete_outline, size: 17, color: Colors.red.shade700),
+                        tooltip: 'Hapus Pasal',
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        padding: EdgeInsets.zero,
+                        onPressed: () => _handleDeletePasal(pasalId, noPasal.isNotEmpty ? noPasal : 'pasal ini'),
+                      ),
+                    ],
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 16),
+                      tooltip: 'Salin Pasal',
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: '$noPasal $noAyat\n\n$teks'));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('$noPasal disalin!'),
+                            duration: const Duration(seconds: 1),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),

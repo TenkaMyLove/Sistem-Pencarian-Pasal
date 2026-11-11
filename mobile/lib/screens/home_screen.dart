@@ -22,16 +22,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final user = AuthService().currentUser;
     final isAdmin = user?.isAdmin ?? false;
-    final isPengelola = user?.isPengelola ?? false;
+    final isTamu = user?.isTamu ?? true;
+    final canTambah = user?.canTambahPeraturan ?? false;
 
-    // Build tabs based on role
+    // Build tabs based on role (mirroring Web RBAC)
     final List<Widget> screens = [
       const SearchScreen(),
-      const JadwalScreen(),
-      if (isAdmin)
-        const KelolaAkunScreen()
-      else if (isPengelola)
-        const TambahPeraturanScreen(),
+      if (!isTamu) const JadwalScreen(),
+      if (canTambah) const TambahPeraturanScreen(),
+      if (isAdmin) const KelolaAkunScreen(),
       const ProfileScreen(),
     ];
 
@@ -41,37 +40,36 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIcon: Icon(Icons.search),
         label: 'Pencarian',
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.calendar_today_outlined),
-        selectedIcon: Icon(Icons.calendar_today),
-        label: 'Jadwal Rapat',
-      ),
+      if (!isTamu)
+        const NavigationDestination(
+          icon: Icon(Icons.calendar_today_outlined),
+          selectedIcon: Icon(Icons.calendar_today),
+          label: 'Jadwal',
+        ),
+      if (canTambah)
+        const NavigationDestination(
+          icon: Icon(Icons.post_add_outlined),
+          selectedIcon: Icon(Icons.post_add),
+          label: 'Tambah',
+        ),
       if (isAdmin)
         const NavigationDestination(
           icon: Icon(Icons.admin_panel_settings_outlined),
           selectedIcon: Icon(Icons.admin_panel_settings),
           label: 'Kelola Akun',
-        )
-      else if (isPengelola)
-        const NavigationDestination(
-          icon: Icon(Icons.post_add_outlined),
-          selectedIcon: Icon(Icons.post_add),
-          label: 'Tambah Peraturan',
         ),
       const NavigationDestination(
         icon: Icon(Icons.person_outline),
         selectedIcon: Icon(Icons.person),
-        label: 'Profil & Host',
+        label: 'Profil',
       ),
     ];
 
     final titles = [
       'Pencarian Peraturan & Pasal',
-      'Jadwal Rapat Harmonisasi',
-      if (isAdmin)
-        'Kelola Akun Pengguna'
-      else if (isPengelola)
-        'Tambah Peraturan via URL',
+      if (!isTamu) 'Jadwal Rapat Harmonisasi',
+      if (canTambah) 'Tambah Peraturan via URL',
+      if (isAdmin) 'Kelola Akun Pengguna',
       'Profil & Pengaturan',
     ];
 
@@ -104,24 +102,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppColors.accent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                user?.peran ?? 'Tamu',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
+          if (!isTamu)
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  user?.displayName ?? '',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-          ),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'Pengaturan Host Server',

@@ -4,7 +4,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/search_item.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../utils/constants.dart';
+import '../widgets/peraturan_edit_dialogs.dart';
 import 'peraturan_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -547,42 +549,49 @@ class _SearchScreenState extends State<SearchScreen> {
             const Divider(height: 18),
 
             // Article Number & Ayat
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.badgeBlueBg,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    item.nomorPasal.isNotEmpty ? item.nomorPasal : 'Pasal',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.badgeBlueText,
-                    ),
-                  ),
-                ),
-                if (item.nomorAyat.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      item.nomorAyat,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade800,
+            Builder(
+              builder: (context) {
+                final hasPasal = item.pasalId > 0 || _isLoading;
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: hasPasal ? AppColors.badgeBlueBg : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        hasPasal
+                            ? (item.nomorPasal.isNotEmpty ? item.nomorPasal : 'Pasal')
+                            : 'Belum ada pasal',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: hasPasal ? AppColors.badgeBlueText : AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ],
+                    if (hasPasal && item.nomorAyat.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          item.nomorAyat,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 8),
 
@@ -642,11 +651,83 @@ class _SearchScreenState extends State<SearchScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 18),
-                  tooltip: 'Salin Teks Pasal',
-                  onPressed: () => _copyPasal(item),
-                ),
+                if ((AuthService().currentUser?.canManagePeraturan ?? false) && !_isLoading)
+                  PopupMenuButton<String>(
+                    tooltip: 'Kelola Peraturan / Pasal',
+                    icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
+                    onSelected: (action) async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      bool changed = false;
+                      String? msg;
+
+                      if (action == 'edit_peraturan') {
+                        changed = await showEditPeraturanDialog(context, {
+                          'id': item.peraturanId,
+                          'jenis_peraturan': item.jenisPeraturan,
+                          'nomor': item.nomor,
+                          'tahun': item.tahun,
+                          'judul': item.judul,
+                          'status': item.status,
+                          'status_detail': item.statusDetail ?? '',
+                          'wilayah': item.wilayah,
+                          'sektor': item.sektor,
+                          'url_dokumen_asli': item.urlDokumenAsli ?? '',
+                        });
+                        if (changed) msg = 'Peraturan berhasil diperbarui';
+                      } else if (action == 'hapus_peraturan') {
+                        changed = await confirmDeletePeraturanDialog(
+                          context,
+                          item.peraturanId,
+                          item.peraturanTitle,
+                        );
+                        if (changed) msg = 'Peraturan berhasil dihapus';
+                      } else if (action == 'edit_pasal' && item.pasalId > 0) {
+                        changed = await showEditPasalDialog(context, {
+                          'id': item.pasalId,
+                          'nomor_pasal': item.nomorPasal,
+                          'nomor_ayat': item.nomorAyat,
+                          'teks_pasal': item.teksPasal,
+                        });
+                        if (changed) msg = 'Pasal berhasil diperbarui';
+                      } else if (action == 'hapus_pasal' && item.pasalId > 0) {
+                        changed = await confirmDeletePasalDialog(
+                          context,
+                          item.pasalId,
+                          item.nomorPasal.isNotEmpty ? item.nomorPasal : 'pasal ini',
+                        );
+                        if (changed) msg = 'Pasal berhasil dihapus';
+                      }
+
+                      if (changed && mounted) {
+                        if (msg != null) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+                          );
+                        }
+                        _fetchData(page: _currentPage);
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(value: 'edit_peraturan', child: Text('Edit Peraturan')),
+                      if (item.pasalId > 0)
+                        const PopupMenuItem(value: 'edit_pasal', child: Text('Edit Pasal')),
+                      if (item.pasalId > 0)
+                        PopupMenuItem(
+                          value: 'hapus_pasal',
+                          child: Text('Hapus Pasal', style: TextStyle(color: Colors.red.shade700)),
+                        ),
+                      PopupMenuItem(
+                        value: 'hapus_peraturan',
+                        child: Text('Hapus Peraturan', style: TextStyle(color: Colors.red.shade700)),
+                      ),
+                    ],
+                  ),
+                if (item.pasalId > 0)
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18),
+                    tooltip: 'Salin Teks Pasal',
+                    onPressed: () => _copyPasal(item),
+                  ),
                 if (item.urlDokumenAsli != null && item.urlDokumenAsli!.isNotEmpty)
                   TextButton.icon(
                     onPressed: () => _launchUrl(item.urlDokumenAsli),
@@ -655,8 +736,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 const SizedBox(width: 4),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
+                  onPressed: () async {
+                    final modified = await Navigator.of(context).push<bool>(
                       MaterialPageRoute(
                         builder: (_) => PeraturanDetailScreen(
                           peraturanId: item.peraturanId,
@@ -664,6 +745,9 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ),
                     );
+                    if (modified == true && mounted) {
+                      _fetchData(page: _currentPage);
+                    }
                   },
                   icon: const Icon(Icons.info_outline, size: 16),
                   label: const Text('Status & Pasal', style: TextStyle(fontSize: 12)),

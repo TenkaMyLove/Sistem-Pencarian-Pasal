@@ -2,6 +2,7 @@ import { jsx } from 'hono/jsx';
 import { Layout } from './layout.js';
 import { UserSession } from '../middleware/auth.js';
 import { PaginatedSearchResults } from '../routes/search.js';
+import { JENIS_OPTIONS, WILAYAH_OPTIONS, SEKTOR_OPTIONS } from './tambah-peraturan.js';
 
 export interface StatusRelationItem {
   judul: string;
@@ -131,7 +132,13 @@ export function SearchView({ user, initialQuery = '', searchData, sektorList, wi
       </div>
 
       {/* Results Container */}
-      <div id="results-container">
+      <div
+        id="results-container"
+        hx-get="/search-results"
+        hx-trigger="refreshResults from:body"
+        hx-include="[name='q'], [name='sektor'], [name='wilayah'], [name='active_page']"
+        hx-indicator="#loading-indicator"
+      >
         <SearchResultsPartial query={initialQuery} searchData={searchData} user={user} />
       </div>
 
@@ -208,6 +215,7 @@ export function SearchResultsPartial({
 
   return (
     <div class="search-results-wrapper">
+      <input type="hidden" name="active_page" value={String(currentPage)} />
       <div class="results-header">
         <span class="results-count">
           Menampilkan {startItem} - {endItem} dari total {totalCount} pasal rujukan {query ? `untuk kata kunci "${query}"` : ''}
@@ -218,14 +226,14 @@ export function SearchResultsPartial({
       <div class="results-scroll-container">
         <div class="results-list">
           {items.map((item) => (
-            <div class="result-card" id={`result-card-${item.pasal_id}`}>
+            <div class="result-card" id={item.pasal_id ? `card-pasal-${item.pasal_id}` : `card-peraturan-${item.peraturan_id}`}>
               <div class="result-card-header">
                 <h4 class="result-title">
                   {item.jenis_peraturan} No. {item.nomor} Tahun {item.tahun}
                 </h4>
 
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-                  <span class={`badge ${item.status === 'berlaku' ? 'badge-status-berlaku' : 'badge-status-dicabut'}`}>
+                  <span class={`badge ${item.status === 'berlaku' ? 'badge-status-berlaku' : item.status === 'diubah' ? 'badge-rel-diubah' : 'badge-status-dicabut'}`}>
                     {item.status.toUpperCase()}
                   </span>
 
@@ -312,35 +320,64 @@ export function SearchResultsPartial({
                   Lihat Detil Status Peraturan &raquo;
                 </button>
 
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                  {isPengelola && item.pasal_id && (
+                <div style="display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap;">
+                  {isPengelola && (
                     <>
                       <button
                         type="button"
-                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; background-color: #fff7ed; color: #c2410c; border: 1px solid #fdba74; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
-                        hx-get={`/pencarian/edit-pasal-modal/${item.pasal_id}`}
+                        style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                        hx-get={`/pencarian/edit-peraturan-modal/${item.peraturan_id}`}
                         hx-target="#modal-container"
-                        title="Edit teks pasal ini"
+                        title="Edit data peraturan ini"
                       >
                         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
-                        Edit
+                        Edit Peraturan
                       </button>
                       <button
                         type="button"
-                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; background-color: #fff1f2; color: #be123c; border: 1px solid #fda4af; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
-                        hx-post={`/pencarian/hapus-pasal/${item.pasal_id}`}
-                        hx-target={`#result-card-${item.pasal_id}`}
-                        hx-swap="outerHTML"
-                        hx-confirm={`Hapus ${item.nomor_pasal} dari ${item.jenis_peraturan} No. ${item.nomor} Tahun ${item.tahun}? Tindakan ini tidak dapat dibatalkan.`}
-                        title="Hapus pasal ini dari database"
+                        style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                        hx-post={`/pencarian/hapus-peraturan/${item.peraturan_id}`}
+                        hx-swap="none"
+                        hx-confirm={`Hapus peraturan ${item.jenis_peraturan} No. ${item.nomor} Tahun ${item.tahun} beserta seluruh pasalnya? Tindakan ini tidak dapat dibatalkan.`}
+                        title="Hapus peraturan ini beserta seluruh pasalnya"
                       >
                         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
-                        Hapus
+                        Hapus Peraturan
                       </button>
+
+                      {item.pasal_id && (
+                        <>
+                          <button
+                            type="button"
+                            style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #fff7ed; color: #c2410c; border: 1px solid #fdba74; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                            hx-get={`/pencarian/edit-pasal-modal/${item.pasal_id}`}
+                            hx-target="#modal-container"
+                            title="Edit teks pasal ini"
+                          >
+                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                            </svg>
+                            Edit Pasal
+                          </button>
+                          <button
+                            type="button"
+                            style="padding: 0.4rem 0.7rem; font-size: 0.78rem; font-weight: 600; background-color: #fff1f2; color: #be123c; border: 1px solid #fda4af; cursor: pointer; border-radius: var(--radius-md); transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.3rem;"
+                            hx-post={`/pencarian/hapus-pasal/${item.pasal_id}`}
+                            hx-swap="none"
+                            hx-confirm={`Hapus ${item.nomor_pasal} dari ${item.jenis_peraturan} No. ${item.nomor} Tahun ${item.tahun}? Tindakan ini tidak dapat dibatalkan.`}
+                            title="Hapus pasal ini dari database"
+                          >
+                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Hapus Pasal
+                          </button>
+                        </>
+                      )}
                     </>
                   )}
 
@@ -542,9 +579,7 @@ function renderKeteranganWithLinks(keterangan: string) {
 }
 
 /**
- * Linkify regulation references in plain text.
- * Matches patterns like: "Perda Provinsi Kalimantan Selatan No. 9 Tahun 2015"
- * and wraps them in clickable search links.
+ * Linkify regulation references in plain text, and highlight Pasal references as non-clickable spans.
  */
 function linkifyRegRefs(text: string) {
   const regPattern = /((?:UU|PP|Perpres|Permen|Perda|Pergub|Perbup|Perwal|Perppu|Inpres|Keppres|Kepmen)\b[^;.\n]*?No\.?\s*\d+\s+Tahun\s+\d{4})/g;
@@ -554,7 +589,9 @@ function linkifyRegRefs(text: string) {
 
   const re = new RegExp(regPattern.source, 'g');
   while ((m = re.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
+    if (m.index > last) {
+      parts.push(renderKeteranganWithLinks(text.slice(last, m.index)));
+    }
     const ref = m[1].trim();
     parts.push(
       <a
@@ -569,11 +606,13 @@ function linkifyRegRefs(text: string) {
     );
     last = m.index + m[0].length;
   }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts.length > 0 ? parts : [text];
+  if (last < text.length) {
+    parts.push(renderKeteranganWithLinks(text.slice(last)));
+  }
+  return parts.length > 0 ? parts : [renderKeteranganWithLinks(text)];
 }
 
-// Komponen fallback: parse teks status_detail menjadi segmen terstruktur dengan link pencarian
+// Komponen fallback: parse teks status_detail menjadi segmen terstruktur
 function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
   const segments = statusDetail
     .split(/[;]/)
@@ -597,12 +636,11 @@ function FallbackStatusDetail({ statusDetail }: { statusDetail: string }) {
 }
 
 // Modal Edit Pasal — hanya untuk Pengelola/Admin
-export function EditPasalModal({ pasal }: { pasal: any }) {
+export function EditPasalModal({ pasal, error }: { pasal: any; error?: string }) {
   return (
     <div class="modal-backdrop" id="edit-pasal-modal" onclick="if(event.target===this)this.remove()">
       <div class="modal-content" style="max-width: 640px; position: relative;">
 
-        {/* Tombol X pojok kanan atas */}
         <button
           type="button"
           onclick="document.getElementById('edit-pasal-modal').remove()"
@@ -621,11 +659,16 @@ export function EditPasalModal({ pasal }: { pasal: any }) {
           </p>
         </div>
 
+        {error && (
+          <div class="alert alert-danger" style="margin-bottom: 1rem;">
+            <span>{error}</span>
+          </div>
+        )}
+
         <form
           hx-post={`/pencarian/edit-pasal/${pasal.id}`}
-          hx-target="#edit-pasal-modal"
-          hx-swap="outerHTML"
-          hx-on--htmx-after-request="if(event.detail.successful){ document.getElementById('edit-pasal-modal')?.remove(); }"
+          hx-target="#modal-container"
+          hx-swap="innerHTML"
         >
           <div class="form-group" style="margin-bottom: 1rem;">
             <label for="ep-nomor-pasal" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.4rem;">
@@ -667,9 +710,7 @@ export function EditPasalModal({ pasal }: { pasal: any }) {
               rows={8}
               style="font-family: monospace; font-size: 0.85rem; resize: vertical;"
               required
-            >
-              {pasal.teks_pasal || ''}
-            </textarea>
+            >{pasal.teks_pasal || ''}</textarea>
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
@@ -678,6 +719,174 @@ export function EditPasalModal({ pasal }: { pasal: any }) {
               class="btn-action"
               style="background-color: #f1f5f9; color: var(--text-main);"
               onclick="document.getElementById('edit-pasal-modal').remove()"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="btn-search"
+              style="gap: 0.5rem;"
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Simpan Perubahan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Modal Edit Peraturan — hanya untuk Pengelola/Admin
+export function EditPeraturanModal({ peraturan, error }: { peraturan: any; error?: string }) {
+  const buildOptions = (baseList: string[], currentVal?: string) => {
+    const val = (currentVal || '').trim();
+    return val && !baseList.includes(val) ? [val, ...baseList] : baseList;
+  };
+
+  const jenisList = buildOptions(JENIS_OPTIONS, peraturan.jenis_peraturan);
+  const wilayahList = buildOptions(WILAYAH_OPTIONS, peraturan.wilayah);
+  const sektorList = buildOptions(SEKTOR_OPTIONS, peraturan.sektor);
+  const statusOptions = ['berlaku', 'diubah', 'dicabut'];
+
+  return (
+    <div class="modal-backdrop" id="edit-peraturan-modal" onclick="if(event.target===this)this.remove()">
+      <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative;">
+
+        <button
+          type="button"
+          onclick="document.getElementById('edit-peraturan-modal').remove()"
+          class="modal-close-btn"
+          title="Tutup"
+        >
+          ✕
+        </button>
+
+        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem; padding-right: 2.5rem;">
+          <h3 style="font-size: 1.1rem; color: var(--primary-navy); font-weight: 800;">
+            Edit Data Peraturan
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Peraturan ID #{peraturan.id}
+          </p>
+        </div>
+
+        {error && (
+          <div class="alert alert-danger" style="margin-bottom: 1rem;">
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form
+          hx-post={`/pencarian/edit-peraturan/${peraturan.id}`}
+          hx-target="#modal-container"
+          hx-swap="innerHTML"
+        >
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem;">
+            <div class="form-group">
+              <label for="er-jenis">Jenis Peraturan <span style="color: var(--danger-color);">*</span></label>
+              <select id="er-jenis" name="jenis_peraturan" class="form-control" required>
+                {jenisList.map((j) => (
+                  <option value={j} selected={peraturan.jenis_peraturan === j}>{j}</option>
+                ))}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="er-nomor">Nomor <span style="color: var(--danger-color);">*</span></label>
+              <input
+                type="text"
+                id="er-nomor"
+                name="nomor"
+                class="form-control"
+                value={peraturan.nomor || ''}
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="er-tahun">Tahun <span style="color: var(--danger-color);">*</span></label>
+              <input
+                type="number"
+                id="er-tahun"
+                name="tahun"
+                class="form-control"
+                value={peraturan.tahun || ''}
+                min="1900"
+                max={String(new Date().getFullYear() + 1)}
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="er-judul">Judul Peraturan <span style="color: var(--danger-color);">*</span></label>
+            <textarea
+              id="er-judul"
+              name="judul"
+              class="form-control"
+              rows={2}
+              style="resize: vertical;"
+              required
+            >{peraturan.judul || ''}</textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem;">
+            <div class="form-group">
+              <label for="er-status">Status</label>
+              <select id="er-status" name="status" class="form-control">
+                {buildOptions(statusOptions, peraturan.status).map((st) => (
+                  <option value={st} selected={(peraturan.status || 'berlaku') === st}>{st.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="er-wilayah">Wilayah</label>
+              <select id="er-wilayah" name="wilayah" class="form-control">
+                {wilayahList.map((w) => (
+                  <option value={w} selected={peraturan.wilayah === w}>{w}</option>
+                ))}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="er-sektor">Sektor</label>
+              <select id="er-sektor" name="sektor" class="form-control">
+                {sektorList.map((s) => (
+                  <option value={s} selected={peraturan.sektor === s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="er-url">URL Dokumen Asli <span style="color: var(--danger-color);">*</span></label>
+            <input
+              type="url"
+              id="er-url"
+              name="url_dokumen_asli"
+              class="form-control"
+              value={peraturan.url_dokumen_asli || ''}
+              required
+            />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="er-status-detail">Keterangan Status <span style="color: var(--text-muted); font-weight: 400;">(opsional)</span></label>
+            <textarea
+              id="er-status-detail"
+              name="status_detail"
+              class="form-control"
+              rows={2}
+              style="resize: vertical;"
+            >{peraturan.status_detail || ''}</textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <button
+              type="button"
+              class="btn-action"
+              style="background-color: #f1f5f9; color: var(--text-main);"
+              onclick="document.getElementById('edit-peraturan-modal').remove()"
             >
               Batal
             </button>

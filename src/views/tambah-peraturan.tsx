@@ -3,12 +3,12 @@ import { Layout } from './layout.js';
 import { UserSession } from '../middleware/auth.js';
 import { CrawlResult } from '../scraper/urlCrawler.js';
 
-const JENIS_OPTIONS = [
+export const JENIS_OPTIONS = [
   'UU', 'PP', 'Perpres', 'Permen', 'Perda', 'Pergub', 'Perbup', 'Perwal',
   'Inpres', 'Keppres', 'Kepmen', 'SE', 'Perppu', 'UUD 1945',
 ];
 
-const WILAYAH_OPTIONS = [
+export const WILAYAH_OPTIONS = [
   'Nasional', 'Kalimantan Selatan',
   'Kabupaten Banjar', 'Kabupaten Barito Kuala', 'Kabupaten Hulu Sungai Selatan',
   'Kabupaten Hulu Sungai Tengah', 'Kabupaten Hulu Sungai Utara',
@@ -17,7 +17,7 @@ const WILAYAH_OPTIONS = [
   'Kota Banjarbaru', 'Kota Banjarmasin',
 ];
 
-const SEKTOR_OPTIONS = [
+export const SEKTOR_OPTIONS = [
   'Keuangan Daerah', 'Otonomi Daerah', 'Tata Ruang', 'Lingkungan Hidup',
   'Pendidikan', 'Kesehatan', 'Ketenagakerjaan', 'Pertanahan',
   'Perpajakan', 'Perdagangan', 'Pertanian', 'Perikanan',

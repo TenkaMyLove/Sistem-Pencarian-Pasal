@@ -239,6 +239,41 @@ class ApiService {
     }
   }
 
+  Future<void> _sendRequest(String method, String path, {Map<String, dynamic>? body, String fallbackError = 'Permintaan gagal'}) async {
+    final baseUrl = await getBaseUrl();
+    final uri = Uri.parse('$baseUrl$path');
+    late final http.Response response;
+    if (method == 'PUT') {
+      response = await http.put(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body ?? {}),
+      ).timeout(const Duration(seconds: 10));
+    } else if (method == 'DELETE') {
+      response = await http.delete(uri).timeout(const Duration(seconds: 10));
+    } else {
+      throw ArgumentError('Unsupported method: $method');
+    }
+
+    final res = jsonDecode(response.body);
+    if (response.statusCode != 200) {
+      throw Exception(res['message'] ?? fallbackError);
+    }
+  }
+
+  // 3b. Manage Peraturan & Pasal (Pengelola / Admin)
+  Future<void> updatePeraturan(int id, Map<String, dynamic> data) =>
+      _sendRequest('PUT', '/api/peraturan/$id', body: data, fallbackError: 'Gagal memperbarui peraturan');
+
+  Future<void> deletePeraturan(int id) =>
+      _sendRequest('DELETE', '/api/peraturan/$id', fallbackError: 'Gagal menghapus peraturan');
+
+  Future<void> updatePasal(int id, Map<String, dynamic> data) =>
+      _sendRequest('PUT', '/api/pasal/$id', body: data, fallbackError: 'Gagal memperbarui pasal');
+
+  Future<void> deletePasal(int id) =>
+      _sendRequest('DELETE', '/api/pasal/$id', fallbackError: 'Gagal menghapus pasal');
+
   // 6. Scraper Tambah Peraturan
   Future<Map<String, dynamic>> tambahPeraturan(Map<String, dynamic> data) async {
     final baseUrl = await getBaseUrl();

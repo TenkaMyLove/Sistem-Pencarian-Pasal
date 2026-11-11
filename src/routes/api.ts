@@ -70,48 +70,51 @@ apiRoutes.get('/search', async (c) => {
     const q = (c.req.query('q') || '').trim();
     const sektor = (c.req.query('sektor') || '').trim();
     const wilayah = (c.req.query('wilayah') || '').trim();
-    const page = Math.max(1, parseInt(c.req.query('page') || '1', 10));
-    const pageSize = Math.min(50, Math.max(1, parseInt(c.req.query('pageSize') || '10', 10)));
-    const offset = (page - 1) * pageSize;
+    const requestedPage = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1);
+    const pageSize = Math.min(50, Math.max(1, parseInt(c.req.query('pageSize') || '10', 10) || 10));
 
-    let baseWhere = ' FROM pasal pas JOIN peraturan per ON pas.peraturan_id = per.id WHERE 1=1';
-    const params: any[] = [];
+    const filterParams: any[] = [];
+    let filterWhere = '';
+
+    if (sektor) {
+      filterWhere += ` AND per.sektor = ?`;
+      filterParams.push(sektor);
+    }
+
+    if (wilayah) {
+      filterWhere += ` AND per.wilayah = ?`;
+      filterParams.push(wilayah);
+    }
+
+    let q1Where = '';
+    let q2Where = '';
+    const q1Params: any[] = [...filterParams];
+    const q2Params: any[] = [...filterParams];
 
     if (q) {
-      baseWhere += ` AND (
+      const likeVal = `%${q}%`;
+      q1Where = ` AND (
         pas.teks_pasal LIKE ? OR
         pas.nomor_pasal LIKE ? OR
         per.judul LIKE ? OR
         per.jenis_peraturan LIKE ? OR
         per.nomor LIKE ?
       )`;
-      const likeVal = `%${q}%`;
-      params.push(likeVal, likeVal, likeVal, likeVal, likeVal);
+      q1Params.push(likeVal, likeVal, likeVal, likeVal, likeVal);
+
+      q2Where = ` AND (
+        per.judul LIKE ? OR
+        per.jenis_peraturan LIKE ? OR
+        per.nomor LIKE ?
+      )`;
+      q2Params.push(likeVal, likeVal, likeVal);
     }
 
-    if (sektor) {
-      baseWhere += ` AND per.sektor = ?`;
-      params.push(sektor);
-    }
-
-    if (wilayah) {
-      baseWhere += ` AND per.wilayah = ?`;
-      params.push(wilayah);
-    }
-
-    // Total Count
-    const countSql = `SELECT COUNT(*) AS total` + baseWhere;
-    const countRes = await query<{ total: string }>(countSql, params);
-    const totalCount = parseInt(countRes[0]?.total || '0', 10);
-    const totalPages = Math.ceil(totalCount / pageSize) || 1;
-
-    // Items
-    const itemsSql = `
-      SELECT 
+    const selectFields = `
         pas.id AS pasal_id,
-        pas.nomor_pasal,
-        pas.nomor_ayat,
-        pas.teks_pasal,
+        COALESCE(pas.nomor_pasal, '—') AS nomor_pasal,
+        COALESCE(pas.nomor_ayat, '') AS nomor_ayat,
+        COALESCE(pas.teks_pasal, '(Belum ada teks pasal — peraturan berhasil diindeks tetapi isi pasal belum berhasil diekstrak. Kunjungi dokumen asli untuk membaca isinya.)') AS teks_pasal,
         per.id AS peraturan_id,
         per.jenis_peraturan,
         per.nomor,
@@ -123,10 +126,32 @@ apiRoutes.get('/search', async (c) => {
         per.wilayah,
         per.sektor,
         per.url_dokumen_asli,
-        per.status_tautan
-      ` + baseWhere + ` ORDER BY per.tahun DESC, per.id DESC, pas.id ASC LIMIT ? OFFSET ?;`;
+        per.status_tautan`;
 
-    const items = await query(itemsSql, [...params, pageSize, offset]);
+    const q1 = `SELECT ${selectFields}
+      FROM pasal pas
+      JOIN peraturan per ON pas.peraturan_id = per.id
+      WHERE 1=1${filterWhere}${q1Where}`;
+
+    const q2 = `SELECT ${selectFields}
+      FROM peraturan per
+      LEFT JOIN pasal pas ON pas.peraturan_id = per.id
+      WHERE pas.id IS NULL${filterWhere}${q2Where}`;
+
+    const unionSql = `(${q1}) UNION ALL (${q2})`;
+    const unionParams = [...q1Params, ...q2Params];
+
+    // Total Count
+    const countSql = `SELECT COUNT(*) AS total FROM (${unionSql}) AS combined`;
+    const countRes = await query<{ total: string }>(countSql, unionParams);
+    const totalCount = parseInt(countRes[0]?.total || '0', 10);
+    const totalPages = Math.ceil(totalCount / pageSize) || 1;
+    const currentPage = Math.min(requestedPage, totalPages);
+    const offset = (currentPage - 1) * pageSize;
+
+    // Items
+    const itemsSql = `SELECT * FROM (${unionSql}) AS combined ORDER BY tahun DESC, peraturan_id DESC, pasal_id ASC LIMIT ? OFFSET ?;`;
+    const items = await query(itemsSql, [...unionParams, pageSize, offset]);
 
     // Available filters
     const sektorRows = await query<{ sektor: string }>('SELECT DISTINCT sektor FROM peraturan WHERE sektor IS NOT NULL AND sektor != \'\' ORDER BY sektor ASC');
@@ -137,7 +162,7 @@ apiRoutes.get('/search', async (c) => {
       data: {
         items,
         totalCount,
-        currentPage: page,
+        currentPage,
         pageSize,
         totalPages,
         filters: {
@@ -172,6 +197,120 @@ apiRoutes.get('/peraturan/:id', async (c) => {
     });
   } catch (err: any) {
     return c.json({ success: false, message: err.message || 'Gagal memuat data peraturan' }, 500);
+  }
+});
+
+// 4b. Update Peraturan
+apiRoutes.put('/peraturan/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'), 10);
+    if (!id || Number.isNaN(id)) {
+      return c.json({ success: false, message: 'ID peraturan tidak valid' }, 400);
+    }
+
+    const existing = await query('SELECT id FROM peraturan WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return c.json({ success: false, message: 'Peraturan tidak ditemukan' }, 404);
+    }
+
+    const body = await c.req.json().catch(() => ({}));
+    const jenis_peraturan = String(body.jenis_peraturan || '').trim();
+    const nomor = String(body.nomor || '').trim();
+    const tahun = parseInt(String(body.tahun || '0'), 10);
+    const judul = String(body.judul || '').trim();
+    const status = String(body.status || 'berlaku').trim();
+    const status_detail = String(body.status_detail || '').trim();
+    const wilayah = String(body.wilayah || 'Nasional').trim();
+    const sektor = String(body.sektor || 'Lainnya').trim();
+    const url_dokumen_asli = String(body.url_dokumen_asli || '').trim();
+
+    if (!jenis_peraturan || !nomor || !tahun || tahun < 1900 || !judul || !url_dokumen_asli) {
+      return c.json({ success: false, message: 'Jenis, nomor, tahun, judul, dan URL dokumen wajib diisi dengan benar' }, 400);
+    }
+
+    await query(
+      `UPDATE peraturan
+       SET jenis_peraturan = ?, nomor = ?, tahun = ?, judul = ?, status = ?, status_detail = ?, wilayah = ?, sektor = ?, url_dokumen_asli = ?
+       WHERE id = ?`,
+      [jenis_peraturan, nomor, tahun, judul, status, status_detail, wilayah, sektor, url_dokumen_asli, id]
+    );
+
+    return c.json({ success: true, message: 'Peraturan berhasil diperbarui' });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message || 'Gagal memperbarui peraturan' }, 500);
+  }
+});
+
+// 4c. Delete Peraturan (CASCADE deletes pasals)
+apiRoutes.delete('/peraturan/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'), 10);
+    if (!id || Number.isNaN(id)) {
+      return c.json({ success: false, message: 'ID peraturan tidak valid' }, 400);
+    }
+
+    const existing = await query('SELECT id FROM peraturan WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return c.json({ success: false, message: 'Peraturan tidak ditemukan' }, 404);
+    }
+
+    await query('DELETE FROM peraturan WHERE id = ?', [id]);
+    return c.json({ success: true, message: 'Peraturan dan seluruh pasalnya berhasil dihapus' });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message || 'Gagal menghapus peraturan' }, 500);
+  }
+});
+
+// 4d. Update Pasal
+apiRoutes.put('/pasal/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'), 10);
+    if (!id || Number.isNaN(id)) {
+      return c.json({ success: false, message: 'ID pasal tidak valid' }, 400);
+    }
+
+    const existing = await query('SELECT id FROM pasal WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return c.json({ success: false, message: 'Pasal tidak ditemukan' }, 404);
+    }
+
+    const body = await c.req.json().catch(() => ({}));
+    const nomor_pasal = String(body.nomor_pasal || '').trim();
+    const nomor_ayat = String(body.nomor_ayat || '').trim();
+    const teks_pasal = String(body.teks_pasal || '').trim();
+
+    if (!nomor_pasal || !teks_pasal) {
+      return c.json({ success: false, message: 'Nomor pasal dan teks pasal wajib diisi' }, 400);
+    }
+
+    await query(
+      'UPDATE pasal SET nomor_pasal = ?, nomor_ayat = ?, teks_pasal = ? WHERE id = ?',
+      [nomor_pasal, nomor_ayat, teks_pasal, id]
+    );
+
+    return c.json({ success: true, message: 'Pasal berhasil diperbarui' });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message || 'Gagal memperbarui pasal' }, 500);
+  }
+});
+
+// 4e. Delete Pasal
+apiRoutes.delete('/pasal/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'), 10);
+    if (!id || Number.isNaN(id)) {
+      return c.json({ success: false, message: 'ID pasal tidak valid' }, 400);
+    }
+
+    const existing = await query('SELECT id FROM pasal WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return c.json({ success: false, message: 'Pasal tidak ditemukan' }, 404);
+    }
+
+    await query('DELETE FROM pasal WHERE id = ?', [id]);
+    return c.json({ success: true, message: 'Pasal berhasil dihapus' });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message || 'Gagal menghapus pasal' }, 500);
   }
 });
 

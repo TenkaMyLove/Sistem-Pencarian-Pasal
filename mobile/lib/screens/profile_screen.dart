@@ -84,29 +84,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 36,
                       backgroundColor: AppColors.primary,
                       child: Text(
-                        (user?.username.isNotEmpty == true ? user!.username[0].toUpperCase() : 'T'),
+                        (user?.displayName.isNotEmpty == true ? user!.displayName[0].toUpperCase() : 'T'),
                         style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      user?.username ?? 'Tamu / Publik',
+                      user?.displayName ?? 'Tamu',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.badgeBlueBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'Peran: ${user?.peran ?? 'Tamu'}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.badgeBlueText,
-                        ),
+                    Text(
+                      user?.roleSubtitle ?? 'Akses Publik',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accent,
                       ),
                     ),
                   ],
@@ -195,6 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildPermissionItem('Lihat Jadwal Harmonisasi Rapat', !isTamu),
                     _buildPermissionItem('Tambah & Edit Jadwal Harmonisasi', user?.canManageJadwal ?? false),
                     _buildPermissionItem('Tambah Peraturan via URL (Crawler)', user?.canTambahPeraturan ?? false),
+                    _buildPermissionItem('Edit & Hapus Peraturan / Pasal', user?.canManagePeraturan ?? false),
                     _buildPermissionItem('Kelola Akun & Reset Kata Sandi', user?.isAdmin ?? false),
                   ],
                 ),

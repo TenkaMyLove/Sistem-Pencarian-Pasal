@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   OutlinedButton.icon(
                     onPressed: _isLoading ? null : _handleGuestLogin,
                     icon: const Icon(Icons.public, size: 20),
-                    label: const Text('Masuk sebagai Tamu / Publik'),
+                    label: const Text('Masuk sebagai Tamu'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
