@@ -576,6 +576,10 @@ a { color: var(--blue); }
 }
 
 .quote-text { font-size: 14px; line-height: 22px; white-space: pre-line; overflow-wrap: anywhere; }
+/* Teks pasal: maksimal 5 baris, sisanya dipotong dengan "..." (tombol Selengkapnya dibuat oleh /js/quote-clamp.js) */
+.quote-text.clamp-5 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5; overflow: hidden; }
+.quote-toggle { margin-top: 6px; padding: 0; background: none; border: 0; color: #1d4ed8; font-size: 13px; font-weight: 600; cursor: pointer; }
+.quote-toggle:hover { text-decoration: underline; }
 
 mark {
   background-color: var(--mark-bg);
@@ -728,6 +732,7 @@ mark {
 
 /* ---------- Relasi status ---------- */
 .rel-group { margin-bottom: 1rem; }
+.rel-group > .section-label { color: #000; }
 .rel-group:last-child { margin-bottom: 0; }
 .rel-list { border: 1px solid var(--border); margin-top: 0.5rem; }
 .rel-item { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.75rem; border-bottom: 1px solid var(--border); }

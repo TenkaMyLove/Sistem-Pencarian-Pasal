@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengguna;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -25,7 +26,7 @@ class AuthController extends Controller
         return view('auth.login', ['error' => null]);
     }
 
-    public function login(Request $request): View|RedirectResponse
+    public function login(Request $request): Response|RedirectResponse
     {
         $username = trim((string) $request->input('username'));
         $kataSandi = trim((string) $request->input('kata_sandi'));

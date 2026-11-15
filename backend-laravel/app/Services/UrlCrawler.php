@@ -30,6 +30,9 @@ class UrlCrawler
 {
     private const PASAL_PATTERN = '/^Pasal\s+(\d+[A-Z]?|[Il])$/i';
 
+    /** Rasio kata "aneh" (misal "4dalah", "pe;att:ran") mulai dari mana teks PDF dianggap hasil OCR berantakan. */
+    private const AMBANG_TEKS_BERANTAKAN = 0.02;
+
     /** Label pada halaman BPK  =>  kunci di kolom status_detail_json */
     private const LABEL_TO_KEY = [
         'mencabut' => 'mencabut',
@@ -108,14 +111,22 @@ class UrlCrawler
             $parsedPasal = $this->ekstrakPasalDariTeks($teksManual);
         }
 
-        // Cadangan 2: unduh berkas PDF resmi dari halaman BPK dan ekstrak pasalnya
+        // Materi Pokok / Abstrak resmi BPK: selalu disimpan bila ada (di urutan pertama).
+        $materiPokok = $crawler !== null ? $this->ekstrakAbstrakBpk($crawler) : [];
+
+        // Cadangan 2: unduh berkas PDF resmi dari halaman BPK dan ekstrak pasalnya.
+        // Jika PDF berupa hasil pindaian (lapisan teks OCR BPK penuh salah baca) DAN Materi Pokok tersedia,
+        // pasal hasil PDF dilewati supaya pencarian tidak berisi teks berantakan.
         if (count($parsedPasal) === 0 && $crawler !== null) {
-            $parsedPasal = $this->ekstrakPasalDariPdf($crawler, $url);
+            $dariPdf = $this->ekstrakPasalDariPdf($crawler, $url);
+            if (count($materiPokok) > 0 && $this->skorTeksBerantakan($dariPdf) >= self::AMBANG_TEKS_BERANTAKAN) {
+                $dariPdf = [];
+            }
+            $parsedPasal = $dariPdf;
         }
 
-        // Cadangan 3: jika PDF merupakan hasil pindaian gambar (0 pasal teks), gunakan Abstrak/Materi Pokok resmi BPK
-        if (count($parsedPasal) === 0 && $crawler !== null) {
-            $parsedPasal = $this->ekstrakAbstrakBpk($crawler);
+        if (count($materiPokok) > 0) {
+            $parsedPasal = array_merge($materiPokok, $parsedPasal);
         }
 
         // 3. Simpan ke database (satu transaksi: gagal satu = batal semua)
@@ -365,6 +376,30 @@ class UrlCrawler
 
             return [];
         }
+    }
+
+    /**
+     * Skor kualitas teks hasil ekstraksi PDF: rasio kata "aneh" terhadap seluruh kata.
+     * Kata aneh = huruf bercampur angka ("4dalah"), huruf kecil lalu kapital di tengah kata ("scrlan"→"sCrlan"),
+     * atau tanda baca/simbol di tengah kata ("pe;att:ran"). Teks bersih ≈ 0–0,01; OCR buruk ≥ 0,02.
+     *
+     * @param  array<int, array{teks_pasal: string}>  $pasal
+     */
+    private function skorTeksBerantakan(array $pasal): float
+    {
+        $kata = preg_split('/\s+/u', trim(implode(' ', array_column($pasal, 'teks_pasal'))), -1, PREG_SPLIT_NO_EMPTY);
+        if (count($kata) < 20) {
+            return 0.0;
+        }
+
+        $aneh = 0;
+        foreach ($kata as $k) {
+            if (preg_match('/\p{L}\d|\d\p{L}|\p{Ll}\p{Lu}|\p{L}[.;:^<>|{}\[\]\\\\]\p{L}/u', $k)) {
+                $aneh++;
+            }
+        }
+
+        return $aneh / count($kata);
     }
 
     /**
