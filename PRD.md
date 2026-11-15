@@ -1,7 +1,7 @@
 # Product Requirement Document (PRD)
 ## Sistem Pencarian Pasal — P3H Kemenkum Kalsel
 
-**Versi**: 3.2  
+**Versi**: 3.3  
 **Tanggal Pembaruan**: 11 November 2026  
 **Status**: Approved & Production Ready  
 **Target Pengguna**: Divisi Peraturan Perundang-undangan dan Pembinaan Hukum (P3H), Kantor Wilayah Kementerian Hukum Kalimantan Selatan  
@@ -14,10 +14,10 @@ Dalam proses harmonisasi Rancangan Peraturan Daerah (Ranperda) dan Rancangan Per
 
 ### Tujuan Utama Produk:
 1. **Mesin Pencari & Kurasi Data Hukum Real-Time**: Menyediakan pencarian pasal hukum yang instan, responsif, dan presisi (berbasis web HTMX tanpa *page reload* maupun aplikasi mobile Flutter), disertai kemampuan kurasi (Edit & Hapus peraturan maupun pasal) bagi Pengelola dan Admin.
-2. **Keterhubungan Relasi Hukum Komprehensif**: Menyajikan relasi status hukum antar peraturan secara lengkap (*Mencabut*, *Dicabut Dengan*, *Diubah Dengan*, *Mengubah*, *Mencabut Sebagian*, dan *Dicabut Sebagian Dengan*) dengan penyorotan (*highlight*) referensi pasal pada keterangan.
-3. **Manajemen Agenda Rapat Harmonisasi**: Menyediakan agenda penjadwalan rapat harmonisasi Ranperda/Ranpergub yang terstruktur dengan dukungan multi-kompilator dan kontrol hak akses berbasis peran.
+2. **Keterhubungan Relasi Hukum Komprehensif**: Menyajikan relasi status hukum antar peraturan secara lengkap (*Mencabut*, *Dicabut Dengan*, *Diubah Dengan*, *Mengubah*, *Mencabut Sebagian*, dan *Dicabut Sebagian Dengan*) dengan penyorotan (*highlight*) referensi pasal non-clickable pada keterangan.
+3. **Manajemen Agenda Rapat Harmonisasi**: Menyediakan agenda penjadwalan rapat harmonisasi Ranperda/Ranpergub berbasis Tim Pokja (`Pokja 1` / `Pokja 2`) dengan dukungan multi-kompilator, ringkasan jadwal mingguan siap salin, dan kontrol hak akses berbasis peran.
 4. **Ekspansi Data Otomatis (Web Crawler)**: Menyediakan alat pengindeksan peraturan dan pasal baru secara langsung melalui URL resmi portal hukum (JDIH BPK / Pemda) maupun entri teks manual.
-5. **Aksesibilitas Multi-Platform**: Mendukung peramban web desktop dan aplikasi mobile Flutter multi-platform (Web Browser Chrome/Edge & Android Emulator/Device) dengan tampilan modern dan efek *skeletonizer*.
+5. **Aksesibilitas Multi-Platform & Konsistensi Visual**: Mendukung dashboard web modern serta aplikasi mobile Flutter multi-platform (Web Browser Chrome/Edge & Android Emulator/Device) dengan sistem desain terpadu Sovereign Navy & Slate serta efek *skeletonizer*.
 6. **Verifikasi Keabsahan Dokumen**: Memastikan tautan dokumen sumber mengarah langsung ke dokumen resmi terverifikasi dengan pemantauan status keaktifan tautan (*normal* vs *tautan_bermasalah*).
 
 ---
@@ -28,10 +28,10 @@ Sistem membagi akses pengguna ke dalam 4 tingkatan peran:
 
 | Peran Pengguna | Label Tampilan Antarmuka | Deskripsi & Hak Akses |
 |---|---|---|
-| **Admin** | `Administrator` (*Manajemen Sistem*) | • Manajemen akun operasional (`Pengelola` & `Perancang`) serta reset kata sandi (`/kelola-akun` & `/api/admin/*`)<br>• Pencarian Pasal, **Edit/Hapus Peraturan & Pasal**, serta **Tambah Peraturan via URL** (Web & Mobile)<br>• Akses Lihat (*Read-Only*) pada Jadwal Rapat Harmonisasi |
+| **Admin** | `Administrator` (*Manajemen Sistem*) | • Manajemen akun operasional (`Pengelola` & `Perancang`) serta reset kata sandi (`/kelola-akun`, `KelolaAkunScreen`, & `/api/admin/*`)<br>• Pencarian Pasal, **Edit/Hapus Peraturan & Pasal**, serta **Tambah Peraturan via URL** (Web & Mobile)<br>• Akses Lihat (*Read-Only*) pada Jadwal Rapat Harmonisasi |
 | **Pengelola** | `Pengelola` (*Data & Jadwal*) | • Pencarian Pasal & Filter Peraturan (Web & Mobile)<br>• **Kurasi Peraturan & Pasal (Edit & Hapus Peraturan/Pasal)** pada Web & Mobile<br>• Manajemen Jadwal Rapat Harmonisasi (**Full CRUD**: Tambah, Ubah, Hapus pada Web & Mobile)<br>• Tambah Peraturan & Pasal via Tautan URL Crawler (Web & Mobile) |
 | **Perancang** | `Perancang` (*Tim Harmonisasi*) | • Pencarian Pasal & Filter Peraturan (Web & Mobile)<br>• Manajemen Jadwal Rapat Harmonisasi (**Full CRUD**: Tambah, Ubah, Hapus pada Web & Mobile) |
-| **Tamu** | `Tamu` (*Akses Publik*) | • Akses langsung Pencarian Pasal, Detail Status Peraturan, dan Tautan Dokumen PDF Asli tanpa harus login<br>• Dibatasi dari menu internal Jadwal Harmonisasi, Tambah Peraturan, Edit/Hapus data, dan Administrasi Akun |
+| **Tamu** | `Tamu` (*Akses Publik*) | • Akses langsung Pencarian Pasal, Detail Status Peraturan, dan Tautan Dokumen Sumber Asli tanpa harus login<br>• Dibatasi dari menu internal Jadwal Harmonisasi, Tambah Peraturan, Edit/Hapus data, dan Administrasi Akun |
 
 > **Kebijakan Keamanan Dokumen**: Dokumen PRD ini sengaja **tidak mencantumkan kredensial akun** (username/kata sandi) maupun kunci rahasia sistem. Pengelolaan kredensial sepenuhnya dilakukan pada basis data terenkripsi (`bcryptjs`) melalui Administrator sistem.
 
@@ -41,55 +41,65 @@ Sistem membagi akses pengguna ke dalam 4 tingkatan peran:
 
 ### 3.1. Mesin Pencarian Pasal, Kurasi Pasal & Filter Peraturan (Web & Mobile)
 - **Pencarian Real-Time**: Pencarian berbasis HTMX (`GET /search-results`, 5 hasil per halaman) pada Web serta REST API (`GET /api/search`, default 10 hasil per halaman, maksimal 50) pada Mobile yang memperbarui hasil secara instan.
-- **Word-Boundary Keyword Highlighting**: Penyorotan kata kunci pencarian pada teks pasal secara presisi menggunakan regex (`<mark>`) tanpa merusak struktur elemen antarmuka.
-- **Dukungan Pencarian Peraturan Kosong (`UNION ALL` Query)**: Peraturan yang baru diindeks tetapi belum memiliki pasal tetap muncul dalam hasil pencarian Web (`/search-results`) maupun Mobile (`/api/search`) dengan keterangan informatif dan tautan dokumen asli.
+- **Word-Boundary Keyword Highlighting**: Penyorotan kata kunci pencarian pada teks pasal secara presisi menggunakan regex (`<mark>` pada Web dan `TextSpan` sorotan kuning pada Mobile) tanpa merusak struktur elemen antarmuka.
+- **Dukungan Pencarian Peraturan Kosong (`UNION ALL` Query)**: Peraturan yang baru diindeks tetapi belum memiliki pasal tetap muncul dalam hasil pencarian Web (`/search-results`) maupun Mobile (`/api/search`) tanpa kotak keterangan "Dokumen Peraturan Terindeks" (kotak disembunyikan bila tidak ada pasal), tetap dengan tombol detil status dan tautan dokumen asli. Pengekstrak PDF kini juga menghentikan pembacaan pada blok pengesahan (Ditetapkan/Diundangkan di ...), LAMPIRAN, dan PENJELASAN, serta membuang karakter kontrol dari font PDF rusak sehingga pasal penutup tidak lagi memuat teks sampah.
 - **Edit & Hapus Peraturan dan Pasal (Web & Mobile — Pengelola & Admin)**:
-  - Tombol **Edit Peraturan** dan **Hapus Peraturan** muncul pada **setiap kartu hasil pencarian** (termasuk peraturan dengan `pasal_id = NULL`) untuk peran `Pengelola` atau `Admin`, sedangkan tombol **Edit Pasal** dan **Hapus Pasal** muncul saat kartu memiliki `pasal_id`. Pada Mobile tersedia lewat menu kartu (`PopupMenuButton`) maupun layar detail (`PeraturanDetailScreen`).
-  - **Edit Peraturan**: Mengubah jenis, nomor, tahun, judul, status hukum, wilayah, sektor, URL dokumen, dan keterangan status melalui modal HTMX (`GET /pencarian/edit-peraturan-modal/:peraturan_id`, `POST /pencarian/edit-peraturan/:peraturan_id`) atau dialog Mobile (`PUT /api/peraturan/:id`).
-  - **Hapus Peraturan**: Menghapus peraturan beserta seluruh pasalnya via relasi `ON DELETE CASCADE` (`POST /pencarian/hapus-peraturan/:peraturan_id` / `DELETE /api/peraturan/:id`) dengan pembaruan daftar otomatis (`HX-Trigger: refreshResults`).
-  - **Edit & Hapus Pasal**: Mengubah (`Nomor Pasal`, `Nomor Ayat`, `Teks Pasal`) maupun menghapus pasal tertentu (`POST /pencarian/edit-pasal/:pasal_id`, `POST /pencarian/hapus-pasal/:pasal_id`, `PUT /api/pasal/:id`, `DELETE /api/pasal/:id`) lalu memicu refresh hasil pencarian & daftar pasal.
-- **Filter Sektor & Wilayah**:
+  - Tombol **Edit Peraturan** dan **Hapus Peraturan** muncul pada **setiap kartu hasil pencarian** (termasuk peraturan dengan `pasal_id = NULL` pada Web / `pasal_id <= 0` pada Mobile) untuk peran `Pengelola` atau `Admin`, sedangkan aksi **Edit Pasal** dan **Hapus Pasal** tersedia saat item memiliki `pasal_id`. Pada Mobile tersedia lewat tombol ikon Edit (`#EEF2FF`) / Hapus (`#FEE2E2`) di setiap kartu `SearchScreen` (modal pilihan Pasal vs Peraturan) serta AppBar dan kartu pasal di `PeraturanDetailScreen`.
+  - **Edit Peraturan**: Mengubah jenis (`jenis_peraturan`), nomor, tahun, judul (`judul`), status hukum, wilayah, sektor, URL dokumen (`url_dokumen_asli`), dan keterangan status melalui modal HTMX (`GET /pencarian/edit-peraturan-modal/:peraturan_id`, `POST /pencarian/edit-peraturan/:peraturan_id`) atau dialog Mobile (`PUT /api/peraturan/:id`).
+  - **Hapus Peraturan**: Menghapus peraturan beserta seluruh pasalnya via relasi `ON DELETE CASCADE` (`POST /pencarian/hapus-peraturan/:peraturan_id` / `DELETE /api/peraturan/:id`) dengan pembaruan daftar otomatis (`HX-Trigger: refreshResults` di Web; refresh list di Mobile).
+  - **Edit & Hapus Pasal**: Mengubah (`nomor_pasal`, `nomor_ayat`, `teks_pasal`) maupun menghapus pasal tertentu (`POST /pencarian/edit-pasal/:pasal_id`, `POST /pencarian/hapus-pasal/:pasal_id`, `PUT /api/pasal/:id`, `DELETE /api/pasal/:id`).
+- **Filter Sektor & Wilayah + Fitur Pencarian Mobile**:
   - **Sektor Hukum**: Otonomi Daerah, Keuangan Daerah, Tata Ruang, Lingkungan Hidup, Pendidikan, Kesehatan, Ketenagakerjaan, Pertanahan, Perpajakan, Perdagangan, Pertanian, Perikanan, Infrastruktur, Pemerintahan, Hukum, serta opsi sektor terindeks lainnya dari basis data.
   - **Wilayah**: Nasional, Kalimantan Selatan, serta 13 Kabupaten/Kota se-Kalimantan Selatan.
-- **Modal Interaktif Detil Status Peraturan (`StatusDetailModal`)**:
+  - **Riwayat & Pengurutan (Mobile)**: `SearchScreen` menyimpan riwayat pencarian lokal (`SharedPreferences` maksimal 15 entri) melalui tombol riwayat serta menyediakan pengurutan cepat (*Relevansi* vs *Tahun Terbaru*) dan pil horizontal dinamis.
+- **Modal & Sheet Detil Status Peraturan (`StatusDetailModal` / Sheet `Status Hubungan`)**:
   - Menampilkan relasi status hukum lengkap yang dikelompokkan rapi (*Mencabut*, *Mencabut Sebagian*, *Diubah Dengan*, *Dicabut Dengan*, *Dicabut Sebagian Dengan*, *Mengubah*, *Diubah*, *Perubahan*, *Peraturan Terkait*).
   - Tautan regulasi relasi mengarah langsung ke portal resmi eksternal (BPK/JDIH) di tab baru dengan ikon indikator tautan luar.
-  - **Sorotan Referensi Pasal Non-Clickable**: Penyebutan pasal di dalam teks `keterangan` (misalnya `"Pasal 238"`, `"Pasal 15"`, `"Pasal 21 s.d. Pasal 25"`, `"Pasal 1 angka 30"`) disorot menggunakan elemen `<span>` berwarna kuning-oranye (`background-color: #fef9c3; color: #92400e; font-weight: 700`) dan **tidak dijadikan tautan klik**, karena pasal rujukan tersebut belum tentu tersedia di dalam basis data sistem.
-  - Dilengkapi tombol tutup (`✕`) di pojok kanan atas serta penutupan otomatis saat klik area backdrop/luar modal.
+  - **Sorotan Referensi Pasal Non-Clickable**: Penyebutan pasal di dalam teks `keterangan` (misalnya `"Pasal 238"`, `"Pasal 15"`, `"Pasal 21 s.d. Pasal 25"`, `"Pasal 1 angka 30"`) disorot menggunakan badge/elemen berwarna kuning (`background-color: #fef9c3` / `#FEF08A`) dan **tidak dijadikan tautan klik**, karena pasal rujukan tersebut belum tentu tersedia di dalam basis data sistem.
+  - Dilengkapi tombol tutup (`✕`) serta penutupan otomatis saat klik area backdrop/luar modal (Web) atau dismissible bottom sheet (Mobile).
 - **Tautan Dokumen PDF Asli**:
   - Tombol tautan langsung ke portal JDIH BPK / Pemda.
   - Indikator badge otomatis `Tautan Bermasalah` vs `Tautan Aktif` berdasarkan kolom `status_tautan`.
-- **Antarmuka Header & Profil Sidebar yang Rapi (`src/views/layout.tsx`)**:
-  - Header atas tidak menampilkan pill `"Mode Tamu (Akses Publik)"` agar tampilan tajuk tetap bersih dan konsisten untuk semua pengguna (termasuk AppBar mobile pada mode tamu).
-  - Profil pada footer sidebar (Web) dan tab Profil (Mobile) menampilkan nama tampilan dan subjudul peran yang bersih tanpa pengulangan kata (`Administrator / Manajemen Sistem`, `Pengelola / Data & Jadwal`, `Perancang / Tim Harmonisasi`, `Tamu / Akses Publik`).
+- **Antarmuka Dashboard Web & Navigasi (`src/views/layout.tsx`, `src/views/login.tsx`)**:
+  - **Fixed Sidebar (`w-80`)**: Tetap menempel di sisi kiri layar sehingga daftar *Menu Yuridis* dan profil footer pengguna selalu terlihat meskipun daftar hasil pencarian panjang ke bawah.
+  - **Fixed Top Header Bar**: Menampilkan judul halaman huruf kapital, lencana peran aktif (`displayName` & `displayRole`), serta tombol `Masuk`/`Keluar`, tanpa menampilkan pill `"Mode Tamu (Akses Publik)"`.
+  - **Profil Peran Tanpa Duplikasi Kata**: Menampilkan label bersih (`Administrator / Manajemen Sistem`, `Pengelola / Data & Jadwal`, `Perancang / Tim Harmonisasi`, `Tamu / Akses Publik`).
+  - **Halaman Masuk Web (`LoginView`)**: Latar penuh `#0b192c` (*Sovereign Navy*), tajuk Kementerian Hukum RI Kanwil Kalsel, kartu login terpusat dengan logo Pengayoman, opsi *Ingat sesi login pada perangkat kerja ini*, dan tautan publik *Akses Pencarian Pasal Publik Tanpa Login*.
 
 ### 3.2. Manajemen Jadwal Rapat Harmonisasi
-- **Agenda Rapat Terstruktur**: Menampilkan No, Jenis Rancangan (`Ranperda` / `Ranpergub`), Pokok Materi (`Tentang`), Hari/Tanggal, Jam (`WITA`), Nama Kompilator, Tim Pokja (`Pokja 1` / `Pokja 2`), dan Pembuat Agenda.
-- **Dukungan Multi-Kompilator**: Checkbox pilihan tim perancang standar serta kolom entri manual untuk nama kompilator tambahan (dipisahkan koma).
-- **Kontrol Hak Akses**: **Pengelola** dan **Perancang** memiliki kontrol CRUD penuh (Tambah, Ubah, Hapus di Web dan Mobile), sedangkan **Admin** memiliki akses baca (*Read-Only*), dan **Tamu** dibatasi dari akses agenda rapat internal pada Web.
+- **Agenda Rapat Terstruktur**: Menampilkan Jenis Rancangan (`Ranperda` / `Ranpergub`), Pokok Materi (`Tentang`), Hari/Tanggal, Jam (`WITA`), Nama Kompilator, Tim Pokja (`Pokja 1` / `Pokja 2`), dan Pembuat Agenda.
+- **Filter Pokja & Ringkasan Cetak Mingguan (Mobile)**: `JadwalScreen` menyediakan pil filter berhitungan (`Semua`, `Pokja 1`, `Pokja 2`) dengan normalisasi format Pokja I/II, banner total agenda ditampilkan, serta fitur `Cetak Mingguan` (modal ringkasan jadwal terformat siap salin ke clipboard).
+- **Standardisasi Format Waktu & Multi-Kompilator**:
+  - Web mendukung checkbox pilihan tim perancang standar serta entri manual nama kompilator tambahan.
+  - Mobile (`JadwalFormDialog`) mengirimkan format jam `HH:mm` agar sesuai dengan kolom MySQL `TIME NOT NULL` dan menampilkannya secara konsisten dalam format `HH.mm WITA`.
+- **Kontrol Hak Akses**: **Pengelola** dan **Perancang** memiliki kontrol CRUD penuh (Tambah, Ubah, Hapus di Web dan Mobile), sedangkan **Admin** memiliki akses baca (*Read-Only*), dan **Tamu** dibatasi dari akses agenda rapat internal.
 
 ### 3.3. Tambah Peraturan via Tautan (Web Crawler & Ingestion)
-- Dapat diakses oleh **Pengelola** (serta **Admin** pada antarmuka Web melalui middleware `requirePengelola`).
+- Dapat diakses oleh **Pengelola** dan **Admin** pada antarmuka Web (`/tambah-peraturan`) dan Mobile (`TambahPeraturanScreen`).
 - Crawler otomatis (`urlCrawler.ts`) mengekstrak metadata (`judul` dari meta `og:title`, `<h1>`, atau `<title>`), teks pasal berpola `"Pasal N"`, serta relasi status peraturan (khusus halaman JDIH BPK).
-- Tersedia kolom opsional `teks_pasal_manual` untuk menyalin-tempel isi teks peraturan secara manual jika halaman sumber tidak menyediakan struktur HTML yang dapat di-parse otomatis, dengan tampilan formulir yang bersih tanpa teks bantuan berikon emoji dekoratif.
+- Kolom opsional `teks_manual` (API) / `teks_pasal_manual` (Web form) memungkinkan salin-tempel isi teks peraturan secara manual jika halaman sumber tidak dapat di-parse otomatis, dengan antarmuka bersih tanpa teks bantuan berikon emoji dekoratif.
 
 ### 3.4. Aplikasi Mobile Terintegrasi (Flutter)
-- Dikembangkan menggunakan **Flutter** multi-platform (Web Browser Chrome/Edge dan Android Emulator/Device).
-- **Skeletonizer Shimmer Effect**: Seluruh proses pemuatan data (pencarian pasal, daftar pasal pada detail peraturan, jadwal rapat, dan daftar akun admin) menggunakan efek animasi *shimmer skeleton* (`skeletonizer ^3.0.0`).
-- **Host Switcher Terintegrasi (`SettingsDialog`)**: Dialog pengaturan alamat backend API dengan preset cepat Web (`http://localhost:3000`) dan Emulator Android (`http://10.0.2.2:3000`), serta tombol **Uji Koneksi Server** (`/api/health`).
-- **Fitur Mobile Lengkap**:
-  - Tab navigasi dinamis sesuai peran (`HomeScreen`): Pencarian, Jadwal Rapat (disembunyikan untuk `Tamu`; chip filter `Semua` / `Ranperda` / `Ranperkada`), Tambah Peraturan (`Pengelola` & `Admin`), Kelola Akun (`Admin`), serta `Profil & Host`.
-  - `PeraturanDetailScreen`: Menampilkan kartu **Detil Status & Relasi Peraturan** lengkap dengan sorotan kuning non-clickable untuk penyebutan `Pasal N`, daftar pasal & pencarian internal, salin teks pasal, tautan dokumen eksternal, serta aksi **Edit & Hapus Peraturan / Pasal** untuk `Pengelola` & `Admin`.
+- Dikembangkan menggunakan **Flutter** multi-platform (Web Browser Chrome/Edge dan Android Emulator/Device) dengan sistem desain terpadu:
+  - **Palet & Komponen**: Sovereign Navy (`#0B192C`), Slate (`#1E293B`), Administrative Blue (`#1D4ED8`), Soft Indigo (`#EEF2FF`), canvas terang `#F8FAFC`, input `#F1F5F9` borderless radius `10`, kartu putih berborder `#E2E8F0` radius `14`, serta font `Inter` (`google_fonts`).
+  - **Splash Screen (`SplashScreen`)**: Tampilan navy dengan logo Pengayoman, inisialisasi sesi `AuthService`, serta pengelolaan `Timer` yang dibersihkan pada `dispose()`.
+  - **Masuk Sistem (`LoginScreen`)**: Desain kartu putih di atas `#F8FAFC`, fitur *Ingat Sesi Saya*, dialog informasi *Lupa Sandi?*, akses *Mode Tamu*, dan tombol pengaturan host.
+  - **Shell Utama (`HomeScreen`)**: AppBar navy dengan subjudul tab aktif, indikator koneksi server (`SettingsDialog`), avatar inisial menuju `ProfileScreen`, dan navigasi bawah 4 tab sesuai RBAC (`Pencarian`, `Jadwal Rapat`, `Tambah`, `Kelola Akun`; disembunyikan pada mode `Tamu`).
+  - **Skeletonizer Shimmer Effect**: Seluruh proses pemuatan data pada `SearchScreen`, `PeraturanDetailScreen`, `JadwalScreen`, dan `KelolaAkunScreen` menggunakan efek animasi *shimmer skeleton* (`skeletonizer ^3.0.0`).
+  - **Host Switcher Non-Destruktif (`SettingsDialog`)**: Preset cepat Web (`http://localhost:3000`) dan Emulator Android (`http://10.0.2.2:3000`), serta tombol **Uji Koneksi Server** menggunakan `ApiService.checkHealth({ baseUrlOverride })` sehingga pengujian URL tidak menimpa pengaturan tersimpan sebelum ditekan simpan.
+  - **PeraturanDetailScreen**: Kartu metadata, kartu *Keterangan & Pasal Terdampak* dengan sorotan kuning non-clickable, pencarian/saring pasal internal, salin teks pasal, tautan dokumen eksternal, serta aksi Edit/Hapus peraturan & pasal untuk `Pengelola` dan `Admin`.
+  - **ProfileScreen**: Kartu identitas pengguna bebas duplikasi label peran, status & konfigurasi server backend, daftar matriks hak akses RBAC peran aktif, serta tombol Keluar/Masuk.
 
 ### 3.5. Kelola Akun & Reset Kata Sandi (Khusus Admin)
 - Antarmuka khusus **Admin** pada Web (`/kelola-akun`) dan Mobile (`KelolaAkunScreen`) untuk memperbarui kata sandi akun operasional tim (**Pengelola** dan **Perancang**).
+- Pada Mobile, `KelolaAkunScreen` menyediakan banner informasi keamanan `bcryptjs cost factor 10`, kartu inline *Form Reset Kata Sandi Staf* (`Pilih Akun Target`, `Kata Sandi Baru`, `Konfirmasi Kata Sandi` dengan toggle visibilitas), serta *Daftar Akun Pengguna Sistem* interaktif yang otomatis memilih akun target saat ditekan.
 - Validasi keamanan: kata sandi minimal 6 karakter, konfirmasi kecocokan kata sandi, pencatatan audit (`diubah_terakhir_oleh`, `tanggal_kata_sandi_diubah`), dan penyimpanan terenkripsi menggunakan algoritma `bcryptjs` (cost factor 10).
 
 ---
 
-## 4. Cakupan Data Peraturan (56 Peraturan Terindeks)
+## 4. Cakupan Data Peraturan (86 Peraturan Terindeks)
 
-Basis data awal (`database_dump_mysql.sql`) mencakup **56 Peraturan Perundang-Undangan** terverifikasi yang meliputi regulasi nasional dan daerah:
+Basis data awal (`database_dump_mysql.sql`) mencakup **86 Peraturan Perundang-Undangan** terverifikasi yang meliputi regulasi nasional dan daerah:
 
 | Sektor Hukum | Peraturan Terindeks |
 |---|---|
@@ -112,16 +122,16 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **56 Peraturan Perundang-Un
 ```
    +------------------------------------+      +------------------------------------+
    |         Client Web Browser         |      |       Client Mobile App (Flutter)  |
-   |      HTMX + Custom CSS P3H         |      |  Android / Chrome Web / Skeleton   |
+   |  HTMX + Tailwind + Custom CSS P3H  |      |  Android / Chrome Web / Skeleton   |
    +-----------------+------------------+      +-----------------+------------------+
                      |                                           |
-                     | (HTML / HTMX SSR)                         | (JSON / REST API)
+                     | (HTML / HTMX SSR)                         | (JSON / REST API + CORS)
                      +--------------------+ ---------------------+
                                           |
                                           v
                      +-------------------------------------------+
                      |       Hono Web & API Server (Node.js)     |
-                     |  - Middleware: Auth & RBAC Cookie/CORS    |
+                     |  - Middleware: Auth Cookie & /api/* CORS  |
                      |  - SSR Engine: Hono JSX Components        |
                      |  - API Controller: /api/* Endpoints       |
                      |  - Scraper Engine: Cheerio & URL Crawler  |
@@ -140,36 +150,36 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **56 Peraturan Perundang-Un
 - **Backend Runtime**: Node.js v20+ / v22+ (ESM)
 - **Web Framework**: [Hono](https://hono.dev/) `^4.6.14` (SSR JSX & REST API)
 - **Database Engine**: MySQL 8.x (`mysql2 ^3.11.3` dengan Full-Text Indexing)
-- **Frontend Web**: HTMX 1.9.10 + Custom Vanilla CSS (`public/css/style.css`)
+- **Frontend Web**: HTMX 1.9.10 + Tailwind CSS + Custom Vanilla CSS (`public/css/style.css`)
 - **Mobile Framework**: Flutter & Dart `^3.11.5` (Material 3 Multi-platform)
 - **Mobile UI Libraries**: `skeletonizer ^3.0.0`, `google_fonts ^8.2.1`, `http ^1.6.0`, `shared_preferences ^2.5.6`, `url_launcher ^6.3.3`, `intl ^0.20.3`
 - **Web Scraper & Crawler**: `cheerio ^1.2.0` + `node-fetch ^3.3.2`
-- **Security & Hashing**: `bcryptjs ^3.0.2` (Cost factor 10) + HTTP-Only Session Cookie & CORS Management
+- **Security & Hashing**: `bcryptjs ^3.0.2` (Cost factor 10) + HTTP-Only Session Cookie & Global `/api/*` CORS Middleware
 
 ---
 
 ## 6. Spesifikasi Endpoint Web & REST API
 
-### 6.1. REST API Endpoints (`/api/*` — Mobile & Integrasi)
+### 6.1. REST API Endpoints (`/api/*` — Mobile & Integrasi, dilindungi CORS Middleware)
 
 | Method | Endpoint | Deskripsi | Akses / Catatan |
 |---|---|---|---|
-| `GET` | `/api/health` | Pemeriksaan status server dan konektivitas | Publik |
+| `GET` | `/api/health` | Pemeriksaan status server & konektivitas (mengembalikan `200 OK` dengan header `Access-Control-Allow-Origin: *`) | Publik |
 | `GET` | `/api/cron/recrawl` | Menjalankan verifikasi tautan dokumen peraturan (`runRecrawlCheck`) | Cron / Sistem |
 | `POST` | `/api/auth/login` | Otentikasi pengguna dan pengembalian profil peran JSON | Publik |
 | `GET` | `/api/search` | Pencarian peraturan/pasal termasuk peraturan kosong via `UNION ALL` (`q`, `sektor`, `wilayah`, `page`, `pageSize`) | Publik / Tamu |
 | `GET` | `/api/peraturan/:id` | Mengambil detail peraturan beserta seluruh daftar pasalnya | Publik / Tamu |
-| `PUT` | `/api/peraturan/:id` | Memperbarui metadata & status peraturan | Pengelola / Admin |
+| `PUT` | `/api/peraturan/:id` | Memperbarui metadata & status peraturan (`jenis_peraturan`, `nomor`, `tahun`, `judul`, `status`, `status_detail`, `wilayah`, `sektor`, `url_dokumen_asli`) | Pengelola / Admin |
 | `DELETE` | `/api/peraturan/:id` | Menghapus peraturan beserta seluruh pasalnya (`ON DELETE CASCADE`) | Pengelola / Admin |
-| `PUT` | `/api/pasal/:id` | Memperbarui nomor pasal, nomor ayat, dan teks pasal | Pengelola / Admin |
+| `PUT` | `/api/pasal/:id` | Memperbarui `nomor_pasal`, `nomor_ayat`, dan `teks_pasal` | Pengelola / Admin |
 | `DELETE` | `/api/pasal/:id` | Menghapus satu baris pasal | Pengelola / Admin |
 | `GET` | `/api/jadwal` | Mengambil daftar agenda rapat harmonisasi | Staf terautentikasi |
-| `POST` | `/api/jadwal` | Menambahkan agenda jadwal rapat baru | Pengelola / Perancang |
+| `POST` | `/api/jadwal` | Menambahkan agenda jadwal rapat baru (`jam` berformat `HH:mm`) | Pengelola / Perancang |
 | `PUT` | `/api/jadwal/:id` | Memperbarui data jadwal rapat harmonisasi | Pengelola / Perancang |
 | `DELETE` | `/api/jadwal/:id` | Menghapus agenda rapat harmonisasi | Pengelola / Perancang |
 | `GET` | `/api/admin/users` | Mengambil daftar metadata akun pengguna (tanpa hash/sandi) | Khusus Admin |
 | `POST` | `/api/admin/reset-password` | Mereset kata sandi akun staf operasional (`Pengelola` / `Perancang`) | Khusus Admin |
-| `POST` | `/api/tambah-peraturan` | Menjalankan crawler untuk mengindeks peraturan baru dari URL | Pengelola / Admin |
+| `POST` | `/api/tambah-peraturan` | Menjalankan crawler untuk mengindeks peraturan baru dari URL & teks manual (`jenis_peraturan`, `judul`, `url`, `teks_manual`) | Pengelola / Admin |
 
 ### 6.2. Web SSR & HTMX Routes Utama
 
@@ -291,13 +301,14 @@ CREATE TABLE jadwal_rapat_harmonisasi (
 1. **Performa & Responsivitas**:
    - Pencarian pasal cepat dengan dukungan indeks Full-Text MySQL dan query `UNION ALL` berpaginasi.
    - Pemuatan antarmuka mobile responsif dengan transisi skeleton shimmer (`Skeletonizer`) tanpa *screen flickering*.
+   - Pengujian `flutter analyze` bebas peringatan dan `flutter test` (`P3HApp smoke test`) berjalan tanpa sisa timer terbuka.
 2. **Keamanan & Privasi**:
    - Penggunaan HTTP-Only Cookie (`SameSite=Lax`) untuk sesi web dan `SharedPreferences` pada client mobile.
    - Hashing kata sandi menggunakan `bcryptjs` dengan cost factor 10.
    - Pencegahan injeksi SQL melalui *parameterized queries* (`mysql2/promise`).
-   - Kebijakan CORS terkelola untuk pertukaran data API.
-   - Tidak ada kredensial akun, kata sandi, maupun nilai `.env` produksi yang dicantumkan pada kode dokumentasi (`README.md` / `PRD.md`).
+   - Middleware CORS aktif pada seluruh rute `/api/*` (`app.use('/api/*', cors(...))`) agar aplikasi Web & Flutter Web dapat mengakses `/api/health` maupun endpoint REST API lainnya dengan aman.
+   - Tidak ada kredensial akun, kata sandi, maupun nilai `.env` produksi yang dicantumkan pada dokumentasi (`README.md` / `PRD.md`).
 3. **Ketersediaan & Aksesibilitas**:
    - Desain tata letak responsif untuk resolusi desktop, laptop, tablet, dan smartphone Android.
-   - Skema warna elegan dan berwibawa mengacu pada identitas resmi Kementerian Hukum Republik Indonesia (Navy `#0b192c` / `#1E3A8A` dan Gold Accent `#d97706`).
+   - Skema warna terstandarisasi mengacu pada identitas Kementerian Hukum Republik Indonesia (Sovereign Navy `#0B192C`, Administrative Blue `#1D4ED8`, Slate `#1E293B`).
    - Penataan antarmuka bersih tanpa emoji dekoratif sesuai standar tata kelola dokumen pemerintahan.

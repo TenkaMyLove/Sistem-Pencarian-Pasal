@@ -1,32 +1,33 @@
 # Sistem Pencarian Pasal — P3H Kanwil Kementerian Hukum Kalsel
 
-Sistem pencarian pasal peraturan perundang-undangan berbasis **Web (Hono + HTMX + MySQL 8.x)** dan **Mobile (Flutter + Skeletonizer)** untuk mendukung percepatan dan efektivitas proses harmonisasi Rancangan Peraturan Daerah (Ranperda) dan Rancangan Peraturan Kepala Daerah (Ranperkada / Ranpergub) di lingkungan Kantor Wilayah Kementerian Hukum Kalimantan Selatan (Divisi Peraturan Perundang-undangan dan Pembinaan Hukum / P3H).
+Sistem pencarian pasal peraturan perundang-undangan dan manajemen harmonisasi regulasi daerah berbasis **Web (Laravel 13 + Blade + HTMX + Tailwind + MySQL 8.x)** dan **Mobile (Flutter + Skeletonizer)** di lingkungan Kantor Wilayah Kementerian Hukum Kalimantan Selatan (Divisi Peraturan Perundang-undangan dan Pembinaan Hukum / P3H).
 
 ---
 
 ## Fitur Utama
 
-- **Pencarian Pasal Real-Time & Cepat** — Pencarian berbasis HTMX dengan penyorotan kata kunci (*keyword highlighting*) presisi menggunakan regex tanpa memuat ulang (*reload*) halaman, didukung query `UNION ALL` agar peraturan baru tanpa pasal tetap terindeks.
-- **Edit & Hapus Peraturan dan Pasal (Web & Mobile — Pengelola & Admin)** — Pengguna dengan peran **Pengelola** atau **Admin** dapat langsung mengubah maupun menghapus **peraturan** (`Edit Peraturan` / `Hapus Peraturan`, termasuk peraturan yang belum memiliki teks pasal) dan **pasal** (`Edit Pasal` / `Hapus Pasal`) secara *real-time* di antarmuka Web (modal HTMX + refresh otomatis) maupun Flutter Mobile.
-- **Cakupan 56 Peraturan Terindeks** — Terdiri dari UUD 1945, Undang-Undang, Perppu, Peraturan Pemerintah, hingga Peraturan Daerah Provinsi dan Kabupaten/Kota se-Kalimantan Selatan.
-- **Filter Sektor & Wilayah** — Filter pencarian cepat berdasarkan sektor hukum dan cakupan wilayah (Nasional, Provinsi Kalimantan Selatan, serta Kabupaten/Kota di Kalsel).
-- **Detil Status Relasi Hukum & Sorotan Referensi Pasal** — Modal interaktif menampilkan status hukum komprehensif (*Mencabut*, *Mencabut Sebagian*, *Mengubah*, *Dicabut Dengan*, *Dicabut Sebagian Dengan*, dan *Diubah Dengan*). Penyebutan pasal di dalam teks keterangan (misal `Pasal 238`) ditampilkan dengan **sorotan (*highlight*) kuning non-clickable** karena pasal yang dirujuk belum tentu tersedia di sistem, sedangkan tautan regulasi relasi membuka dokumen resmi JDIH.
-- **Tautan Dokumen Asli Terverifikasi** — Tautan langsung ke portal JDIH BPK (`peraturan.bpk.go.id`) dan JDIH Pemerintah Daerah dengan indikator keaktifan tautan (`normal` atau `tautan_bermasalah`) serta runner pengecekan tautan (`npm run recrawl` / `/api/cron/recrawl`).
-- **Tambah Peraturan & Pasal via Tautan (Web Crawler)** — Fitur ekstraktor otomatis untuk mengindeks peraturan dan pasal baru langsung dari tautan portal hukum resmi, dilengkapi kolom teks manual opsional.
-- **Manajemen Jadwal Harmonisasi Rapat** —
-  - Pencatatan agenda rapat mencakup Jenis Rancangan (Ranperda / Ranpergub), Pokok Materi (*Tentang*), Hari/Tanggal, Jam (WITA), Nama Kompilator, Tim Pokja (Pokja 1 / Pokja 2), dan Pembuat Agenda.
-  - Dukungan **Multi-Kompilator** (memilih beberapa kompilator dari daftar tim maupun entri manual).
-- **Kelola Akun Staf (Admin)** — Manajemen pembaruan kata sandi untuk akun operasional tim (**Pengelola** dan **Perancang**) dengan enkripsi `bcryptjs`. *(Demi keamanan, dokumentasi ini tidak mencantumkan kredensial atau kata sandi akun.)*
+- **Antarmuka Web Modern & Sidebar Tetap** — Tata letak dashboard web dengan *fixed sidebar* (*Kementerian Hukum — Kalimantan Selatan*), *fixed top bar* penanda halaman & profil peran aktif tanpa duplikasi label, halaman login bernuansa *Sovereign Navy* (`#0b192c`), serta pemisahan sesi pegawai dan akses tamu publik.
+- **Aplikasi Mobile Flutter Multi-Platform (Desain Flat Navy & Slate)** —
+  - **Masuk Sistem & Host Switcher**: Login terintegrasi dengan opsi `Ingat Sesi Saya`, dialog `Lupa Sandi?`, akses cepat `Mode Tamu`, serta tombol pengaturan URL server dengan uji koneksi non-destruktif (`GET /api/health`).
+  - **Pencarian Pasal Mobile**: Kotak pencarian + tombol `Cari`, riwayat pencarian lokal, sheet filter `Wilayah` & `Sektor`, pil sektor horizontal, opsi pengurutan (`Relevansi` / `Tahun Terbaru`), animasi loading `Skeletonizer`, pratinjau teks pasal dengan sorotan kata kunci, salin teks pasal, sheet `Status Hubungan`, tombol aksi Edit/Hapus, serta paginasi.
+  - **Jadwal Harmonisasi & Cetak Mingguan**: Filter `Semua`, `Pokja 1`, dan `Pokja 2` lengkap dengan hitungan agenda, ringkasan agenda mingguan siap salin (`Cetak Mingguan`), form dialog berstandar waktu `HH:mm` (`WITA`), serta akses tambah/ubah/hapus untuk *Pengelola* dan *Perancang*.
+  - **Kelola Akun & Keamanan (Admin)**: Banner protokol keamanan `bcryptjs`, formulir inline *Reset Kata Sandi Staf*, serta daftar akun interaktif dengan `Skeletonizer`.
+  - **Tambah Peraturan & Profil Hak Akses**: Formulir indeksasi peraturan baru via URL crawler/teks manual, halaman profil pengguna dengan status server *real-time* & matriks hak akses RBAC, serta halaman detail peraturan dengan filter pasal internal.
+- **Pencarian Pasal Real-Time & Query `UNION ALL`** — Pencarian berbasis HTMX (Web) dan REST API JSON (Mobile) dengan penyorotan kata kunci presisi, didukung query `UNION ALL` sehingga peraturan yang baru ditambahkan tanpa pasal tetap terindeks dan muncul dalam hasil (tanpa kotak keterangan tambahan; hanya judul peraturan dan tombol aksi).
+- **Edit & Hapus Peraturan dan Pasal (Web & Mobile — Pengelola & Admin)** — Pengguna dengan peran **Pengelola** atau **Admin** dapat memperbarui maupun menghapus metadata/status **peraturan** (termasuk peraturan kosong tanpa pasal) serta isi **pasal** secara *real-time* pada antarmuka Web maupun Mobile (`PUT`/`DELETE` `/api/peraturan/:id` dan `/api/pasal/:id`).
+- **Detil Status Relasi Hukum & Sorotan Referensi Pasal Non-Clickable** — Menampilkan relasi status hukum komprehensif (*Mencabut*, *Mencabut Sebagian*, *Mengubah*, *Dicabut Dengan*, *Dicabut Sebagian Dengan*, dan *Diubah Dengan*). Penyebutan pasal di dalam teks keterangan (misal `Pasal 238`) diberi **sorotan (*highlight*) kuning non-clickable** karena pasal rujukan belum tentu tersedia di dalam sistem, sedangkan tautan regulasi relasi membuka dokumen resmi eksternal.
+- **Cakupan 86 Peraturan Terindeks & Verifikasi Tautan** — Terdiri dari UUD 1945, Undang-Undang, Perppu, Peraturan Pemerintah, hingga Perda Provinsi/Kabupaten/Kota se-Kalimantan Selatan dengan indikator `normal` / `tautan_bermasalah` serta runner pengecekan tautan (`php artisan peraturan:recrawl` / `GET /api/cron/recrawl`).
 - **Hak Akses Berbasis Peran (RBAC)** —
-  - **Admin** (`Administrator` — *Manajemen Sistem*): Kelola akun & reset kata sandi staf (`Pengelola` & `Perancang`), Tambah Peraturan via URL serta Edit/Hapus Peraturan & Pasal (Web & Mobile), Pencarian Pasal, dan Jadwal Harmonisasi (*Read-Only*).
-  - **Pengelola** (`Pengelola` — *Data & Jadwal*): Pencarian Pasal, Edit & Hapus Peraturan/Pasal (Web & Mobile), CRUD penuh Jadwal Harmonisasi Rapat (Web & Mobile), serta Tambah Peraturan via URL Crawler (Web & Mobile).
-  - **Perancang** (`Perancang` — *Tim Harmonisasi*): Pencarian Pasal & Filter Peraturan, serta CRUD penuh Jadwal Harmonisasi Rapat (Web & Mobile).
-  - **Tamu** (`Tamu` — *Akses Publik*): Akses cepat pencarian pasal, detail status peraturan, dan tautan dokumen PDF asli tanpa harus login.
-- **Versi Mobile Flutter Multi-Platform** — Dilengkapi aplikasi mobile Flutter dengan efek shimmer/loading modern menggunakan **Skeletonizer**, detail status relasi hukum beserta sorotan kuning non-clickable pada penyebutan pasal, fitur baca/kelola pasal & peraturan sesuai peran, salin teks pasal, *Host Server Switcher*, dan siap dijalankan di browser (Chrome/Edge) maupun emulator Android Studio.
+  - **Admin** (`Administrator` — *Manajemen Sistem*): Kelola akun & reset kata sandi staf (`Pengelola` & `Perancang`), Tambah Peraturan via URL, Edit/Hapus Peraturan & Pasal, Pencarian Pasal, serta Jadwal Harmonisasi (*Read-Only*).
+  - **Pengelola** (`Pengelola` — *Data & Jadwal*): Pencarian Pasal, Edit & Hapus Peraturan/Pasal, CRUD penuh Jadwal Harmonisasi Rapat, serta Tambah Peraturan via URL Crawler & teks manual.
+  - **Perancang** (`Perancang` — *Tim Harmonisasi*): Pencarian Pasal & Filter Peraturan, serta CRUD penuh Jadwal Harmonisasi Rapat.
+  - **Tamu** (`Tamu` — *Akses Publik*): Akses pencarian pasal, detail status peraturan, dan tautan dokumen sumber tanpa login.
+
+> **Catatan Keamanan**: Dokumentasi ini sengaja tidak mencantumkan kredensial akun (username/kata sandi) maupun nilai konfigurasi rahasia.
 
 ---
 
-## Cakupan Sektor & Peraturan (56 Peraturan Terindeks)
+## Cakupan Sektor & Peraturan (86 Peraturan Terindeks)
 
 | Sektor | Peraturan Terindeks |
 |---|---|
@@ -48,109 +49,116 @@ Sistem pencarian pasal peraturan perundang-undangan berbasis **Web (Hono + HTMX 
 
 | Layer | Stack |
 |---|---|
-| Runtime | Node.js (v20+ / v22+) (ESM) |
-| Web Framework | [Hono](https://hono.dev/) `^4.6` (SSR JSX & REST API) |
-| Database | MySQL 8.x (Full-Text Search Indexing & `mysql2 ^3.11`) |
-| Frontend Web | HTMX 1.9 + Vanilla CSS (Responsive & Modern) |
-| Mobile App | [Flutter](https://flutter.dev/) + Dart `^3.11` (Material 3 & `skeletonizer ^3.0`) |
-| Crawler & Ingestion | `cheerio ^1.2` + `node-fetch ^3.3` + Custom Link Crawler & Verifier |
-| Keamanan & Hashing | `bcryptjs ^3.0` + HTTP-Only Session Cookie + CORS Middleware |
-| Type Safety & Compiler | TypeScript (`^5.7`) + `tsx` |
+| Runtime | PHP `8.4+` (dengan Composer `2.8+`) |
+| Web Framework | [Laravel](https://laravel.com/) `^13.0` (Arsitektur MVC: Eloquent ORM, Blade SSR, & REST API) |
+| Database | MySQL 8.x (Full-Text Search Indexing & Eloquent / Query Builder) |
+| Frontend Web | Blade Templates + HTMX 1.9 + Tailwind CSS + Custom CSS (`public/css/style.css`) |
+| Mobile App | [Flutter](https://flutter.dev/) + Dart `^3.11` (Material 3, `google_fonts`, & `skeletonizer ^3.0`) |
+| Crawler & Ingestion | Laravel `Http` Client (Guzzle) + `symfony/dom-crawler` + `symfony/css-selector` |
+| Keamanan & Hashing | `bcrypt` (`Hash::make` / `password_verify`, kompatibel `$2b$`/`$2y$`) + Laravel Session & CSRF + CORS `/api/*` |
+| Pengujian Otomatis | PHPUnit `^12.5` (`php artisan test`) + Flutter Widget Test |
 
 ---
 
 ## Struktur Proyek
 
+> Panduan lengkap berfokus pemula (penjelasan pola **MVC** langkah demi langkah) tersedia di [`backend-laravel/README.md`](backend-laravel/README.md).
+
 ```
-src/
-├── db/
-│   ├── index.ts               # MySQL connection pool (mysql2/promise)
-│   ├── schema.sql             # Skema legacy (PostgreSQL)
-│   └── schema_mysql.sql       # DDL skema MySQL 8.x (Fulltext, Relasi, Jadwal)
-├── middleware/
-│   └── auth.ts                # Session cookie & RBAC middleware
+backend-laravel/               # Backend Utama (Laravel 13 — MVC + Blade + REST API)
+├── app/
+│   ├── Console/Commands/      # Perintah CLI (`php artisan peraturan:recrawl`)
+│   ├── Http/
+│   │   ├── Controllers/       # AuthController, SearchController, JadwalController, AdminController, TambahPeraturanController, Api/ApiController
+│   │   └── Middleware/        # LoadUser (sesi/Tamu) & CheckRole (role:staff, role:pengelola, role:admin)
+│   ├── Models/                # Eloquent Models (Peraturan, Pasal, JadwalRapat, Pengguna)
+│   ├── Services/              # SearchService (UNION ALL), UrlCrawler, RecrawlService
+│   └── Support/               # TeksHelper (highlight kata kunci <mark> & tautan rujukan)
+├── config/
+│   ├── p3h.php                # Konfigurasi daftar jenis peraturan, wilayah, sektor, kompilator
+│   └── cors.php               # Konfigurasi CORS untuk endpoint `/api/*`
+├── database/
+│   ├── migrations/            # Skema tabel MySQL (`create_p3h_tables`)
+│   └── seeders/               # Seeder akun awal (`DatabaseSeeder`)
+├── public/                    # Aset statis (`css/style.css`, `js/tailwind-config.js`, `images/logo.png`)
+├── resources/views/           # Template Blade (`layouts`, `auth`, `search`, `jadwal`, `peraturan`, `admin`, `errors`)
 ├── routes/
-│   ├── api.ts                 # REST API endpoints untuk Flutter Mobile & Web
-│   ├── auth.tsx               # Login, Logout, dan Akses Tamu
-│   ├── search.tsx             # Pencarian pasal, modal detail status, serta edit/hapus pasal
-│   ├── jadwal.tsx             # Manajemen jadwal rapat harmonisasi (CRUD)
-│   ├── admin.tsx              # Manajemen akun & reset kata sandi staf (Admin)
-│   └── tambah-peraturan.tsx   # Penambahan peraturan baru via URL scraper
-├── scraper/
-│   ├── urlCrawler.ts          # Ekstraktor teks & pasal peraturan dari link JDIH
-│   ├── recrawl.ts             # Health check & verifikasi tautan dokumen
-│   └── recrawlRunner.ts       # Runner CLI verifikasi tautan
-├── views/
-│   ├── layout.tsx             # Layout utama, sidebar, profil pengguna
-│   ├── login.tsx              # Halaman login & pintasan masuk tamu
-│   ├── search.tsx             # Kartu hasil pencarian, highlight pasal, modal status & edit pasal
-│   ├── jadwal.tsx             # Tabel jadwal & modal formulir jadwal multi-kompilator
-│   ├── admin.tsx              # Tampilan kelola akun pengguna
-│   └── tambah-peraturan.tsx   # Antarmuka input URL peraturan baru & teks manual
-└── index.ts                   # Entry point server Hono
+│   ├── web.php                # Rute halaman Web SSR & partial HTMX
+│   └── api.php                # Rute REST API JSON (`/api/*`) untuk Flutter Mobile
+└── tests/Feature/             # Pengujian fitur otomatis (`ExampleTest.php`)
 
 mobile/                        # Aplikasi Mobile Flutter
 ├── lib/
 │   ├── models/                # Model data (User, SearchItem, JadwalItem, UserAccount)
-│   ├── screens/               # Halaman UI (Splash, Login, Home, Search, Detail, Jadwal, Tambah Peraturan, Admin, Profil, Settings)
-│   ├── services/              # ApiService (HTTP client) & AuthService (SharedPreferences)
-│   ├── utils/                 # Konstanta URL host & tema aplikasi
+│   ├── screens/               # Splash, Login, Home, Search, Detail, Jadwal, Tambah, Kelola Akun, Profil, Settings
+│   ├── services/              # ApiService (HTTP client + checkHealth override) & AuthService
+│   ├── utils/                 # Konstanta palet & radius (constants.dart) & Material 3 theme (theme.dart)
 │   ├── widgets/               # Dialog berbagi pakai (Edit & Hapus Peraturan / Pasal)
-│   └── main.dart              # Entry point Flutter
+│   └── main.dart              # Entry point Flutter (P3HApp)
+├── test/                      # Smoke test widget (widget_test.dart)
 ├── android/                   # Konfigurasi native Android (usesCleartextTraffic, Internet)
 └── web/                       # Konfigurasi build & run browser web
 
-public/
-├── css/style.css              # Tata letak & styling antarmuka web
-├── images/logo.png            # Logo Pengayoman
-└── favicon.ico                # Ikon aplikasi web
+src/                           # (Legacy) Kode backend Node.js/Hono sebelum migrasi ke Laravel
 ```
 
 ---
 
-## Instalasi & Menjalankan Server Web (Backend)
+## Instalasi & Menjalankan Server Web (Backend Laravel)
 
 ### 1. Prasyarat
-- **Node.js** v20+ atau v22+
+- **PHP** 8.2+ / 8.4+ dan **Composer** 2.x
 - **MySQL** 8.x (misalnya via Laragon, XAMPP, atau MySQL Server standalone)
 - **Flutter SDK** (opsional, untuk menjalankan aplikasi mobile)
 
 ### 2. Konfigurasi Environment
-Salin berkas `.env.example` menjadi `.env`, lalu sesuaikan nilainya dengan konfigurasi MySQL lokal dan secret aplikasi Anda:
+Masuk ke folder `backend-laravel` dan salin `.env.example` menjadi `.env`:
 ```bash
+cd backend-laravel
 cp .env.example .env
+php artisan key:generate
 ```
-Variabel yang dibutuhkan di `.env`:
-- `PORT` — Port server HTTP (default `3000`)
-- `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` — Konfigurasi koneksi ke MySQL 8.x
-- `SESSION_SECRET` — Kunci rahasia untuk sesi aplikasi
+Variabel penting di `backend-laravel/.env`:
+- `DB_CONNECTION=mysql`
+- `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=p3h_kemenkum_kalsel`, `DB_USERNAME=root`, `DB_PASSWORD=`
+- `APP_TIMEZONE=Asia/Makassar`, `APP_LOCALE=id`
 
 > **Catatan Keamanan**: Jangan pernah mengunggah atau menyertakan berkas `.env` maupun kredensial akun ke dalam repositori Git atau dokumentasi.
 
 ### 3. Persiapan Database MySQL
-Buat database `p3h_kemenkum_kalsel` di MySQL 8.x, kemudian impor skema dan data awal menggunakan berkas SQL yang tersedia:
-- Skema tabel: `src/db/schema_mysql.sql`
-- Data awal peraturan & pasal: `database_dump_mysql.sql`
-- Pada Windows (Laragon), dapat memanfaatkan skrip `setup_mysql.bat` setelah menyesuaikan path `mysql.exe` dan parameter koneksi lokal Anda.
-
-### 4. Jalankan Server
+Buat database `p3h_kemenkum_kalsel` di MySQL 8.x, kemudian jalankan migrasi & seeder Laravel (atau impor data awal dari `database_dump_mysql.sql`):
 ```bash
-npm install
-npm run dev
+cd backend-laravel
+php artisan migrate
+php artisan db:seed
 ```
-Untuk build produksi:
-```bash
-npm run build
-npm start
-```
-Server berjalan secara default di `http://localhost:3000`.
+> Jika ingin mengimpor seluruh 86 peraturan & 1.426 pasal awal beserta relasi statusnya, jalankan `setup_mysql.bat` dari root proyek.
 
-### 5. Verifikasi Tautan Dokumen (Recrawl Check)
-Untuk menjalankan pemeriksaan status tautan dokumen peraturan:
+### 4. Jalankan Server Laravel
+Dari root proyek, Anda cukup menjalankan skrip pintas:
 ```bash
-npm run recrawl
+start_laravel.bat
+```
+Atau secara manual melalui terminal:
+```bash
+cd backend-laravel
+php artisan serve --host=127.0.0.1 --port=3000
+```
+Server berjalan di `http://localhost:3000` (port `3000` digunakan agar langsung kompatibel dengan aplikasi mobile Flutter tanpa mengubah pengaturan port).
+
+### 5. Verifikasi Tautan Dokumen (Recrawl Check) & Pengujian
+Untuk menjalankan pemeriksaan status tautan dokumen peraturan melalui Artisan CLI:
+```bash
+cd backend-laravel
+php artisan peraturan:recrawl
 ```
 Atau panggil endpoint cron job: `GET /api/cron/recrawl`.
+
+Untuk menjalankan pengujian otomatis (menggunakan database SQLite in-memory sehingga aman bagi data MySQL):
+```bash
+cd backend-laravel
+php artisan test
+```
 
 ---
 
@@ -175,10 +183,17 @@ flutter run -d chrome
 flutter run -d android
 ```
 
+### Verifikasi Kode & Pengujian Mobile:
+```bash
+cd mobile
+flutter analyze
+flutter test
+```
+
 > **Catatan Koneksi Server**:
-> - Pada Web Browser, aplikasi otomatis terhubung ke `http://localhost:3000`.
+> - Pada Web Browser, aplikasi otomatis terhubung ke `http://localhost:3000` (endpoint `/api/*` telah dilengkapi header CORS `Access-Control-Allow-Origin: *`).
 > - Pada Emulator Android Studio, aplikasi otomatis terhubung ke `http://10.0.2.2:3000`.
-> - Alamat host server juga dapat diubah secara instan melalui menu pengaturan (*Host Switcher*) di dalam aplikasi, baik dari halaman Login maupun tab Profil & Host.
+> - Alamat host server dapat diubah dan diuji langsung melalui menu pengaturan (*Host Switcher*) baik dari halaman Login, ikon server pada AppBar, maupun layar Profil.
 
 ---
 

@@ -137,19 +137,46 @@ function extractPasal($: cheerio.CheerioAPI): ParsedPasal[] {
  * Extract pasal items from raw plain text (e.g. pasted PDF content).
  * Same line-by-line strategy as extractPasal Strategy 2, but operates on raw string.
  */
+export function cleanPasalText(raw: string): string {
+  let isi = raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, '');
+  const m = isi.match(/^(.*?\bAgar\s+(?:setiap|semua)\s+orang\s+(?:dapat\s+)?mengetahuinya\b.*?Lembaran\s+(?:Negara|Daerah)\s+[^.]+?\.)\s*(?:Diundangkan|Ditetapkan|Disahkan|LAMPIRAN|PENJELASAN|\bNOREG\b).*$/is);
+  if (m) {
+    isi = m[1];
+  } else {
+    isi = isi.replace(/\s*\b(Ditetapkan\s+di\s+|Diundangkan\s+di\s+|NOREG\s+PERATURAN\s+).*$/is, '');
+  }
+  isi = isi.replace(/\s*([A-Z0-9]{2,}[<>+*#@$%&][A-Z0-9<>+*#@$%&;:'\-]{1,}\s*){2,}.*$/s, '');
+  isi = isi.replace(/\s+(Pasal|Paragraf|Bagian|BAB)\s*$/i, '').trim();
+  return isi.replace(/\s+/g, ' ').trim();
+}
+
 export function extractPasalFromText(rawText: string): ParsedPasal[] {
   const results: ParsedPasal[] = [];
   const pasalPattern = /^Pasal\s+(\d+[A-Z]?)$/i;
+  const stopPattern = /^(PENJELASAN(\s+ATAS)?|LAMPIRAN(\s+[IVXLCDM\d]+)?\b|Ditetapkan\s+di\s+|Diundangkan\s+di\s+)/i;
 
   const lines = rawText.replace(/\r/g, '').split('\n');
   let currentPasal = '';
   let currentLines: string[] = [];
 
   for (const rawLine of lines) {
-    const line = rawLine.trim();
+    const line = rawLine.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, '').trim();
+    if (!line) continue;
+    if (stopPattern.test(line)) {
+      if (currentPasal && currentLines.length > 0) {
+        const teks = cleanPasalText(currentLines.join(' '));
+        if (teks.length > 10) {
+          results.push({ nomor_pasal: currentPasal, nomor_ayat: '', teks_pasal: teks });
+        }
+      }
+      currentPasal = '';
+      currentLines = [];
+      if (/^(PENJELASAN|LAMPIRAN)/i.test(line)) break;
+      continue;
+    }
     if (pasalPattern.test(line)) {
       if (currentPasal && currentLines.length > 0) {
-        const teks = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+        const teks = cleanPasalText(currentLines.join(' '));
         if (teks.length > 10) {
           results.push({ nomor_pasal: currentPasal, nomor_ayat: '', teks_pasal: teks });
         }
@@ -162,7 +189,7 @@ export function extractPasalFromText(rawText: string): ParsedPasal[] {
   }
 
   if (currentPasal && currentLines.length > 0) {
-    const teks = currentLines.join(' ').replace(/\s+/g, ' ').trim();
+    const teks = cleanPasalText(currentLines.join(' '));
     if (teks.length > 10) {
       results.push({ nomor_pasal: currentPasal, nomor_ayat: '', teks_pasal: teks });
     }

@@ -320,12 +320,7 @@ export function SearchResultsPartial({
                   </div>
                   <div class="quote-text">{highlightText(item.teks_pasal, query)}</div>
                 </div>
-              ) : (
-                <div class="note-box">
-                  <strong>Dokumen Peraturan Terindeks</strong>
-                  Peraturan ini belum memiliki entri pasal. Naskah utuh dapat ditelaah melalui dokumen resmi.
-                </div>
-              )}
+              ) : null}
 
               <div class="row-actions">
                 <div class="row-actions-group">
