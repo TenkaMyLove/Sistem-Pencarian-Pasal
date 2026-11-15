@@ -23,8 +23,6 @@ Sistem pencarian pasal peraturan perundang-undangan dan manajemen harmonisasi re
   - **Perancang** (`Perancang` — *Tim Harmonisasi*): Pencarian Pasal & Filter Peraturan, serta CRUD penuh Jadwal Harmonisasi Rapat.
   - **Tamu** (`Tamu` — *Akses Publik*): Akses pencarian pasal, detail status peraturan, dan tautan dokumen sumber tanpa login.
 
-> **Catatan Keamanan**: Dokumentasi ini sengaja tidak mencantumkan kredensial akun (username/kata sandi) maupun nilai konfigurasi rahasia.
-
 ---
 
 ## Cakupan Sektor & Peraturan (86 Peraturan Terindeks)
@@ -61,8 +59,6 @@ Sistem pencarian pasal peraturan perundang-undangan dan manajemen harmonisasi re
 ---
 
 ## Struktur Proyek
-
-> Panduan lengkap berfokus pemula (penjelasan pola **MVC** langkah demi langkah) tersedia di [`backend-laravel/README.md`](backend-laravel/README.md).
 
 ```
 backend-laravel/               # Backend Utama (Laravel 13 — MVC + Blade + REST API)
@@ -123,8 +119,6 @@ Variabel penting di `backend-laravel/.env`:
 - `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=p3h_kemenkum_kalsel`, `DB_USERNAME=root`, `DB_PASSWORD=`
 - `APP_TIMEZONE=Asia/Makassar`, `APP_LOCALE=id`
 
-> **Catatan Keamanan**: Jangan pernah mengunggah atau menyertakan berkas `.env` maupun kredensial akun ke dalam repositori Git atau dokumentasi.
-
 ### 3. Persiapan Database MySQL
 Buat database `p3h_kemenkum_kalsel` di MySQL 8.x, kemudian jalankan migrasi & seeder Laravel (atau impor data awal dari `database_dump_mysql.sql`):
 ```bash
@@ -132,7 +126,6 @@ cd backend-laravel
 php artisan migrate
 php artisan db:seed
 ```
-> Jika ingin mengimpor seluruh 86 peraturan & 1.426 pasal awal beserta relasi statusnya, jalankan `setup_mysql.bat` dari root proyek.
 
 ### 4. Jalankan Server Laravel
 Dari root proyek, Anda cukup menjalankan skrip pintas:
@@ -189,11 +182,6 @@ cd mobile
 flutter analyze
 flutter test
 ```
-
-> **Catatan Koneksi Server**:
-> - Pada Web Browser, aplikasi otomatis terhubung ke `http://localhost:3000` (endpoint `/api/*` telah dilengkapi header CORS `Access-Control-Allow-Origin: *`).
-> - Pada Emulator Android Studio, aplikasi otomatis terhubung ke `http://10.0.2.2:3000`.
-> - Alamat host server dapat diubah dan diuji langsung melalui menu pengaturan (*Host Switcher*) baik dari halaman Login, ikon server pada AppBar, maupun layar Profil.
 
 ---
 
