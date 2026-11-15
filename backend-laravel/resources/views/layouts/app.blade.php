@@ -34,7 +34,7 @@
 
     $navCls = fn ($key) => $activeNav === $key
         ? 'flex items-center gap-space-md px-space-md py-3 transition-colors bg-secondary text-on-secondary rounded'
-        : 'flex items-center gap-space-md px-space-md py-3 text-on-primary-container hover:bg-white/10 hover:text-on-primary transition-colors rounded';
+        : 'flex items-center gap-space-md px-space-md py-3 text-on-primary hover:bg-white/10 transition-colors rounded';
 @endphp
 <!DOCTYPE html>
 <html lang="id">
