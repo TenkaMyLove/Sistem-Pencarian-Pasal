@@ -1779,87 +1779,120 @@ class _SearchScreenState extends State<SearchScreen> {
     final canNext = _currentPage < _totalPages;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(top: 6, bottom: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          OutlinedButton(
-            onPressed: canPrev
-                ? () => _performSearch(page: _currentPage - 1, saveHistory: false)
-                : null,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              disabledForegroundColor: AppColors.textMuted,
-              side: BorderSide(
-                color: canPrev
-                    ? AppColors.border
-                    : AppColors.border.withValues(alpha: 0.5),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Halaman $_currentPage dari $_totalPages',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              minimumSize: const Size(0, 36),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 8),
+              Container(
+                width: 4,
+                height: 4,
+                decoration: const BoxDecoration(
+                  color: AppColors.textSecondary,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.arrow_back, size: 15),
-                SizedBox(width: 4),
-                Text('Sebelumnya', style: TextStyle(fontSize: 12)),
-              ],
-            ),
+              const SizedBox(width: 8),
+              Text(
+                'Menampilkan $startIndex-$endIndex dari $_totalCount data',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  'Halaman $_currentPage dari $_totalPages',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: canPrev
+                      ? () => _performSearch(page: _currentPage - 1, saveHistory: false)
+                      : null,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    disabledForegroundColor: AppColors.textMuted,
+                    side: BorderSide(
+                      color: canPrev
+                          ? AppColors.border
+                          : AppColors.border.withValues(alpha: 0.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    minimumSize: const Size(0, 38),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.arrow_back, size: 15),
+                      SizedBox(width: 6),
+                      Text(
+                        'Sebelumnya',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  'Menampilkan $startIndex-$endIndex dari $_totalCount data',
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: canNext
-                ? () => _performSearch(page: _currentPage + 1, saveHistory: false)
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: AppColors.inputFill,
-              disabledForegroundColor: AppColors.textMuted,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              minimumSize: const Size(0, 36),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Berikutnya', style: TextStyle(fontSize: 12)),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_forward, size: 15),
-              ],
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: canNext
+                      ? () => _performSearch(page: _currentPage + 1, saveHistory: false)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppColors.inputFill,
+                    disabledForegroundColor: AppColors.textMuted,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    minimumSize: const Size(0, 38),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Berikutnya',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(Icons.arrow_forward, size: 15),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

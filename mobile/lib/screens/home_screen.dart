@@ -119,12 +119,21 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               width: 36,
               height: 36,
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: AppColors.primarySlate,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.white.withAlpha(25)),
               ),
-              child: const Icon(Icons.account_balance, color: Colors.white, size: 19),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => const Icon(
+                  Icons.account_balance,
+                  color: Colors.white,
+                  size: 19,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
