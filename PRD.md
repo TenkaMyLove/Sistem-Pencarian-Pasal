@@ -17,7 +17,7 @@ Dalam proses harmonisasi Rancangan Peraturan Daerah (Ranperda) dan Rancangan Per
 2. **Keterhubungan Relasi Hukum Komprehensif**: Menyajikan relasi status hukum antar peraturan secara lengkap (*Mencabut*, *Dicabut Dengan*, *Diubah Dengan*, *Mengubah*, *Mencabut Sebagian*, dan *Dicabut Sebagian Dengan*) dengan penyorotan (*highlight*) referensi pasal non-clickable pada keterangan.
 3. **Manajemen Agenda Rapat Harmonisasi**: Menyediakan agenda penjadwalan rapat harmonisasi Ranperda/Ranpergub berbasis Tim Pokja (`Pokja 1` / `Pokja 2`) dengan dukungan multi-kompilator, ringkasan jadwal mingguan siap salin, dan kontrol hak akses berbasis peran.
 4. **Ekspansi Data Otomatis (Web Crawler)**: Menyediakan alat pengindeksan peraturan dan pasal baru secara langsung melalui URL resmi portal hukum (JDIH BPK / Pemda) maupun entri teks manual.
-5. **Aksesibilitas Multi-Platform, PWA & Konsistensi Visual**: Mendukung dashboard web responsif + **Progressive Web App (PWA)** (khususnya untuk pengguna Apple iPhone/iPad via Safari *Add to Home Screen* melalui tombol **Download Aplikasi** di pojok bawah sidebar) serta aplikasi mobile native Flutter (Android) dengan sistem desain terpadu Sovereign Navy & Slate serta efek *skeletonizer*.
+5. **Aksesibilitas Multi-Platform, PWA & Konsistensi Visual**: Mendukung dashboard web responsif + **Progressive Web App (PWA)** (khususnya untuk pengguna Apple iPhone/iPad via Safari *Add to Home Screen* melalui tab **Aplikasi** di navigasi bawah mobile) serta aplikasi mobile native Flutter (Android) dengan sistem desain terpadu Sovereign Navy & Slate serta efek *skeletonizer*.
 6. **Verifikasi Keabsahan Dokumen**: Memastikan tautan dokumen sumber mengarah langsung ke dokumen resmi terverifikasi dengan pemantauan status keaktifan tautan (*normal* vs *tautan_bermasalah*).
 
 ---
@@ -60,11 +60,12 @@ Sistem membagi akses pengguna ke dalam **3 tingkatan peran** *(peran `Admin` tel
   - Tombol tautan langsung ke portal JDIH BPK / Pemda.
   - Indikator badge otomatis `Tautan Bermasalah` vs `Tautan Aktif` berdasarkan kolom `status_tautan`.
 - **Antarmuka Dashboard Web, PWA & Responsivitas Mobile (`resources/views/layouts/app.blade.php`, `resources/views/auth/login.blade.php`)**:
-  - **Sidebar Responsif & Tombol Download Aplikasi (PWA)**: Pada desktop tampil tetap di sisi kiri; pada mobile/PWA berubah menjadi *slide-out drawer* disertai tombol navigasi bawah (*bottom tab bar*) dan dukungan *safe-area inset* iOS. Pojok bawah sidebar menggantikan kartu profil dengan tombol **Download Aplikasi** untuk pemasangan Progressive Web App (`manifest.json`, `sw.js`, `apple-touch-icon.png`) beserta modal panduan pasang untuk Apple Safari (iPhone/iPad) dan Chrome/Edge.
+  - **Navigasi Adaptif Desktop & Mobile/PWA**: Pada desktop (`>= 1024px`) menampilkan fixed sidebar di sisi kiri tanpa duplikasi profil/tombol install; pada mobile/PWA (`< 1024px`) sidebar dihilangkan dan digantikan *bottom navigation bar* lengkap dengan dukungan *safe-area inset* iOS serta tab **Aplikasi** untuk pemasangan Progressive Web App (`manifest.json`, `sw.js`, `apple-touch-icon.png`) beserta modal panduan pasang untuk Apple Safari (iPhone/iPad) dan Chrome/Edge Android (tab otomatis tersembunyi setelah terpasang).
+  - **Tampilan Kartu Mobile**: Tabel *Jadwal Rapat Harmonisasi* dan *Kelola Akun* otomatis beralih menjadi kartu responsif di layar mobile (`< 768px`) dengan format tanggal Bahasa Indonesia (`Asia/Makassar` / WITA).
   - **Ikon SVG Inline**: Seluruh ikon navigasi & aksi memakai SVG inline (tanpa ketergantungan font eksternal yang lambat dimuat).
-  - **Fixed Top Header Bar**: Menampilkan tombol drawer (mobile), judul halaman huruf kapital, lencana peran aktif (`displayName` & `displayRole`), serta tombol `Masuk`/`Keluar`.
+  - **Fixed Top Header Bar**: Menampilkan logo instansi (mobile), judul halaman huruf kapital, lencana peran aktif (`displayName` & `displayRole`), serta tombol `Masuk`/`Keluar`.
   - **Profil Peran Tanpa Duplikasi Kata**: Menampilkan label bersih (`Pengelola / Data, Jadwal & Akun`, `Perancang / Tim Harmonisasi`, `Tamu / Akses Publik`).
-  - **Halaman Masuk Web (`auth/login.blade.php`)**: Latar penuh `#0b192c` (*Sovereign Navy*), responsif penuh di layar mobile & desktop, tajuk Kementerian Hukum RI Kanwil Kalsel, kartu login terpusat dengan logo Pengayoman, opsi *Ingat sesi login pada perangkat kerja ini*, dan tautan publik *Akses Pencarian Pasal Publik Tanpa Login*.
+  - **Halaman Masuk Web (`auth/login.blade.php`)**: Latar penuh `#0b192c` (*Sovereign Navy*), responsif penuh di layar mobile & desktop, placeholder `Username`, tajuk Kementerian Hukum RI Kanwil Kalsel, kartu login terpusat dengan logo Pengayoman, opsi *Ingat sesi login pada perangkat kerja ini*, dan tautan publik *Akses Pencarian Pasal Publik Tanpa Login*.
 
 ### 3.2. Manajemen Jadwal Rapat Harmonisasi
 - **Agenda Rapat Terstruktur**: Menampilkan Jenis Rancangan (`Ranperda` / `Ranpergub`), Pokok Materi (`Tentang`), Hari/Tanggal, Jam (`WITA`), Nama Kompilator, Tim Pokja (`Pokja 1` / `Pokja 2`), dan Pembuat Agenda.
@@ -80,7 +81,7 @@ Sistem membagi akses pengguna ke dalam **3 tingkatan peran** *(peran `Admin` tel
 - Kolom opsional `teks_manual` (API) / `teks_pasal_manual` (Web form) memungkinkan salin-tempel isi teks peraturan secara manual jika halaman sumber tidak dapat di-parse otomatis, dengan antarmuka bersih tanpa teks bantuan berikon emoji dekoratif.
 
 ### 3.4. Aplikasi Mobile Terintegrasi (Flutter) & PWA (iOS)
-- Aplikasi mobile native dikembangkan menggunakan **Flutter** (utamanya untuk distribusi APK/Play Store Android), sedangkan pengguna perangkat Apple (iPhone/iPad) menggunakan versi **PWA** dari web Laravel melalui tombol **Download Aplikasi**:
+- Aplikasi mobile native dikembangkan menggunakan **Flutter** (utamanya untuk distribusi APK/Play Store Android), sedangkan pengguna perangkat Apple (iPhone/iPad) menggunakan versi **PWA** dari web Laravel melalui tab **Aplikasi** di navigasi bawah mobile:
   - **Palet & Komponen**: Sovereign Navy (`#0B192C`), Slate (`#1E293B`), Administrative Blue (`#1D4ED8`), Soft Indigo (`#EEF2FF`), canvas terang `#F8FAFC`, input `#F1F5F9` borderless radius `10`, kartu putih berborder `#E2E8F0` radius `14`, serta font `Inter` (`google_fonts`).
   - **Splash Screen (`SplashScreen`)**: Tampilan navy dengan logo Pengayoman, inisialisasi sesi `AuthService`, serta pengelolaan `Timer` yang dibersihkan pada `dispose()`.
   - **Masuk Sistem (`LoginScreen`)**: Desain kartu putih di atas `#F8FAFC`, fitur *Ingat Sesi Saya*, dialog informasi *Lupa Sandi?*, akses *Mode Tamu*, dan tombol pengaturan host.

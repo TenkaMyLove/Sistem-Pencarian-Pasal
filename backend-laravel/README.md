@@ -75,7 +75,7 @@ backend-laravel/
 │   ├── manifest.json                   # Konfigurasi PWA (ikon, nama, mode standalone)
 │   └── sw.js                           # Service Worker PWA
 ├── resources/views/                    # Template HTML (Blade)
-│   ├── layouts/app.blade.php           # Kerangka utama responsif (Sidebar/Drawer + Topbar + PWA Download + Bottom Nav)
+│   ├── layouts/app.blade.php           # Kerangka utama adaptif (Sidebar Desktop + Bottom Nav & PWA Mobile + Topbar)
 │   ├── auth/login.blade.php            # Halaman Login
 │   ├── search/                         # Halaman pencarian, daftar hasil, dan popup modal
 │   ├── jadwal/                         # Halaman tabel & modal jadwal rapat
