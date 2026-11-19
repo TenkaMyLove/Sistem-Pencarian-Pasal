@@ -90,7 +90,7 @@
                             required
                             autofocus
                             autocomplete="username"
-                            placeholder="pengelola"
+                            placeholder="Username"
                             class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-2 focus:ring-[#0b192c] focus:border-[#0b192c] focus:bg-white outline-none transition-all font-medium"
                         >
                     </div>
