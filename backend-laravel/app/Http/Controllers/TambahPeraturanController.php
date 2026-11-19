@@ -23,6 +23,9 @@ class TambahPeraturanController extends Controller
     /** POST /tambah-peraturan */
     public function simpan(Request $request)
     {
+        // Beri waktu cukup saat mengunduh & mengekstrak PDF peraturan dari portal JDIH/BPK
+        @set_time_limit(90);
+
         $url = trim((string) $request->input('url'));
         $jenis = trim((string) $request->input('jenis_peraturan'));
         $nomor = trim((string) $request->input('nomor'));

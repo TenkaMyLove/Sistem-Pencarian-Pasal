@@ -15,10 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Percayai reverse proxy HTTPS (Railway / Cloudflare / Nginx) agar cookie & URL HTTPS benar
+        $middleware->trustProxies(at: '*');
+
         // LoadUser berjalan di setiap halaman web: mengisi $user (Tamu bila belum login)
         $middleware->web(append: [LoadUser::class]);
 
-        // Nama pendek untuk dipakai di routes/web.php, contoh: ->middleware('role:admin')
+        // Nama pendek untuk dipakai di routes/web.php, contoh: ->middleware('role:pengelola')
         $middleware->alias(['role' => CheckRole::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
