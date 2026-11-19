@@ -211,7 +211,7 @@ class ApiService {
     }
   }
 
-  // 5. Admin - User Accounts
+  // 5. Pengelola - User Accounts
   Future<List<UserAccount>> getAdminUsers() async {
     final baseUrl = await getBaseUrl();
     final uri = Uri.parse('$baseUrl/api/admin/users');
@@ -273,7 +273,7 @@ class ApiService {
     }
   }
 
-  // 3b. Manage Peraturan & Pasal (Pengelola / Admin)
+  // 3b. Manage Peraturan & Pasal (Pengelola)
   Future<void> updatePeraturan(int id, Map<String, dynamic> data) =>
       _sendRequest('PUT', '/api/peraturan/$id', body: data, fallbackError: 'Gagal memperbarui peraturan');
 

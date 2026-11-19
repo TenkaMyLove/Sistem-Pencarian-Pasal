@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-/** Tabel `pengguna` — akun yang bisa login (Admin, Pengelola, Perancang). */
+/** Tabel `pengguna` — akun yang bisa login (Pengelola, Perancang). */
 class Pengguna extends Model
 {
     protected $table = 'pengguna';

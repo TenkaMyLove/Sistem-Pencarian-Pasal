@@ -78,12 +78,12 @@ CREATE TABLE log_kegagalan_crawl (
     CONSTRAINT fk_log_sumber FOREIGN KEY (sumber_scraping_id) REFERENCES sumber_scraping(id) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- 6. Table: pengguna (System Users)
+-- 6. Table: pengguna (System Users: Pengelola, Perancang)
 CREATE TABLE pengguna (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     kata_sandi_terenkripsi VARCHAR(255) NOT NULL,
-    peran VARCHAR(50) NOT NULL,
+    peran VARCHAR(50) NOT NULL, -- Pengelola, Perancang
     diubah_terakhir_oleh VARCHAR(50),
     tanggal_kata_sandi_diubah DATETIME DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

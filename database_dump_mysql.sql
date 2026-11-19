@@ -6,11 +6,10 @@
 SET FOREIGN_KEY_CHECKS = 0;
 SET NAMES utf8mb4;
 
--- Data for pengguna (3 rows)
+-- Data for pengguna (2 rows)
 INSERT INTO pengguna (id, username, kata_sandi_terenkripsi, peran, diubah_terakhir_oleh, tanggal_kata_sandi_diubah) VALUES
   (10, 'Pengelola', '$2b$10$vI.q/lq0Ajf5JA.ZqyZEAOKDH7GrmWwHoLtBJSOw55qjnHCoR/d9W', 'Pengelola', 'System', '2026-08-17 13:48:43'),
-  (11, 'Perancang', '$2b$10$9zq5m7sTu6o5xKB88N8Zf.YRTN/vJ4f9ln7Q1bXq9xB9XZr2jl4pu', 'Perancang', 'Admin', '2026-08-18 13:46:27'),
-  (12, 'Admin', '$2b$10$Bcqtmyi/z65SAJdAbl07/egsumyA/9ttrFBxeUQNT3Utk56vZ1NlW', 'Admin', 'System', '2026-08-17 13:48:43');
+  (11, 'Perancang', '$2b$10$9zq5m7sTu6o5xKB88N8Zf.YRTN/vJ4f9ln7Q1bXq9xB9XZr2jl4pu', 'Perancang', 'Pengelola', '2026-08-18 13:46:27');
 
 -- Data for sumber_scraping (8 rows)
 INSERT INTO sumber_scraping (id, nama_sumber, url_dasar, jadwal_crawl_terakhir, jadwal_crawl_status_terakhir) VALUES

@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Tugasnya: mengambil data pengguna dari session. Jika belum login,
  * dianggap "Tamu". Hasilnya dibagikan ke semua view sebagai variabel $user.
  *
- * $user berbentuk array: ['id' => 1, 'username' => 'Admin', 'peran' => 'Admin']
+ * $user berbentuk array: ['id' => 1, 'username' => 'Pengelola', 'peran' => 'Pengelola']
  */
 class LoadUser
 {

@@ -6,20 +6,19 @@ Sistem pencarian pasal peraturan perundang-undangan dan manajemen harmonisasi re
 
 ## Fitur Utama
 
-- **Antarmuka Web Modern & Sidebar Tetap** — Tata letak dashboard web dengan *fixed sidebar* (*Kementerian Hukum — Kalimantan Selatan*), *fixed top bar* penanda halaman & profil peran aktif tanpa duplikasi label, halaman login bernuansa *Sovereign Navy* (`#0b192c`), serta pemisahan sesi pegawai dan akses tamu publik.
-- **Aplikasi Mobile Flutter Multi-Platform (Desain Flat Navy & Slate)** —
+- **Antarmuka Web Modern, PWA & Responsif Mobile** — Tata letak dashboard web dengan *sidebar* responsif (fixed di desktop, *slide-out drawer* + *bottom navigation bar* di mobile/PWA), tombol **Download Aplikasi** (PWA) di pojok bawah sidebar dengan panduan pemasangan untuk Apple iPhone/iPad (Safari) dan Chrome/Edge, ikon SVG inline, *top bar* penanda halaman & profil peran aktif, halaman login responsif bernuansa *Sovereign Navy* (`#0b192c`), serta pemisahan sesi pegawai dan akses tamu publik.
+- **Aplikasi Mobile Flutter Native (Android — Desain Flat Navy & Slate)** —
   - **Masuk Sistem & Host Switcher**: Login terintegrasi dengan opsi `Ingat Sesi Saya`, dialog `Lupa Sandi?`, akses cepat `Mode Tamu`, serta tombol pengaturan URL server dengan uji koneksi non-destruktif (`GET /api/health`).
   - **Pencarian Pasal Mobile**: Kotak pencarian + tombol `Cari`, riwayat pencarian lokal, sheet filter `Wilayah` & `Sektor`, pil sektor horizontal, opsi pengurutan (`Relevansi` / `Tahun Terbaru`), animasi loading `Skeletonizer`, pratinjau teks pasal dengan sorotan kata kunci, salin teks pasal, sheet `Status Hubungan`, tombol aksi Edit/Hapus, serta paginasi.
   - **Jadwal Harmonisasi & Cetak Mingguan**: Filter `Semua`, `Pokja 1`, dan `Pokja 2` lengkap dengan hitungan agenda, ringkasan agenda mingguan siap salin (`Cetak Mingguan`), form dialog berstandar waktu `HH:mm` (`WITA`), serta akses tambah/ubah/hapus untuk *Pengelola* dan *Perancang*.
-  - **Kelola Akun & Keamanan (Admin)**: Banner protokol keamanan `bcryptjs`, formulir inline *Reset Kata Sandi Staf*, serta daftar akun interaktif dengan `Skeletonizer`.
+  - **Kelola Akun & Keamanan (Pengelola)**: Banner protokol keamanan `bcrypt`, formulir inline *Reset Kata Sandi Staf*, serta daftar akun interaktif dengan `Skeletonizer`.
   - **Tambah Peraturan & Profil Hak Akses**: Formulir indeksasi peraturan baru via URL crawler/teks manual, halaman profil pengguna dengan status server *real-time* & matriks hak akses RBAC, serta halaman detail peraturan dengan filter pasal internal.
-- **Pencarian Pasal Real-Time & Query `UNION ALL`** — Pencarian berbasis HTMX (Web) dan REST API JSON (Mobile) dengan penyorotan kata kunci presisi, didukung query `UNION ALL` sehingga peraturan yang baru ditambahkan tanpa pasal tetap terindeks dan muncul dalam hasil (tanpa kotak keterangan tambahan; hanya judul peraturan dan tombol aksi).
-- **Edit & Hapus Peraturan dan Pasal (Web & Mobile — Pengelola & Admin)** — Pengguna dengan peran **Pengelola** atau **Admin** dapat memperbarui maupun menghapus metadata/status **peraturan** (termasuk peraturan kosong tanpa pasal) serta isi **pasal** secara *real-time* pada antarmuka Web maupun Mobile (`PUT`/`DELETE` `/api/peraturan/:id` dan `/api/pasal/:id`).
+- **Pencarian Pasal Real-Time & Query `UNION ALL`** — Pencarian berbasis HTMX (Web/PWA) dan REST API JSON (Mobile) dengan penyorotan kata kunci presisi, didukung query `UNION ALL` sehingga peraturan yang baru ditambahkan tanpa pasal tetap terindeks dan muncul dalam hasil (tanpa kotak keterangan tambahan; hanya judul peraturan dan tombol aksi).
+- **Edit & Hapus Peraturan dan Pasal (Web, PWA & Mobile — Khusus Pengelola)** — Pengguna dengan peran **Pengelola** dapat memperbarui maupun menghapus metadata/status **peraturan** (termasuk peraturan kosong tanpa pasal) serta isi **pasal** secara *real-time* pada antarmuka Web/PWA maupun Mobile (`PUT`/`DELETE` `/api/peraturan/:id` dan `/api/pasal/:id`).
 - **Detil Status Relasi Hukum & Sorotan Referensi Pasal Non-Clickable** — Menampilkan relasi status hukum komprehensif (*Mencabut*, *Mencabut Sebagian*, *Mengubah*, *Dicabut Dengan*, *Dicabut Sebagian Dengan*, dan *Diubah Dengan*). Penyebutan pasal di dalam teks keterangan (misal `Pasal 238`) diberi **sorotan (*highlight*) kuning non-clickable** karena pasal rujukan belum tentu tersedia di dalam sistem, sedangkan tautan regulasi relasi membuka dokumen resmi eksternal.
 - **Cakupan 86 Peraturan Terindeks & Verifikasi Tautan** — Terdiri dari UUD 1945, Undang-Undang, Perppu, Peraturan Pemerintah, hingga Perda Provinsi/Kabupaten/Kota se-Kalimantan Selatan dengan indikator `normal` / `tautan_bermasalah` serta runner pengecekan tautan (`php artisan peraturan:recrawl` / `GET /api/cron/recrawl`).
-- **Hak Akses Berbasis Peran (RBAC)** —
-  - **Admin** (`Administrator` — *Manajemen Sistem*): Kelola akun & reset kata sandi staf (`Pengelola` & `Perancang`), Tambah Peraturan via URL, Edit/Hapus Peraturan & Pasal, Pencarian Pasal, serta Jadwal Harmonisasi (*Read-Only*).
-  - **Pengelola** (`Pengelola` — *Data & Jadwal*): Pencarian Pasal, Edit & Hapus Peraturan/Pasal, CRUD penuh Jadwal Harmonisasi Rapat, serta Tambah Peraturan via URL Crawler & teks manual.
+- **Hak Akses Berbasis Peran (RBAC — 3 Peran)** — *(Peran `Admin` telah dihapus dan kewenangan reset kata sandi dialihkan ke `Pengelola`)*:
+  - **Pengelola** (`Pengelola` — *Data, Jadwal & Akun*): Pencarian Pasal, Edit & Hapus Peraturan/Pasal, CRUD penuh Jadwal Harmonisasi Rapat, Tambah Peraturan via URL Crawler & teks manual, serta **Kelola Akun & Reset Kata Sandi** (`Pengelola` & `Perancang`).
   - **Perancang** (`Perancang` — *Tim Harmonisasi*): Pencarian Pasal & Filter Peraturan, serta CRUD penuh Jadwal Harmonisasi Rapat.
   - **Tamu** (`Tamu` — *Akses Publik*): Akses pencarian pasal, detail status peraturan, dan tautan dokumen sumber tanpa login.
 
@@ -66,17 +65,17 @@ backend-laravel/               # Backend Utama (Laravel 13 — MVC + Blade + RES
 │   ├── Console/Commands/      # Perintah CLI (`php artisan peraturan:recrawl`)
 │   ├── Http/
 │   │   ├── Controllers/       # AuthController, SearchController, JadwalController, AdminController, TambahPeraturanController, Api/ApiController
-│   │   └── Middleware/        # LoadUser (sesi/Tamu) & CheckRole (role:staff, role:pengelola, role:admin)
+│   │   └── Middleware/        # LoadUser (sesi/Tamu) & CheckRole (role:staff, role:pengelola)
 │   ├── Models/                # Eloquent Models (Peraturan, Pasal, JadwalRapat, Pengguna)
 │   ├── Services/              # SearchService (UNION ALL), UrlCrawler, RecrawlService
-│   └── Support/               # TeksHelper (highlight kata kunci <mark> & tautan rujukan)
+│   └── Support/               # TeksHelper (highlight kata kunci <mark>, SVG inline & tautan rujukan)
 ├── config/
 │   ├── p3h.php                # Konfigurasi daftar jenis peraturan, wilayah, sektor, kompilator
 │   └── cors.php               # Konfigurasi CORS untuk endpoint `/api/*`
 ├── database/
 │   ├── migrations/            # Skema tabel MySQL (`create_p3h_tables`)
-│   └── seeders/               # Seeder akun awal (`DatabaseSeeder`)
-├── public/                    # Aset statis (`css/style.css`, `js/tailwind-config.js`, `images/logo.png`)
+│   └── seeders/               # Seeder akun awal (`DatabaseSeeder`: Pengelola & Perancang)
+├── public/                    # Aset statis & PWA (`manifest.json`, `sw.js`, `css/style.css`, `js/`, `images/icon-*.png`)
 ├── resources/views/           # Template Blade (`layouts`, `auth`, `search`, `jadwal`, `peraturan`, `admin`, `errors`)
 ├── routes/
 │   ├── web.php                # Rute halaman Web SSR & partial HTMX

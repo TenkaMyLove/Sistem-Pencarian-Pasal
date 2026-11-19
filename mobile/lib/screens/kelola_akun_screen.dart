@@ -75,8 +75,6 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
 
   String _roleDisplayName(String peran) {
     switch (peran.toLowerCase().trim()) {
-      case 'admin':
-        return 'Administrator';
       case 'pengelola':
         return 'Pengelola';
       case 'perancang':
@@ -88,10 +86,8 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
 
   String _roleSubtitle(String peran) {
     switch (peran.toLowerCase().trim()) {
-      case 'admin':
-        return 'Admin Sistem';
       case 'pengelola':
-        return 'Data & Jadwal';
+        return 'Data, Jadwal & Akun';
       case 'perancang':
         return 'Tim Harmonisasi';
       default:
@@ -101,10 +97,8 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
 
   IconData _roleIcon(String peran) {
     switch (peran.toLowerCase().trim()) {
-      case 'admin':
-        return Icons.admin_panel_settings_outlined;
       case 'pengelola':
-        return Icons.event_note_outlined;
+        return Icons.manage_accounts_outlined;
       case 'perancang':
         return Icons.edit_note_outlined;
       default:
@@ -152,12 +146,12 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final adminUsername =
-          AuthService().currentUser?.username ?? 'admin';
+      final pengelolaUsername =
+          AuthService().currentUser?.username ?? 'Pengelola';
       await ApiService().resetPassword(
         targetUsername: _selectedUsername!,
         kataSandiBaru: _newPasswordController.text.trim(),
-        adminUsername: adminUsername,
+        adminUsername: pengelolaUsername,
       );
 
       if (!mounted) return;
@@ -324,7 +318,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
-                          'Khusus Admin',
+                          'Khusus Pengelola',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
@@ -601,8 +595,8 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   final isSelected = account.username == _selectedUsername;
                   final lastChanged =
                       _formatLastChanged(account.tanggalKataSandiDiubah);
-                  final isAdminAcc =
-                      account.peran.toLowerCase().trim() == 'admin';
+                  final isPengelolaAcc =
+                      account.peran.toLowerCase().trim() == 'pengelola';
 
                   return GestureDetector(
                     onTap: _isLoading
@@ -631,7 +625,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: isAdminAcc || isSelected
+                              color: isPengelolaAcc || isSelected
                                   ? AppColors.infoBg
                                   : AppColors.inputFill,
                               borderRadius: BorderRadius.circular(10),
@@ -639,7 +633,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                             child: Icon(
                               _roleIcon(account.peran),
                               size: 21,
-                              color: isAdminAcc || isSelected
+                              color: isPengelolaAcc || isSelected
                                   ? AppColors.primaryLight
                                   : AppColors.primary,
                             ),

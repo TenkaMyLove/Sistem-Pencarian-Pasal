@@ -35,7 +35,7 @@ return [
     // Nama kompilator standar pada form jadwal rapat
     'kompilator' => ['Eryck', 'Kiki', 'Dian', 'Dame', 'Nizar', 'Wyra', 'Dudunk', 'Ryna'],
 
-    // Akun yang boleh di-reset kata sandinya oleh Admin
+    // Akun yang boleh di-reset kata sandinya oleh Pengelola
     'akun_operasional' => ['Pengelola', 'Perancang'],
 
     // Jumlah hasil per halaman pada pencarian web

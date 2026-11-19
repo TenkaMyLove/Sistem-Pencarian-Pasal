@@ -7,7 +7,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Throwable;
 
-/** Tambah Peraturan via URL (Pengelola/Admin). */
+/** Tambah Peraturan via URL (Khusus Pengelola). */
 class TambahPeraturanController extends Controller
 {
     public function __construct(private UrlCrawler $crawler)

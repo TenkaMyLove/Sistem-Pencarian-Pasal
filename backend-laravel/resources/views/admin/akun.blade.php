@@ -1,5 +1,5 @@
 {{--
-    Halaman Kelola Akun (khusus Admin).
+    Halaman Kelola Akun (khusus Pengelola).
     Variabel: $userAccounts (Collection of Pengguna), $message, $error (string atau null).
 --}}
 @extends('layouts.app', ['title' => 'Kelola Akun', 'activeNav' => 'kelola-akun'])
@@ -8,7 +8,7 @@
     <div class="page-head">
         <div>
             <h2>Kelola Akun Pengguna</h2>
-            <p>Perbarui kata sandi akun operasional Pengelola dan Perancang. Khusus Administrator.</p>
+            <p>Perbarui kata sandi akun operasional Pengelola dan Perancang. Khusus Pengelola.</p>
         </div>
     </div>
 

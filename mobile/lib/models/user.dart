@@ -1,7 +1,7 @@
 class User {
   final int id;
   final String username;
-  final String peran; // 'Admin', 'Pengelola', 'Perancang', 'Tamu'
+  final String peran; // 'Pengelola', 'Perancang', 'Tamu'
 
   User({
     required this.id,
@@ -9,17 +9,16 @@ class User {
     required this.peran,
   });
 
-  bool get isAdmin => peran == 'Admin';
   bool get isPengelola => peran == 'Pengelola';
   bool get isPerancang => peran == 'Perancang';
   bool get isTamu => peran == 'Tamu';
   bool get canManageJadwal => isPengelola || isPerancang;
-  bool get canManagePeraturan => isPengelola || isAdmin;
-  bool get canTambahPeraturan => isPengelola || isAdmin;
+  bool get canManagePeraturan => isPengelola;
+  bool get canTambahPeraturan => isPengelola;
+  bool get canManageAkun => isPengelola;
 
   static const Map<String, Map<String, String>> _roleProfile = {
-    'Admin': {'name': 'Administrator', 'subtitle': 'Manajemen Sistem'},
-    'Pengelola': {'name': 'Pengelola', 'subtitle': 'Data & Jadwal'},
+    'Pengelola': {'name': 'Pengelola', 'subtitle': 'Data, Jadwal & Akun'},
     'Perancang': {'name': 'Perancang', 'subtitle': 'Tim Harmonisasi'},
     'Tamu': {'name': 'Tamu', 'subtitle': 'Akses Publik'},
   };

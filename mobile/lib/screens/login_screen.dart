@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
         content: const Text(
-          'Untuk keamanan kredensial pegawai, pembaruan kata sandi hanya dapat dilakukan oleh Administrator melalui menu Kelola Akun & Keamanan.',
+          'Untuk keamanan kredensial pegawai, pembaruan kata sandi hanya dapat dilakukan oleh Pengelola melalui menu Kelola Akun & Keamanan.',
           style: TextStyle(fontSize: 13, height: 1.5, color: AppColors.textBody),
         ),
         actions: [

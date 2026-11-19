@@ -4,7 +4,7 @@
     Variabel: $query, $sektor, $wilayah, $searchData, $user (global)
 --}}
 @php
-    $isPengelola = in_array($user['peran'] ?? '', ['Pengelola', 'Admin']);
+    $isPengelola = ($user['peran'] ?? '') === 'Pengelola';
 
     $items = $searchData['items'] ?? [];
     $totalCount = $searchData['totalCount'] ?? 0;
@@ -123,7 +123,7 @@
                                 Lihat Detil Status
                             </button>
 
-                            {{-- Tombol di bawah ini hanya untuk Pengelola/Admin --}}
+                            {{-- Tombol di bawah ini hanya untuk Pengelola --}}
                             @if ($isPengelola)
                                 <button
                                     type="button"

@@ -6,9 +6,16 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b192c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="P3H Kalsel">
     <title>Masuk - P3H Kanwil Kementerian Hukum Kalsel</title>
     <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,29 +28,29 @@
     </style>
 </head>
 
-<body class="w-full min-h-screen bg-[#0b192c] flex flex-col justify-between p-12">
+<body class="w-full min-h-screen bg-[#0b192c] flex flex-col justify-between p-4 sm:p-8 lg:p-12">
 
     {{-- ── Header / identitas instansi ── --}}
-    <header class="w-full flex items-center justify-between pb-6 border-b border-[#1e293b]">
-        <div class="flex items-center gap-4">
+    <header class="w-full flex items-center justify-between gap-3 pb-4 sm:pb-6 border-b border-[#1e293b]">
+        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
             {{-- Kotak logo --}}
-            <div class="w-14 h-14 bg-[#081220] border border-[#1e293b] rounded-xl flex items-center justify-center p-2.5">
+            <div class="w-11 h-11 sm:w-14 sm:h-14 bg-[#081220] border border-[#1e293b] rounded-xl flex items-center justify-center p-2 sm:p-2.5 flex-shrink-0">
                 <img src="/images/logo.png" alt="Logo Pengayoman" class="w-full h-full object-contain">
             </div>
-            <div>
-                <h1 class="text-white text-xl font-bold tracking-wide leading-tight">KEMENTERIAN HUKUM REPUBLIK INDONESIA</h1>
-                <p class="text-slate-300 text-sm font-medium mt-0.5">Kantor Wilayah Kalimantan Selatan &bull; Divisi Pelayanan Hukum dan HAM</p>
+            <div class="min-w-0">
+                <h1 class="text-white text-sm sm:text-xl font-bold tracking-wide leading-tight">KEMENTERIAN HUKUM REPUBLIK INDONESIA</h1>
+                <p class="text-slate-300 text-xs sm:text-sm font-medium mt-0.5 truncate">Kantor Wilayah Kalimantan Selatan &bull; Divisi P3H</p>
             </div>
         </div>
         {{-- Titik hijau "online" --}}
-        <div class="flex items-center gap-2.5 text-xs text-slate-300 font-mono bg-[#081220] px-3.5 py-2 rounded-xl border border-[#1e293b]">
+        <div class="hidden sm:flex items-center gap-2.5 text-xs text-slate-300 font-mono bg-[#081220] px-3.5 py-2 rounded-xl border border-[#1e293b] flex-shrink-0">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
         </div>
     </header>
 
     {{-- ── Kartu login ── --}}
-    <main class="w-full flex-1 flex items-center justify-center py-8">
-        <div class="w-full max-w-[520px] bg-white rounded-2xl shadow-2xl p-12 border border-slate-200 flex flex-col gap-0">
+    <main class="w-full flex-1 flex items-center justify-center py-6 sm:py-8">
+        <div class="w-full max-w-[520px] bg-white rounded-2xl shadow-2xl p-6 sm:p-10 lg:p-12 border border-slate-200 flex flex-col gap-0">
 
             {{-- Logo + judul --}}
             <div class="mb-8 text-center flex flex-col items-center">
@@ -153,18 +160,23 @@
     </main>
 
     {{-- ── Footer ── --}}
-    <footer class="w-full flex items-center justify-between pt-4 border-t border-[#1e293b] text-xs text-white">
-        <div class="flex items-center gap-6 text-white text-xs font-normal">
-            <span>&copy; 2026 Kantor Wilayah Kementerian Hukum Kalimantan Selatan. Hak Cipta Dilindungi.</span>
-            <span class="text-slate-400">&bull;</span>
+    <footer class="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-[#1e293b] text-xs text-white">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-slate-300 text-xs font-normal">
+            <span>&copy; 2026 Kanwil Kementerian Hukum Kalimantan Selatan.</span>
+            <span class="hidden sm:inline text-slate-500">&bull;</span>
             <span>Jl. Brigjen H. Hasan Basry No. 49, Banjarmasin</span>
         </div>
-        <div class="flex items-center gap-6 text-white text-xs font-medium">
-            <a href="#" class="text-white hover:text-slate-200 hover:underline transition-colors">Panduan Sistem</a>
-            <a href="#" class="text-white hover:text-slate-200 hover:underline transition-colors">Bantuan Teknis</a>
-            <a href="#" class="text-white hover:text-slate-200 hover:underline transition-colors">Kebijakan Privasi</a>
+        <div class="flex flex-wrap items-center gap-4 text-slate-300 text-xs font-medium">
+            <a href="/pencarian" class="text-white hover:text-slate-200 hover:underline transition-colors">Pencarian Publik</a>
+            <a href="#" class="text-slate-300 hover:text-white hover:underline transition-colors">Panduan Sistem</a>
         </div>
     </footer>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
 
 </body>
 </html>

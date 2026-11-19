@@ -93,15 +93,17 @@ class ExampleTest extends TestCase
         $this->get('/tambah-peraturan')->assertRedirect('/login');
         $this->get('/kelola-akun')->assertRedirect('/login');
 
-        // Pengelola boleh membuka jadwal & tambah peraturan, tetapi ditolak di kelola akun
+        // Pengelola boleh membuka jadwal, tambah peraturan, dan kelola akun (reset kata sandi)
         $sesiPengelola = ['user' => ['id' => 1, 'username' => 'Pengelola', 'peran' => 'Pengelola']];
         $this->withSession($sesiPengelola)->get('/jadwal')->assertOk()->assertSee('Agenda Rapat Harmonisasi');
         $this->withSession($sesiPengelola)->get('/tambah-peraturan')->assertOk()->assertSee('Tambah Peraturan via Tautan');
-        $this->withSession($sesiPengelola)->get('/kelola-akun')->assertStatus(403);
+        $this->withSession($sesiPengelola)->get('/kelola-akun')->assertOk()->assertSee('Kelola Akun Pengguna');
 
-        // Admin boleh membuka kelola akun
-        $sesiAdmin = ['user' => ['id' => 2, 'username' => 'Admin', 'peran' => 'Admin']];
-        $this->withSession($sesiAdmin)->get('/kelola-akun')->assertOk()->assertSee('Kelola Akun Pengguna');
+        // Perancang boleh membuka jadwal, tetapi ditolak di tambah peraturan & kelola akun
+        $sesiPerancang = ['user' => ['id' => 2, 'username' => 'Perancang', 'peran' => 'Perancang']];
+        $this->withSession($sesiPerancang)->get('/jadwal')->assertOk()->assertSee('Agenda Rapat Harmonisasi');
+        $this->withSession($sesiPerancang)->get('/tambah-peraturan')->assertStatus(403);
+        $this->withSession($sesiPerancang)->get('/kelola-akun')->assertStatus(403);
     }
 
     public function test_endpoint_api_utama_merespon_json_sesuai_kontrak(): void
@@ -111,10 +113,10 @@ class ExampleTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('status', 'ok');
 
-        $this->postJson('/api/auth/login', ['username' => 'Admin', 'kata_sandi' => 'admin123'])
+        $this->postJson('/api/auth/login', ['username' => 'Pengelola', 'kata_sandi' => 'pengelola123'])
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('user.peran', 'Admin');
+            ->assertJsonPath('user.peran', 'Pengelola');
 
         $this->getJson('/api/search?q=ruang')
             ->assertOk()
@@ -129,6 +131,6 @@ class ExampleTest extends TestCase
         $this->getJson('/api/admin/users')
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonCount(3, 'data');
+            ->assertJsonCount(2, 'data');
     }
 }

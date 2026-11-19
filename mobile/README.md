@@ -31,12 +31,12 @@ Aplikasi ini dikembangkan menggunakan **Flutter** dan mendukung multi-platform p
 5. **Web Crawler Tambah Peraturan via URL** *(Peran Pengelola)*:
    - Formulir input URL portal hukum resmi untuk mengindeks peraturan baru secara otomatis ke database.
 
-6. **Kelola Akun & Reset Kata Sandi** *(Peran Admin)*:
+6. **Kelola Akun & Reset Kata Sandi** *(Peran Pengelola)*:
    - Pengelolaan kata sandi untuk akun staf operasional (*Pengelola* dan *Perancang*).
 
 7. **Mode Tamu / Publik & RBAC**:
    - Mode Tamu dapat langsung mencari dan membaca pasal tanpa login.
-   - Login staf operasional dengan otentikasi peran (Admin, Pengelola, Perancang).
+   - Login staf operasional dengan otentikasi peran (**Pengelola**, **Perancang**). *(Peran Admin telah dihapus; hak kelola akun diberikan ke Pengelola.)*
 
 8. **Pengaturan Host & Alamat Server Fleksibel**:
    - Terdapat dialog pengaturan host API terintegrasi yang memudahkan pengalihan antara:
