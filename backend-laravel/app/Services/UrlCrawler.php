@@ -111,6 +111,16 @@ class UrlCrawler
             $parsedPasal = $this->ekstrakPasalDariTeks($teksManual);
         }
 
+        // Cadangan relasi status: jika halaman sumber tidak terbaca dari cloud, deteksi relasi Mengubah/Mencabut
+        // dari judul & teks manual lalu tautkan dengan data peraturan lokal yang ada di database
+        if (empty($statusJson)) {
+            $inferred = $this->inferStatusDariJudulDanTeks($finalJudul, $teksManual, $input);
+            if ($inferred !== null) {
+                $statusJson = $inferred['json'];
+                $statusDetail = $inferred['ringkasan'];
+            }
+        }
+
         // Materi Pokok / Abstrak resmi BPK: selalu disimpan bila ada (di urutan pertama).
         $materiPokok = $crawler !== null ? $this->ekstrakAbstrakBpk($crawler) : [];
 
@@ -261,6 +271,78 @@ class UrlCrawler
         }
 
         return 'berlaku';
+    }
+
+    /**
+     * Deteksi relasi "Mengubah" atau "Mencabut" dari judul / teks manual ketika halaman sumber
+     * tidak dapat diunduh langsung dari server cloud, lalu tautkan ke peraturan di database lokal bila ada.
+     */
+    private function inferStatusDariJudulDanTeks(string $judul, string $teksManual, array $input): ?array
+    {
+        $sumber = trim($judul."\n".$teksManual);
+        if ($sumber === '') {
+            return null;
+        }
+
+        $relKey = null;
+        $nomorTarget = null;
+        $tahunTarget = null;
+        $tentangTarget = '';
+
+        if (preg_match('/\bPerubahan\s+(?:(?:Pertama|Kedua|Ketiga|Keempat|Kelima)\s+)?Atas\s+[^.;\n]*?\bNomor\s+(\d+)\s+Tahun\s+(\d{4})(?:\s+tentang\s+([^\n.;()]+))?/iu', $sumber, $m)) {
+            $relKey = 'mengubah';
+            $nomorTarget = trim($m[1]);
+            $tahunTarget = (int) $m[2];
+            $tentangTarget = trim($m[3] ?? '');
+        } elseif (preg_match('/\bPencabutan\s+(?:Atas\s+)?[^.;\n]*?\bNomor\s+(\d+)\s+Tahun\s+(\d{4})(?:\s+tentang\s+([^\n.;()]+))?/iu', $sumber, $m)) {
+            $relKey = 'mencabut';
+            $nomorTarget = trim($m[1]);
+            $tahunTarget = (int) $m[2];
+            $tentangTarget = trim($m[3] ?? '');
+        }
+
+        if ($relKey === null || $nomorTarget === null || ! $tahunTarget) {
+            return null;
+        }
+
+        $jenis = $input['jenis_peraturan'] ?? 'Perda';
+        $wilayah = $input['wilayah'] ?? '';
+
+        // Cari peraturan target di database lokal
+        $lokal = Peraturan::where('jenis_peraturan', $jenis)
+            ->where('nomor', $nomorTarget)
+            ->where('tahun', $tahunTarget)
+            ->first();
+
+        $label = $lokal
+            ? "{$lokal->jenis_peraturan} No. {$lokal->nomor} Tahun {$lokal->tahun}"
+            : "{$jenis} ".($wilayah && $wilayah !== 'Nasional' ? "{$wilayah} " : '')."No. {$nomorTarget} Tahun {$tahunTarget}";
+
+        $judulRelasi = $lokal
+            ? $lokal->judul
+            : $label.($tentangTarget !== '' ? " tentang {$tentangTarget}" : '');
+
+        $urlRelasi = $lokal ? $lokal->url_dokumen_asli : ($input['url'] ?? '');
+
+        // Ekstrak kalimat keterangan perubahan pasal dari teks manual bila ada
+        $keterangan = '';
+        if ($teksManual !== '' && preg_match('/((?:Beberapa\s+ketentuan|Ketentuan\s+Pasal)[^.]+(?:\.[^.]+){0,2})/iu', $teksManual, $km)) {
+            $keterangan = $this->rapikan($km[1]);
+        }
+
+        $entry = [
+            'label' => $label,
+            'judul' => $judulRelasi,
+            'url' => $urlRelasi,
+        ];
+        if ($keterangan !== '') {
+            $entry['keterangan'] = $keterangan;
+        }
+
+        return [
+            'json' => [$relKey => [$entry]],
+            'ringkasan' => "{$relKey}: 1 peraturan",
+        ];
     }
 
     // ------------------------------------------------------------------
