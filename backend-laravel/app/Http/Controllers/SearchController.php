@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pasal;
 use App\Models\Peraturan;
 use App\Services\SearchService;
+use App\Services\UrlCrawler;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Contracts\View\View;
@@ -57,19 +58,23 @@ class SearchController extends Controller
     }
 
     /** GET /pencarian/status-modal/{id} — popup detail status peraturan. */
-    public function statusModal(int $id): View
+    public function statusModal(int $id, UrlCrawler $crawler): View
     {
-        return view('search.status-modal', ['peraturan' => Peraturan::findOrFail($id)]);
+        $peraturan = $crawler->lengkapiPeraturanJikaPerlu(Peraturan::findOrFail($id));
+
+        return view('search.status-modal', ['peraturan' => $peraturan]);
     }
 
     // ---------------- Peraturan (khusus Pengelola) ----------------
 
-    public function editPeraturanModal(int $id): View
+    public function editPeraturanModal(int $id, UrlCrawler $crawler): View
     {
-        return view('search.edit-peraturan-modal', ['peraturan' => Peraturan::findOrFail($id), 'error' => null]);
+        $peraturan = $crawler->lengkapiPeraturanJikaPerlu(Peraturan::findOrFail($id));
+
+        return view('search.edit-peraturan-modal', ['peraturan' => $peraturan, 'error' => null]);
     }
 
-    public function updatePeraturan(Request $request, int $id): View|Response
+    public function updatePeraturan(Request $request, int $id, UrlCrawler $crawler): View|Response
     {
         $peraturan = Peraturan::findOrFail($id);
 
@@ -94,7 +99,18 @@ class SearchController extends Controller
             ]);
         }
 
+        // Jika pengguna menempel teks relasi BPK ("Dicabut dengan : ...") ke Keterangan Status, urai menjadi JSON terstruktur
+        if ($data['status_detail'] !== '') {
+            $parsedStatus = $crawler->ekstrakStatusDariTeks($data['status_detail']);
+            if ($parsedStatus !== null) {
+                $data['status_detail_json'] = $parsedStatus['json'];
+                $data['status_detail'] = $parsedStatus['ringkasan'];
+                $data['status'] = $crawler->tentukanStatus(null, $parsedStatus['json']);
+            }
+        }
+
         $peraturan->update($data);
+        $crawler->lengkapiPeraturanJikaPerlu($peraturan);
 
         // Isi kosong + header HX-Trigger: memberi tahu halaman agar memuat ulang hasil pencarian
         return response('', 200)->header('HX-Trigger', 'refreshResults');

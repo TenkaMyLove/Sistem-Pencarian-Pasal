@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Peraturan;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Logika pencarian pasal. Dipakai bersama oleh halaman web (SearchController)
@@ -38,6 +40,24 @@ class SearchService
      */
     public function cari(string $q = '', string $sektor = '', string $wilayah = '', int $page = 1, int $pageSize = 5): array
     {
+        // Lengkapi otomatis peraturan yang belum memiliki relasi JSON / judul lengkap akibat blokir jaringan cloud
+        try {
+            $perluDilengkapi = Peraturan::where('judul', 'like', 'http%')
+                ->orWhereNull('status_detail_json')
+                ->orWhere('status_detail_json', '[]')
+                ->orWhere('status_detail_json', '{}')
+                ->limit(10)
+                ->get();
+
+            if ($perluDilengkapi->isNotEmpty()) {
+                $crawler = app(UrlCrawler::class);
+                foreach ($perluDilengkapi as $per) {
+                    $crawler->lengkapiPeraturanJikaPerlu($per);
+                }
+            }
+        } catch (Throwable) {
+        }
+
         $q = trim($q);
         $sektor = trim($sektor);
         $wilayah = trim($wilayah);

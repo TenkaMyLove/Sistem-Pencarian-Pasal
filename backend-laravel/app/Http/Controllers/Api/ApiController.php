@@ -115,13 +115,15 @@ class ApiController extends Controller
     // ------------------------------------------------------------------
     // 4. Peraturan & pasal
     // ------------------------------------------------------------------
-    public function detailPeraturan(string $id): JsonResponse
+    public function detailPeraturan(string $id, UrlCrawler $crawler): JsonResponse
     {
         try {
             $peraturan = Peraturan::find($id);
             if (! $peraturan) {
                 return $this->pesan('Peraturan tidak ditemukan', 404);
             }
+
+            $peraturan = $crawler->lengkapiPeraturanJikaPerlu($peraturan);
 
             return response()->json([
                 'success' => true,

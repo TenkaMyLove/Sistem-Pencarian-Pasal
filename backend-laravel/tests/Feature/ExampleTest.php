@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\JadwalRapat;
 use App\Models\Pasal;
 use App\Models\Peraturan;
+use App\Services\UrlCrawler;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
@@ -132,5 +134,82 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonCount(2, 'data');
+    }
+
+    public function test_crawler_melengkapi_status_relasi_dari_db_lokal_saat_akses_bpk_diblokir_cloud(): void
+    {
+        Http::fake(['*' => Http::response('Forbidden', 403)]);
+
+        Peraturan::create([
+            'jenis_peraturan' => 'UU',
+            'nomor' => '23',
+            'tahun' => 2014,
+            'judul' => 'Undang-Undang Nomor 23 Tahun 2014 tentang Pemerintahan Daerah',
+            'status' => 'berlaku',
+            'status_detail' => 'mencabut: 3 peraturan',
+            'status_detail_json' => [
+                'mencabut' => [
+                    [
+                        'url' => 'https://peraturan.bpk.go.id/Details/39043/uu-no-12-tahun-2008',
+                        'judul' => 'UU No. 12 Tahun 2008 tentang Perubahan Kedua atas Undang-Undang Nomor 32 Tahun 2004 tentang Pemerintahan Daerah',
+                        'label' => 'UU No. 12 Tahun 2008',
+                    ],
+                    [
+                        'url' => 'https://peraturan.bpk.go.id/Details/40250/uu-no-8-tahun-2005',
+                        'judul' => 'UU No. 8 Tahun 2005 tentang Penetapan Peraturan Pemerintah Pengganti Undang-Undang Nomor 3 Tahun 2005 tentang Perubahan atas Undang-Undang Nomor 32 Tahun 2004 tentang Pemerintahan Daerah Menjadi Undang-Undang',
+                        'label' => 'UU No. 8 Tahun 2005',
+                    ],
+                    [
+                        'url' => 'https://peraturan.bpk.go.id/Details/40768/uu-no-32-tahun-2004',
+                        'judul' => 'UU No. 32 Tahun 2004 tentang Pemerintahan Daerah',
+                        'label' => 'UU No. 32 Tahun 2004',
+                    ],
+                ],
+            ],
+            'wilayah' => 'Nasional',
+            'sektor' => 'Otonomi Daerah',
+            'url_dokumen_asli' => 'https://peraturan.bpk.go.id/Details/38685/uu-no-23-tahun-2014',
+            'status_tautan' => 'normal',
+        ]);
+
+        Peraturan::create([
+            'jenis_peraturan' => 'UU',
+            'nomor' => '6',
+            'tahun' => 2014,
+            'judul' => 'Undang-Undang Nomor 6 Tahun 2014 tentang Desa',
+            'status' => 'berlaku',
+            'status_detail' => 'mencabut sebagian: 1 peraturan',
+            'status_detail_json' => [
+                'mencabut_sebagian' => [[
+                    'url' => 'https://peraturan.bpk.go.id/Details/40768/uu-no-32-tahun-2004',
+                    'judul' => 'UU No. 32 Tahun 2004 tentang Pemerintahan Daerah',
+                    'label' => 'UU No. 32 Tahun 2004',
+                    'keterangan' => 'Pasal 200 sampai dengan Pasal 216 Undang-Undang Nomor 32 Tahun 2004 tentang Pemerintahan Daerah dicabut.',
+                ]],
+            ],
+            'wilayah' => 'Nasional',
+            'sektor' => 'Otonomi Daerah',
+            'url_dokumen_asli' => 'https://peraturan.bpk.go.id/Details/38582/uu-no-6-tahun-2014',
+            'status_tautan' => 'normal',
+        ]);
+
+        $hasil = app(UrlCrawler::class)->crawl([
+            'url' => 'https://peraturan.bpk.go.id/Details/40768/uu-no-32-tahun-2004',
+            'jenis_peraturan' => 'UU',
+            'nomor' => '32',
+            'tahun' => 2004,
+            'judul' => '',
+            'wilayah' => 'Nasional',
+            'sektor' => 'Otonomi Daerah',
+        ]);
+
+        $this->assertTrue($hasil['ok']);
+        $uu32 = Peraturan::findOrFail($hasil['peraturan_id']);
+        $this->assertSame('Undang-Undang Nomor 32 Tahun 2004 tentang Pemerintahan Daerah', $uu32->judul);
+        $this->assertSame('dicabut', $uu32->status);
+        $this->assertNotEmpty($uu32->status_detail_json['dicabut_dengan'] ?? []);
+        $this->assertNotEmpty($uu32->status_detail_json['dicabut_sebagian_dengan'] ?? []);
+        $this->assertCount(2, $uu32->status_detail_json['diubah_dengan'] ?? []);
+        $this->assertNotEmpty($uu32->status_detail_json['mencabut'] ?? []);
     }
 }

@@ -40,6 +40,8 @@ class UrlCrawler
         'mencabut sebagian dengan' => 'mencabut_sebagian_dengan',
         'diubah' => 'diubah_dengan',
         'diubah dengan' => 'diubah_dengan',
+        'diubah sebagian' => 'diubah_dengan',
+        'diubah sebagian dengan' => 'diubah_dengan',
         'dicabut' => 'dicabut_dengan',
         'dicabut dengan' => 'dicabut_dengan',
         'dicabut sebagian' => 'dicabut_sebagian_dengan',
@@ -52,13 +54,73 @@ class UrlCrawler
         'peraturan terkait' => 'peraturan_terkait',
     ];
 
+    /** Pemetaan relasi balik (inverse) ketika peraturan A merujuk peraturan B di database lokal */
+    private const INVERSE_RELASI = [
+        'mencabut' => 'dicabut_dengan',
+        'mencabut_sebagian' => 'dicabut_sebagian_dengan',
+        'mengubah' => 'diubah_dengan',
+        'dicabut_dengan' => 'mencabut',
+        'dicabut_sebagian_dengan' => 'mencabut_sebagian',
+        'diubah_dengan' => 'mengubah',
+    ];
+
+    /**
+     * Katalog cadangan metadata & relasi BPK untuk peraturan rujukan utama apabila
+     * server cloud (Railway) diblokir dari mengakses peraturan.bpk.go.id secara langsung.
+     */
+    private const KATALOG_CADANGAN_BPK = [
+        'UU|32|2004' => [
+            'judul' => 'Undang-Undang Nomor 32 Tahun 2004 tentang Pemerintahan Daerah',
+            'materi_pokok' => 'Dalam UU ini diatur mengenai pelaksanaan otonomi daerah di Indonesia. Dalam Otonomi daerah, daerah dibagi atas daerah-daerah provinsi dan daerah provinsi itu dibagi atas kabupaten dan kota yang masing-masing mempunyai pemerintahan daerah. Pembagian urusan pemerintahan dilaksanakan dengan cara pembagian urusan pemerintah pusat dan pemerintahan daerah. Pemerintahan daerah menyelenggarakan urusan pemerintahan yang menjadi kewenangannya, kecuali urusan pemerintahan yang oleh Undang-Undang ini ditentukan menjadi urusan Pemerintah pusat. Pokok-pokok pengaturan dalam UU ini antara lain: pembentukan daerah dan kawasan khusus; penyelenggaraan pemerintahan; kepegawaian daerah; peraturan daerah dan peraturan kepala daerah; perencanaan pembangunan daerah; dan keuangan daerah.',
+            'relasi' => [
+                'mencabut' => [
+                    [
+                        'label' => 'UU No. 22 Tahun 1999',
+                        'judul' => 'UU No. 22 Tahun 1999 tentang Pemerintahan Daerah',
+                        'url' => 'https://peraturan.bpk.go.id/Details/45329/uu-no-22-tahun-1999',
+                    ],
+                ],
+            ],
+        ],
+        'UU|28|2009' => [
+            'judul' => 'Undang-Undang Nomor 28 Tahun 2009 tentang Pajak Daerah dan Retribusi Daerah',
+            'relasi' => [
+                'mencabut' => [
+                    [
+                        'label' => 'UU No. 34 Tahun 2000',
+                        'judul' => 'UU No. 34 Tahun 2000 tentang Perubahan atas Undang-Undang Republik Indonesia Nomor 18 Tahun 1997 tentang Pajak Daerah dan Retribusi Daerah',
+                        'url' => 'https://peraturan.bpk.go.id/Details/45238/uu-no-34-tahun-2000',
+                    ],
+                    [
+                        'label' => 'UU No. 18 Tahun 1997',
+                        'judul' => 'UU No. 18 Tahun 1997 tentang Pajak Daerah dan Retribusi Daerah',
+                        'url' => 'https://peraturan.bpk.go.id/Details/45992/uu-no-18-tahun-1997',
+                    ],
+                ],
+            ],
+        ],
+        'UU|33|2004' => [
+            'judul' => 'Undang-Undang Nomor 33 Tahun 2004 tentang Perimbangan Keuangan antara Pemerintah Pusat dan Pemerintahan Daerah',
+            'relasi' => [
+                'mencabut' => [
+                    [
+                        'label' => 'UU No. 25 Tahun 1999',
+                        'judul' => 'UU No. 25 Tahun 1999 tentang Perimbangan Keuangan antara Pemerintah Pusat dan Daerah',
+                        'url' => 'https://peraturan.bpk.go.id/Details/45335/uu-no-25-tahun-1999',
+                    ],
+                ],
+            ],
+        ],
+    ];
+
     /**
      * @param  array  $input  url, jenis_peraturan, nomor, tahun, judul, wilayah, sektor, teks_manual (opsional)
      */
     public function crawl(array $input): array
     {
-        $url = $input['url'];
-        $manualJudul = trim($input['judul'] ?? '');
+        $url = trim((string) ($input['url'] ?? ''));
+        $manualJudul = trim((string) ($input['judul'] ?? ''));
+        $teksManual = trim((string) ($input['teks_manual'] ?? ''));
 
         // Status tautan tidak lagi ditampilkan ke pengguna; kegagalan unduh otomatis tidak dianggap tautan rusak
         $statusTautan = 'normal';
@@ -85,6 +147,11 @@ class UrlCrawler
             logger()->warning('[UrlCrawler] Gagal mengunduh '.$url.': '.$e->getMessage());
         }
 
+        // Jika unduhan gagal namun pengguna menempel kode HTML halaman sumber ke kolom teks manual
+        if ($html === '' && $teksManual !== '' && preg_match('/<(?:html|body|div|ol|li|meta)\b/i', $teksManual)) {
+            $html = $teksManual;
+        }
+
         // 2. Baca isi HTML
         if ($html !== '') {
             $crawler = new Crawler;
@@ -101,30 +168,54 @@ class UrlCrawler
                 $statusJson = $status['json'];
                 $statusDetail = $status['ringkasan'];
             }
-
-            $statusPeraturan = $this->tentukanStatus($crawler, $statusJson);
         }
 
-        // Cadangan 1: pengguna menempel teks manual pada form
-        $teksManual = trim($input['teks_manual'] ?? '');
-        if (count($parsedPasal) === 0 && $teksManual !== '') {
-            $parsedPasal = $this->ekstrakPasalDariTeks($teksManual);
-        }
-
-        // Cadangan relasi status: jika halaman sumber tidak terbaca dari cloud, deteksi relasi Mengubah/Mencabut
-        // dari judul & teks manual lalu tautkan dengan data peraturan lokal yang ada di database
-        if (empty($statusJson)) {
-            $inferred = $this->inferStatusDariJudulDanTeks($finalJudul, $teksManual, $input);
-            if ($inferred !== null) {
-                $statusJson = $inferred['json'];
-                $statusDetail = $inferred['ringkasan'];
+        // Cadangan 1: pengguna menempel teks manual pada form (pasal & blok STATUS PERATURAN)
+        if ($teksManual !== '') {
+            if (count($parsedPasal) === 0) {
+                $parsedPasal = $this->ekstrakPasalDariTeks($teksManual);
+            }
+            if (empty($statusJson)) {
+                $statusDariTeks = $this->ekstrakStatusDariTeks($teksManual);
+                if ($statusDariTeks !== null) {
+                    $statusJson = $statusDariTeks['json'];
+                    $statusDetail = $statusDariTeks['ringkasan'];
+                }
             }
         }
 
+        // Cadangan 2: deteksi relasi timbal-balik & tidak langsung dari database lokal + katalog BPK
+        // (mengatasi pemblokiran akses peraturan.bpk.go.id dari IP server cloud seperti Railway)
+        $hasilLokal = $this->inferDariDatabaseLokal($input, $finalJudul, $statusJson, $teksManual);
+        $finalJudul = $hasilLokal['judul'];
+        $statusJson = $hasilLokal['status_json'];
+
+        // Cadangan 3: deteksi relasi Mengubah/Mencabut langsung dari pola judul ("Perubahan Atas ..." / "Pencabutan Atas ...")
+        $inferred = $this->inferStatusDariJudulDanTeks($finalJudul, $teksManual, $input);
+        if ($inferred !== null) {
+            $statusJson = $this->gabungStatusJson($statusJson, $inferred['json']);
+        }
+
+        if (! empty($statusJson)) {
+            $statusDetail = $this->bangunRingkasanStatus($statusJson);
+        }
+
+        $statusPeraturan = $this->tentukanStatus($crawler, $statusJson);
+
         // Materi Pokok / Abstrak resmi BPK: selalu disimpan bila ada (di urutan pertama).
         $materiPokok = $crawler !== null ? $this->ekstrakAbstrakBpk($crawler) : [];
+        if (count($materiPokok) === 0 && $teksManual !== '') {
+            $materiPokok = $this->ekstrakMateriPokokDariTeks($teksManual);
+        }
+        if (count($materiPokok) === 0 && $hasilLokal['materi_pokok'] !== '') {
+            $materiPokok = [[
+                'nomor_pasal' => 'Materi Pokok',
+                'nomor_ayat' => '',
+                'teks_pasal' => $hasilLokal['materi_pokok'],
+            ]];
+        }
 
-        // Cadangan 2: unduh berkas PDF resmi dari halaman BPK dan ekstrak pasalnya.
+        // Cadangan 4: unduh berkas PDF resmi dari halaman BPK dan ekstrak pasalnya.
         // Jika PDF berupa hasil pindaian (lapisan teks OCR BPK penuh salah baca) DAN Materi Pokok tersedia,
         // pasal hasil PDF dilewati supaya pencarian tidak berisi teks berantakan.
         if (count($parsedPasal) === 0 && $crawler !== null) {
@@ -139,9 +230,42 @@ class UrlCrawler
             $parsedPasal = array_merge($materiPokok, $parsedPasal);
         }
 
-        // 3. Simpan ke database (satu transaksi: gagal satu = batal semua)
+        // 3. Simpan ke database (perbarui baris lama jika peraturan yang sama sebelumnya gagal terambil sempurna dari cloud)
         try {
             $peraturan = DB::transaction(function () use ($input, $finalJudul, $statusPeraturan, $statusDetail, $statusJson, $statusTautan, $url, $parsedPasal) {
+                $existing = Peraturan::where('jenis_peraturan', $input['jenis_peraturan'])
+                    ->where('nomor', $input['nomor'])
+                    ->where('tahun', (int) $input['tahun'])
+                    ->first();
+
+                if ($existing && (empty($existing->status_detail_json) || str_starts_with(trim((string) $existing->judul), 'http'))) {
+                    $existing->update([
+                        'judul' => $finalJudul,
+                        'status' => $statusPeraturan,
+                        'status_detail' => $statusDetail !== '' ? $statusDetail : $existing->status_detail,
+                        'status_detail_json' => ! empty($statusJson) ? $statusJson : ($existing->status_detail_json ?? []),
+                        'wilayah' => $input['wilayah'] ?? $existing->wilayah ?? 'Nasional',
+                        'sektor' => $input['sektor'] ?? $existing->sektor ?? 'Lainnya',
+                        'url_dokumen_asli' => $url !== '' ? $url : $existing->url_dokumen_asli,
+                        'status_tautan' => $statusTautan,
+                        'tanggal_dicek_terakhir' => now(),
+                    ]);
+
+                    if (count($parsedPasal) > 0) {
+                        $existing->pasal()->delete();
+                        foreach ($parsedPasal as $p) {
+                            Pasal::create([
+                                'peraturan_id' => $existing->id,
+                                'nomor_pasal' => $p['nomor_pasal'],
+                                'nomor_ayat' => $p['nomor_ayat'] ?: '',
+                                'teks_pasal' => $p['teks_pasal'],
+                            ]);
+                        }
+                    }
+
+                    return $existing;
+                }
+
                 $peraturan = Peraturan::create([
                     'jenis_peraturan' => $input['jenis_peraturan'],
                     'nomor' => $input['nomor'],
@@ -191,6 +315,76 @@ class UrlCrawler
             'peraturan_id' => $peraturan->id,
             'parsedPasal' => $parsedPasal,
         ];
+    }
+
+    /**
+     * Lengkapi otomatis peraturan yang sudah terlanjur tersimpan tanpa relasi JSON atau berjudul URL
+     * akibat pemblokiran jaringan dari server cloud.
+     */
+    public function lengkapiPeraturanJikaPerlu(Peraturan $peraturan): Peraturan
+    {
+        try {
+            $jsonSaatIni = is_array($peraturan->status_detail_json) ? $peraturan->status_detail_json : [];
+            $judulAdalahUrl = str_starts_with(trim((string) $peraturan->judul), 'http');
+
+            if (! empty($jsonSaatIni) && ! $judulAdalahUrl) {
+                return $peraturan;
+            }
+
+            $input = [
+                'url' => (string) $peraturan->url_dokumen_asli,
+                'jenis_peraturan' => (string) $peraturan->jenis_peraturan,
+                'nomor' => (string) $peraturan->nomor,
+                'tahun' => (int) $peraturan->tahun,
+                'wilayah' => (string) $peraturan->wilayah,
+                'sektor' => (string) $peraturan->sektor,
+            ];
+
+            $detailLama = trim((string) $peraturan->status_detail);
+            $statusDariDetail = $detailLama !== '' ? $this->ekstrakStatusDariTeks($detailLama) : null;
+            if ($statusDariDetail !== null) {
+                $jsonSaatIni = $this->gabungStatusJson($jsonSaatIni, $statusDariDetail['json']);
+            }
+
+            $hasil = $this->inferDariDatabaseLokal($input, (string) $peraturan->judul, $jsonSaatIni, $detailLama);
+            $judulBaru = $hasil['judul'];
+            $jsonBaru = $hasil['status_json'];
+
+            $inferred = $this->inferStatusDariJudulDanTeks($judulBaru, $detailLama, $input);
+            if ($inferred !== null) {
+                $jsonBaru = $this->gabungStatusJson($jsonBaru, $inferred['json']);
+            }
+
+            $perluSimpan = false;
+            if ($judulAdalahUrl && $judulBaru !== '' && $judulBaru !== $peraturan->judul) {
+                $peraturan->judul = $judulBaru;
+                $perluSimpan = true;
+            }
+
+            if (! empty($jsonBaru) && empty($peraturan->status_detail_json)) {
+                $peraturan->status_detail_json = $jsonBaru;
+                $peraturan->status_detail = $this->bangunRingkasanStatus($jsonBaru);
+                $peraturan->status = $this->tentukanStatus(null, $jsonBaru);
+                $perluSimpan = true;
+            }
+
+            if ($perluSimpan) {
+                $peraturan->save();
+            }
+
+            if ($hasil['materi_pokok'] !== '' && $peraturan->pasal()->count() === 0) {
+                Pasal::create([
+                    'peraturan_id' => $peraturan->id,
+                    'nomor_pasal' => 'Materi Pokok',
+                    'nomor_ayat' => '',
+                    'teks_pasal' => $hasil['materi_pokok'],
+                ]);
+            }
+        } catch (Throwable $e) {
+            logger()->warning('[UrlCrawler] Gagal melengkapi peraturan #'.$peraturan->id.': '.$e->getMessage());
+        }
+
+        return $peraturan;
     }
 
     // ------------------------------------------------------------------
@@ -255,15 +449,17 @@ class UrlCrawler
         return '';
     }
 
-    private function tentukanStatus(Crawler $c, array $statusJson): string
+    public function tentukanStatus(?Crawler $c, array $statusJson): string
     {
         if (! empty($statusJson['dicabut_dengan'])) {
             return 'dicabut';
         }
 
-        $statusMeta = strtolower($this->ambilMetadataBpk($c, 'Status'));
-        if (str_contains($statusMeta, 'tidak berlaku') || str_contains($statusMeta, 'dicabut')) {
-            return 'dicabut';
+        if ($c !== null) {
+            $statusMeta = strtolower($this->ambilMetadataBpk($c, 'Status'));
+            if (str_contains($statusMeta, 'tidak berlaku') || str_contains($statusMeta, 'dicabut')) {
+                return 'dicabut';
+            }
         }
 
         if (! empty($statusJson['diubah_dengan']) || ! empty($statusJson['dicabut_sebagian_dengan'])) {
@@ -271,6 +467,419 @@ class UrlCrawler
         }
 
         return 'berlaku';
+    }
+
+    /**
+     * Lengkapi judul, relasi status_detail_json (Dicabut dengan, Dicabut sebagian dengan,
+     * Diubah dengan, Mencabut, Mengubah), dan Materi Pokok dengan memindai grafik relasi
+     * pada tabel `peraturan` lokal serta katalog cadangan BPK.
+     *
+     * @return array{judul: string, status_json: array, materi_pokok: string}
+     */
+    private function inferDariDatabaseLokal(array $input, string $judulSaatIni, array $statusJsonSaatIni, string $teksManual = ''): array
+    {
+        $jenis = trim((string) ($input['jenis_peraturan'] ?? ''));
+        $nomor = ltrim(trim((string) ($input['nomor'] ?? '')), '0') ?: trim((string) ($input['nomor'] ?? ''));
+        $tahun = (int) ($input['tahun'] ?? 0);
+        $url = trim((string) ($input['url'] ?? ''));
+        $wilayah = trim((string) ($input['wilayah'] ?? 'Nasional'));
+
+        $judul = trim($judulSaatIni);
+        $judulMasihUrl = $judul === '' || str_starts_with($judul, 'http');
+        $statusJson = $statusJsonSaatIni;
+        $materiPokok = '';
+
+        // 1. Cek katalog cadangan BPK terlebih dahulu
+        $kunciKatalog = strtoupper($jenis).'|'.$nomor.'|'.$tahun;
+        if (isset(self::KATALOG_CADANGAN_BPK[$kunciKatalog])) {
+            $kat = self::KATALOG_CADANGAN_BPK[$kunciKatalog];
+            if ($judulMasihUrl && ! empty($kat['judul'])) {
+                $judul = $kat['judul'];
+                $judulMasihUrl = false;
+            }
+            if (! empty($kat['materi_pokok'])) {
+                $materiPokok = $kat['materi_pokok'];
+            }
+            if (! empty($kat['relasi'])) {
+                $statusJson = $this->gabungStatusJson($statusJson, $kat['relasi']);
+            }
+        }
+
+        if ($jenis === '' || $nomor === '' || $tahun < 1900) {
+            return ['judul' => $judul, 'status_json' => $statusJson, 'materi_pokok' => $materiPokok];
+        }
+
+        $bpkIdTarget = null;
+        if (preg_match('#/Details/(\d+)#i', $url, $mId)) {
+            $bpkIdTarget = $mId[1];
+        }
+
+        $polaJenis = $this->polaRegexJenis($jenis);
+        $polaIdentitasAwal = '/^\s*'.$polaJenis.'\b[^0-9\n]*?\b(?:No\.?|Nomor)\s*0*'.preg_quote($nomor, '/').'\s+Tahun\s+'.$tahun.'\b(?:\s+tentang\s+(.+))?$/iu';
+        $polaSasaranPerubahan = '/\bPerubahan\s+(?:(?:Pertama|Kedua|Ketiga|Keempat|Kelima)\s+)?Atas\s+'.$polaJenis.'\b[^.;\n]*?\b(?:No\.?|Nomor)\s*0*'.preg_quote($nomor, '/').'\s+Tahun\s+'.$tahun.'\b/iu';
+        $polaSasaranPencabutan = '/\bPencabutan\s+(?:Atas\s+)?'.$polaJenis.'\b[^.;\n]*?\b(?:No\.?|Nomor)\s*0*'.preg_quote($nomor, '/').'\s+Tahun\s+'.$tahun.'\b/iu';
+
+        // 2. Pindai seluruh peraturan yang sudah ada di database lokal
+        try {
+            $semuaPeraturan = Peraturan::all();
+        } catch (Throwable) {
+            $semuaPeraturan = collect();
+        }
+
+        foreach ($semuaPeraturan as $per) {
+            // Lewati diri sendiri
+            if (strcasecmp((string) $per->jenis_peraturan, $jenis) === 0
+                && (ltrim((string) $per->nomor, '0') ?: (string) $per->nomor) === $nomor
+                && (int) $per->tahun === $tahun) {
+                continue;
+            }
+
+            $relJson = is_array($per->status_detail_json)
+                ? $per->status_detail_json
+                : (json_decode((string) ($per->status_detail_json ?? '{}'), true) ?: []);
+
+            $labelPer = "{$per->jenis_peraturan} No. {$per->nomor} Tahun {$per->tahun}";
+            $judulRingkasPer = $this->formatJudulRelasi($per->jenis_peraturan, (string) $per->nomor, (int) $per->tahun, (string) $per->judul);
+
+            // 2a. Cek apakah judul peraturan $per sendiri merupakan Perubahan / Pencabutan atas peraturan target ini
+            if (preg_match($polaSasaranPerubahan, (string) $per->judul)) {
+                $statusJson = $this->gabungStatusJson($statusJson, [
+                    'diubah_dengan' => [[
+                        'label' => $labelPer,
+                        'judul' => $judulRingkasPer,
+                        'url' => (string) $per->url_dokumen_asli,
+                    ]],
+                ]);
+            } elseif (preg_match($polaSasaranPencabutan, (string) $per->judul)) {
+                $statusJson = $this->gabungStatusJson($statusJson, [
+                    'dicabut_dengan' => [[
+                        'label' => $labelPer,
+                        'judul' => $judulRingkasPer,
+                        'url' => (string) $per->url_dokumen_asli,
+                    ]],
+                ]);
+            }
+
+            // 2b. Pindai setiap daftar relasi di dalam status_detail_json milik $per
+            foreach ($relJson as $relKey => $daftarItem) {
+                if (! is_array($daftarItem)) {
+                    continue;
+                }
+
+                $inverseKey = self::INVERSE_RELASI[$relKey] ?? null;
+
+                foreach ($daftarItem as $item) {
+                    if (! is_array($item)) {
+                        continue;
+                    }
+
+                    $itemUrl = trim((string) ($item['url'] ?? ''));
+                    $itemLabel = trim((string) ($item['label'] ?? ''));
+                    $itemJudul = trim((string) ($item['judul'] ?? ''));
+                    $bagianSebelumTentang = trim(preg_split('/\btentang\b/iu', $itemJudul)[0] ?? $itemLabel);
+
+                    $cocokTarget = false;
+                    if ($bpkIdTarget !== null && preg_match('#/Details/(\d+)#i', $itemUrl, $mItem) && $mItem[1] === $bpkIdTarget) {
+                        $cocokTarget = true;
+                    } elseif (preg_match($polaIdentitasAwal, $bagianSebelumTentang) || preg_match($polaIdentitasAwal, $itemLabel)) {
+                        $cocokTarget = true;
+                    }
+
+                    if ($cocokTarget) {
+                        // Ambil judul resmi ("tentang ...") bila judul target masih berupa URL
+                        if ($judulMasihUrl && preg_match('/\btentang\s+(.+)$/iu', $itemJudul, $mTentang)) {
+                            $judul = $this->formatJudulLengkap($jenis, $nomor, $tahun, $wilayah, trim($mTentang[1]));
+                            $judulMasihUrl = false;
+                        }
+
+                        // Tambahkan relasi balik (misal $per mencabut target -> target dicabut_dengan $per)
+                        if ($inverseKey !== null) {
+                            $entriBalik = [
+                                'label' => $labelPer,
+                                'judul' => $judulRingkasPer,
+                                'url' => (string) $per->url_dokumen_asli,
+                            ];
+                            if (! empty($item['keterangan'])) {
+                                $entriBalik['keterangan'] = trim((string) $item['keterangan']);
+                            }
+                            $statusJson = $this->gabungStatusJson($statusJson, [
+                                $inverseKey => [$entriBalik],
+                            ]);
+                        }
+                        continue;
+                    }
+
+                    // 2c. Relasi tidak langsung: entri di dalam JSON menyebutkan "Perubahan ... atas <Target>"
+                    if ($itemJudul !== '') {
+                        if (preg_match($polaSasaranPerubahan, $itemJudul)) {
+                            $statusJson = $this->gabungStatusJson($statusJson, [
+                                'diubah_dengan' => [[
+                                    'label' => $itemLabel !== '' ? $itemLabel : $itemJudul,
+                                    'judul' => $itemJudul,
+                                    'url' => $itemUrl,
+                                ]],
+                            ]);
+                        } elseif (preg_match($polaSasaranPencabutan, $itemJudul)) {
+                            $statusJson = $this->gabungStatusJson($statusJson, [
+                                'dicabut_dengan' => [[
+                                    'label' => $itemLabel !== '' ? $itemLabel : $itemJudul,
+                                    'judul' => $itemJudul,
+                                    'url' => $itemUrl,
+                                ]],
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Jika judul masih berupa URL, coba ambil "TENTANG ..." dari teks manual atau bentuk judul standar yang rapi
+        if ($judulMasihUrl) {
+            $tentangManual = '';
+            if ($teksManual !== '' && preg_match('/\bTENTANG\s+([^\r\n.;]{4,160})/iu', $teksManual, $mT)) {
+                $tentangManual = $this->rapikan($mT[1]);
+            }
+            $judul = $this->formatJudulLengkap($jenis, $nomor, $tahun, $wilayah, $tentangManual);
+        }
+
+        return [
+            'judul' => $judul,
+            'status_json' => $statusJson,
+            'materi_pokok' => $materiPokok,
+        ];
+    }
+
+    /**
+     * Ekstrak blok "STATUS PERATURAN" (Dicabut dengan :, Dicabut sebagian dengan :,
+     * Diubah dengan :, Mencabut :, Mengubah :) dari teks manual yang ditempel pengguna.
+     *
+     * @return array{json: array, ringkasan: string}|null
+     */
+    public function ekstrakStatusDariTeks(string $teks): ?array
+    {
+        if (trim($teks) === '') {
+            return null;
+        }
+
+        $polaLabel = '/^\s*(?:[0-9]+\.\s*)?(Dicabut\s+sebagian\s+dengan|Dicabut\s+dengan|Dicabut\s+sebagian|Dicabut|Diubah\s+sebagian\s+dengan|Diubah\s+dengan|Diubah\s+sebagian|Diubah|Mencabut\s+sebagian\s+dengan|Mencabut\s+sebagian|Mencabut|Mengubah\s+sebagian|Mengubah|Ditetapkan\s+dengan|Ditetapkan|Menetapkan)\s*:?\s*(.*)$/iu';
+        $polaBerhenti = '/^\s*(MATERI\s+POKOK\s+PERATURAN|ABSTRAK\s+PERATURAN|DETAIL\s+PERATURAN|FILE\s*\-\s*FILE\s+PERATURAN|Pasal\s+\d+\b|BAB\s+[IVXLCDM]+\b)/iu';
+        $polaReg = '/^((?:UU|PP|Perpres|Permen|Permendagri|Permenkumham|Perda|Pergub|Perbup|Perwal|Perppu|Perpu|Inpres|Keppres|Kepmen)[^0-9\n]*?(?:No\.?|Nomor)\s*\d+\s+Tahun\s+\d{4})(?:\s+tentang\s+(.+))?$/iu';
+
+        $hasil = [];
+        $kunciAktif = null;
+        $indexAktif = null;
+
+        foreach (preg_split('/\r\n|\r|\n/', $teks) as $barisMentah) {
+            $baris = $this->rapikan($barisMentah);
+            if ($baris === '') {
+                continue;
+            }
+
+            if (preg_match($polaBerhenti, $baris)) {
+                $kunciAktif = null;
+                $indexAktif = null;
+                continue;
+            }
+
+            if (preg_match($polaLabel, $baris, $mLabel)) {
+                $namaLabel = strtolower($this->rapikan($mLabel[1]));
+                $kunciAktif = self::LABEL_TO_KEY[$namaLabel] ?? null;
+                $indexAktif = null;
+
+                $sisa = trim($mLabel[2] ?? '');
+                if ($kunciAktif !== null && $sisa !== '') {
+                    $entri = $this->uraiBarisItemStatus($sisa, $polaReg);
+                    if ($entri !== null) {
+                        $hasil[$kunciAktif][] = $entri;
+                        $indexAktif = count($hasil[$kunciAktif]) - 1;
+                    }
+                }
+                continue;
+            }
+
+            if ($kunciAktif === null) {
+                continue;
+            }
+
+            // Buang penanda butir seperti "a.", "b.", "1.", "-", "•"
+            $tanpaButir = trim((string) preg_replace('/^(?:[a-z0-9]{1,2}[\.\)]\s*|[\-\•\*]\s*)/iu', '', $baris));
+            $entri = $this->uraiBarisItemStatus($tanpaButir, $polaReg);
+            if ($entri !== null) {
+                $hasil[$kunciAktif][] = $entri;
+                $indexAktif = count($hasil[$kunciAktif]) - 1;
+            } elseif ($indexAktif !== null && isset($hasil[$kunciAktif][$indexAktif])) {
+                // Baris keterangan di bawah item peraturan (misal: "Pasal 200 sampai dengan Pasal 216 ... dicabut")
+                $ketLama = $hasil[$kunciAktif][$indexAktif]['keterangan'] ?? '';
+                $hasil[$kunciAktif][$indexAktif]['keterangan'] = trim($ketLama.' '.$baris);
+            }
+        }
+
+        if (empty($hasil)) {
+            return null;
+        }
+
+        return [
+            'json' => $hasil,
+            'ringkasan' => $this->bangunRingkasanStatus($hasil),
+        ];
+    }
+
+    private function uraiBarisItemStatus(string $teks, string $polaReg): ?array
+    {
+        if (! preg_match($polaReg, $teks, $m)) {
+            return null;
+        }
+
+        $label = $this->rapikan($m[1]);
+        $tentang = $this->rapikan($m[2] ?? '');
+        $judul = $tentang !== '' ? "{$label} tentang {$tentang}" : $label;
+
+        $url = '';
+        if (preg_match('/^(UU|PP|Perpres|Permen|Permendagri|Permenkumham|Perda|Pergub|Perbup|Perwal|Perppu|Perpu|Inpres|Keppres|Kepmen)\b.*?(?:No\.?|Nomor)\s*0*(\d+)\s+Tahun\s+(\d{4})$/iu', $label, $mKode)) {
+            $jenisCari = strtoupper($mKode[1]) === 'PERPU' ? 'Perppu' : $mKode[1];
+            try {
+                $lokal = Peraturan::whereRaw('LOWER(jenis_peraturan) = ?', [strtolower($jenisCari)])
+                    ->where('nomor', $mKode[2])
+                    ->where('tahun', (int) $mKode[3])
+                    ->first();
+                if ($lokal) {
+                    $url = (string) $lokal->url_dokumen_asli;
+                }
+            } catch (Throwable) {
+            }
+        }
+
+        return [
+            'label' => $label,
+            'judul' => $judul,
+            'url' => $url,
+        ];
+    }
+
+    private function ekstrakMateriPokokDariTeks(string $teks): array
+    {
+        if (preg_match('/MATERI\s+POKOK\s+PERATURAN\s*(?:Abstrak)?\s*(.+?)(?:CATATAN\s*:|STATUS\s+PERATURAN|FILE\s*\-\s*FILE|Pasal\s+1\b|$)/isu', $teks, $m)) {
+            $bersih = $this->rapikan($m[1]);
+            if (mb_strlen($bersih) > 30) {
+                return [[
+                    'nomor_pasal' => 'Materi Pokok',
+                    'nomor_ayat' => '',
+                    'teks_pasal' => $bersih,
+                ]];
+            }
+        }
+
+        return [];
+    }
+
+    /** Gabungkan dua struktur status_detail_json tanpa duplikasi item. */
+    private function gabungStatusJson(array $utama, array $tambahan): array
+    {
+        foreach ($tambahan as $kunci => $daftar) {
+            if (! is_array($daftar)) {
+                continue;
+            }
+            if (! isset($utama[$kunci]) || ! is_array($utama[$kunci])) {
+                $utama[$kunci] = [];
+            }
+
+            foreach ($daftar as $itemBaru) {
+                if (! is_array($itemBaru)) {
+                    continue;
+                }
+                $labelBaru = strtolower(trim((string) ($itemBaru['label'] ?? '')));
+                $urlBaru = strtolower(trim((string) ($itemBaru['url'] ?? '')));
+                $sudahAda = false;
+
+                foreach ($utama[$kunci] as &$itemLama) {
+                    $labelLama = strtolower(trim((string) ($itemLama['label'] ?? '')));
+                    $urlLama = strtolower(trim((string) ($itemLama['url'] ?? '')));
+                    if (($labelBaru !== '' && $labelBaru === $labelLama) || ($urlBaru !== '' && $urlBaru === $urlLama)) {
+                        if (empty($itemLama['keterangan']) && ! empty($itemBaru['keterangan'])) {
+                            $itemLama['keterangan'] = $itemBaru['keterangan'];
+                        }
+                        if (empty($itemLama['url']) && ! empty($itemBaru['url'])) {
+                            $itemLama['url'] = $itemBaru['url'];
+                        }
+                        $sudahAda = true;
+                        break;
+                    }
+                }
+                unset($itemLama);
+
+                if (! $sudahAda) {
+                    $utama[$kunci][] = $itemBaru;
+                }
+            }
+        }
+
+        // Urutkan kunci sesuai urutan tampilan standar BPK
+        $urutanKunci = ['dicabut_dengan', 'dicabut_sebagian_dengan', 'diubah_dengan', 'mencabut', 'mencabut_sebagian', 'mengubah', 'ditetapkan', 'peraturan_terkait'];
+        $terurut = [];
+        foreach ($urutanKunci as $k) {
+            if (! empty($utama[$k])) {
+                $terurut[$k] = $utama[$k];
+            }
+        }
+        foreach ($utama as $k => $v) {
+            if (! empty($v) && ! isset($terurut[$k])) {
+                $terurut[$k] = $v;
+            }
+        }
+
+        return $terurut;
+    }
+
+    public function bangunRingkasanStatus(array $statusJson): string
+    {
+        return collect($statusJson)
+            ->filter(fn ($items) => is_array($items) && count($items) > 0)
+            ->map(fn ($items, $k) => str_replace('_', ' ', $k).': '.count($items).' peraturan')
+            ->implode('; ');
+    }
+
+    private function polaRegexJenis(string $jenis): string
+    {
+        return match (strtoupper(trim($jenis))) {
+            'UU' => '(?:UU|Undang-Undang)',
+            'PP' => '(?:PP|Peraturan\s+Pemerintah)',
+            'PERPRES' => '(?:Perpres|Peraturan\s+Presiden)',
+            'PERPPU', 'PERPU' => '(?:Perppu|Perpu|Peraturan\s+Pemerintah\s+Pengganti\s+Undang-Undang)',
+            'PERDA' => '(?:Perda|Peraturan\s+Daerah)',
+            'PERGUB' => '(?:Pergub|Peraturan\s+Gubernur)',
+            'PERBUP' => '(?:Perbup|Peraturan\s+Bupati)',
+            'PERWAL' => '(?:Perwal|Peraturan\s+Wali\s*Kota)',
+            default => preg_quote($jenis, '/'),
+        };
+    }
+
+    private function formatJudulLengkap(string $jenis, string $nomor, int $tahun, string $wilayah, string $tentang = ''): string
+    {
+        $namaJenis = match (strtoupper(trim($jenis))) {
+            'UU' => 'Undang-Undang',
+            'PP' => 'Peraturan Pemerintah',
+            'PERPRES' => 'Peraturan Presiden',
+            'PERPPU', 'PERPU' => 'Peraturan Pemerintah Pengganti Undang-Undang',
+            'PERDA' => 'Peraturan Daerah'.($wilayah !== '' && strcasecmp($wilayah, 'Nasional') !== 0 ? ' '.$wilayah : ''),
+            'PERGUB' => 'Peraturan Gubernur'.($wilayah !== '' && strcasecmp($wilayah, 'Nasional') !== 0 ? ' '.$wilayah : ''),
+            'PERBUP' => 'Peraturan Bupati'.($wilayah !== '' && strcasecmp($wilayah, 'Nasional') !== 0 ? ' '.$wilayah : ''),
+            'PERWAL' => 'Peraturan Wali Kota'.($wilayah !== '' && strcasecmp($wilayah, 'Nasional') !== 0 ? ' '.$wilayah : ''),
+            default => $jenis,
+        };
+
+        $dasar = "{$namaJenis} Nomor {$nomor} Tahun {$tahun}";
+
+        return $tentang !== '' ? "{$dasar} tentang {$tentang}" : $dasar;
+    }
+
+    private function formatJudulRelasi(string $jenis, string $nomor, int $tahun, string $judulLengkap): string
+    {
+        $label = "{$jenis} No. {$nomor} Tahun {$tahun}";
+        if (preg_match('/\btentang\s+(.+)$/iu', $judulLengkap, $m)) {
+            return "{$label} tentang ".trim($m[1]);
+        }
+
+        return $judulLengkap !== '' ? $judulLengkap : $label;
     }
 
     /**
