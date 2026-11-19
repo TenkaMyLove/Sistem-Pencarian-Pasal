@@ -60,7 +60,8 @@ class UrlCrawler
         $url = $input['url'];
         $manualJudul = trim($input['judul'] ?? '');
 
-        $statusTautan = 'tautan_bermasalah';
+        // Status tautan tidak lagi ditampilkan ke pengguna; kegagalan unduh otomatis tidak dianggap tautan rusak
+        $statusTautan = 'normal';
         $finalJudul = $manualJudul !== '' ? $manualJudul : $url;
         $parsedPasal = [];
         $statusJson = [];
@@ -78,7 +79,6 @@ class UrlCrawler
             ])->timeout(30)->get($url);
 
             if ($response->successful()) {
-                $statusTautan = 'normal';
                 $html = $response->body();
             }
         } catch (Throwable $e) {

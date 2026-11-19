@@ -18,7 +18,7 @@ Dalam proses harmonisasi Rancangan Peraturan Daerah (Ranperda) dan Rancangan Per
 3. **Manajemen Agenda Rapat Harmonisasi**: Menyediakan agenda penjadwalan rapat harmonisasi Ranperda/Ranpergub berbasis Tim Pokja (`Pokja 1` / `Pokja 2`) dengan dukungan multi-kompilator, ringkasan jadwal mingguan siap salin, dan kontrol hak akses berbasis peran.
 4. **Ekspansi Data Otomatis (Web Crawler)**: Menyediakan alat pengindeksan peraturan dan pasal baru secara langsung melalui URL resmi portal hukum (JDIH BPK / Pemda) maupun entri teks manual.
 5. **Aksesibilitas Multi-Platform, PWA & Konsistensi Visual**: Mendukung dashboard web responsif + **Progressive Web App (PWA)** (khususnya untuk pengguna Apple iPhone/iPad via Safari *Add to Home Screen* melalui tab **Aplikasi** di navigasi bawah mobile) serta aplikasi mobile native Flutter (Android) dengan sistem desain terpadu Sovereign Navy & Slate serta efek *skeletonizer*.
-6. **Verifikasi Keabsahan Dokumen**: Memastikan tautan dokumen sumber mengarah langsung ke dokumen resmi terverifikasi dengan pemantauan status keaktifan tautan (*normal* vs *tautan_bermasalah*).
+6. **Verifikasi Keabsahan Dokumen**: Memastikan tautan dokumen sumber mengarah langsung ke dokumen resmi (tombol *Dokumen Asli*). Label teknis status tautan (`Tautan Aktif` / `Tautan Bermasalah`) tidak ditampilkan kepada pengguna agar antarmuka mudah dipahami pengguna non-teknis.
 
 ---
 
@@ -58,7 +58,7 @@ Sistem membagi akses pengguna ke dalam **3 tingkatan peran** *(peran `Admin` tel
   - Dilengkapi tombol tutup (`✕`) serta penutupan otomatis saat klik area backdrop/luar modal (Web) atau dismissible bottom sheet (Mobile).
 - **Tautan Dokumen PDF Asli**:
   - Tombol tautan langsung ke portal JDIH BPK / Pemda.
-  - Indikator badge otomatis `Tautan Bermasalah` vs `Tautan Aktif` berdasarkan kolom `status_tautan`.
+  - Tidak ada label teknis status tautan pada kartu hasil maupun halaman Tambah Peraturan; bila isi pasal belum terbaca otomatis, pengguna mendapat pesan ramah dan opsi menempel teks manual.
 - **Antarmuka Dashboard Web, PWA & Responsivitas Mobile (`resources/views/layouts/app.blade.php`, `resources/views/auth/login.blade.php`)**:
   - **Navigasi Adaptif Desktop & Mobile/PWA**: Pada desktop (`>= 1024px`) menampilkan fixed sidebar di sisi kiri tanpa duplikasi profil/tombol install; pada mobile/PWA (`< 1024px`) sidebar dihilangkan dan digantikan *bottom navigation bar* lengkap dengan dukungan *safe-area inset* iOS serta tab **Aplikasi** untuk pemasangan Progressive Web App (`manifest.json`, `sw.js`, `apple-touch-icon.png`) beserta modal panduan pasang untuk Apple Safari (iPhone/iPad) dan Chrome/Edge Android (tab otomatis tersembunyi setelah terpasang).
   - **Tampilan Kartu Mobile**: Tabel *Jadwal Rapat Harmonisasi* dan *Kelola Akun* otomatis beralih menjadi kartu responsif di layar mobile (`< 768px`) dengan format tanggal Bahasa Indonesia (`Asia/Makassar` / WITA).

@@ -46,18 +46,12 @@
                     <dl class="kv">
                         <dt>Judul</dt>
                         <dd>{{ $result['judul'] }}</dd>
-                        <dt>Status Tautan</dt>
-                        <dd>
-                            <span class="{{ $result['status_tautan'] === 'normal' ? 'tag tag-berlaku' : 'tag tag-dicabut' }}">
-                                {{ $result['status_tautan'] === 'normal' ? 'Tautan Valid (HTTP 200)' : 'Tautan Bermasalah' }}
-                            </span>
-                        </dd>
                         <dt>Pasal Ditemukan</dt>
                         <dd>{{ $result['pasal_count'] }} pasal</dd>
                     </dl>
                     @if ($result['pasal_count'] === 0)
                         <span>
-                            Tidak ada pasal yang berhasil diekstrak. Tempel teks isi peraturan pada kolom Teks Isi Peraturan, lalu tambahkan ulang.
+                            Isi pasal belum terbaca otomatis dari tautan. Peraturan tetap tersimpan dan dapat dicari berdasarkan judulnya. Untuk menambahkan isi pasal, tempel teks peraturan pada kolom Teks Isi Peraturan lalu tambahkan ulang.
                         </span>
                     @endif
                     @if (!empty($result['peraturan_id']))
