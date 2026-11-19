@@ -86,14 +86,6 @@
                             <span class="meta-sep">/</span>
                         @endif
                         <span>Wilayah: {{ $item->wilayah }}</span>
-                        <span class="meta-sep">/</span>
-                        @if ($item->status_tautan === 'tautan_bermasalah')
-                            <span class="meta-bad" title="Tautan dokumen asli di situs sumber mengalami kendala HTTP 404/Error">
-                                Tautan Bermasalah
-                            </span>
-                        @else
-                            <span class="meta-ok">Tautan Aktif</span>
-                        @endif
                     </div>
 
                     <h4 class="result-title">
