@@ -10,6 +10,7 @@
     activeNav: pencarian | jadwal | kelola-akun | tambah-peraturan
     $user (array: id, username, peran) otomatis tersedia dari middleware LoadUser.
 --}}
+@use('App\Support\TeksHelper')
 @php
     $isGuest = $user['peran'] === 'Tamu';
 
@@ -45,8 +46,7 @@
     <title>{{ $title }} - P3H Kanwil Kementerian Hukum Kalsel</title>
     <link rel="icon" type="image/png" href="/images/logo.png">
 
-    {{-- Material Symbols & font Inter --}}
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    {{-- Font Inter --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
@@ -90,27 +90,27 @@
 
         <nav class="flex flex-col px-space-md gap-space-xs flex-1 overflow-hidden">
             <a href="/pencarian" class="{{ $navCls('pencarian') }}">
-                <span class="material-symbols-outlined text-[22px]">{{ $navIcon['pencarian'] }}</span>
+                <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['pencarian'], 20) !!}</span>
                 <span class="text-[15px] font-semibold">Pencarian Pasal</span>
             </a>
 
             @unless ($isGuest)
                 <a href="/jadwal" class="{{ $navCls('jadwal') }}">
-                    <span class="material-symbols-outlined text-[22px]">{{ $navIcon['jadwal'] }}</span>
+                    <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['jadwal'], 20) !!}</span>
                     <span class="text-[15px] font-semibold">Jadwal Harmonisasi</span>
                 </a>
             @endunless
 
             @if (in_array($user['peran'], ['Pengelola', 'Admin']))
                 <a href="/tambah-peraturan" class="{{ $navCls('tambah-peraturan') }}">
-                    <span class="material-symbols-outlined text-[22px]">{{ $navIcon['tambah-peraturan'] }}</span>
+                    <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['tambah-peraturan'], 20) !!}</span>
                     <span class="text-[15px] font-semibold">Tambah Peraturan</span>
                 </a>
             @endif
 
             @if ($user['peran'] === 'Admin')
                 <a href="/kelola-akun" class="{{ $navCls('kelola-akun') }}">
-                    <span class="material-symbols-outlined text-[22px]">{{ $navIcon['kelola-akun'] }}</span>
+                    <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['kelola-akun'], 20) !!}</span>
                     <span class="text-[15px] font-semibold">Kelola Akun</span>
                 </a>
             @endif
@@ -118,8 +118,8 @@
 
         <div class="px-space-md py-space-md border-t border-white/10 flex-shrink-0">
             <div class="flex items-center gap-space-sm">
-                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-                    <span class="material-symbols-outlined text-[18px] text-on-primary-container">person</span>
+                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 text-on-primary-container">
+                    {!! TeksHelper::ikon('person', 18) !!}
                 </div>
                 <div class="flex flex-col min-w-0">
                     <span class="text-[14px] font-semibold text-on-primary truncate leading-tight">{{ $displayName }}</span>
@@ -137,7 +137,7 @@
 
             <div class="flex items-center gap-space-md">
                 <div class="flex items-center gap-2 px-3 py-1.5 bg-[#0b192c] text-white rounded-lg flex-shrink-0">
-                    <span class="material-symbols-outlined text-[18px] text-white flex-shrink-0">person</span>
+                    <span class="text-white flex-shrink-0">{!! TeksHelper::ikon('person', 18) !!}</span>
                     <div class="flex flex-col min-w-0 text-left leading-tight">
                         <span class="text-[13px] font-semibold text-white truncate">{{ $displayName }}</span>
                         <span class="text-[11px] text-[#94a3b8] leading-none truncate">{{ $displayRole }}</span>
@@ -145,13 +145,13 @@
                 </div>
 
                 @if ($isGuest)
-                    <a href="/login" class="h-9 px-space-md bg-surface-container text-on-surface border border-outline-variant font-semibold text-[13px] flex items-center gap-1 transition-colors rounded-lg hover:bg-surface-container-high">
-                        <span class="material-symbols-outlined text-[18px]">login</span>
+                    <a href="/login" class="h-9 px-space-md bg-surface-container text-on-surface border border-outline-variant font-semibold text-[13px] flex items-center gap-1.5 transition-colors rounded-lg hover:bg-surface-container-high">
+                        {!! TeksHelper::ikon('login', 18) !!}
                         <span>Masuk</span>
                     </a>
                 @else
-                    <a href="/logout" class="h-9 px-space-md bg-surface-container text-on-surface border border-outline-variant font-semibold text-[13px] flex items-center gap-1 transition-colors rounded-lg hover:bg-surface-container-high">
-                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                    <a href="/logout" class="h-9 px-space-md bg-surface-container text-on-surface border border-outline-variant font-semibold text-[13px] flex items-center gap-1.5 transition-colors rounded-lg hover:bg-surface-container-high">
+                        {!! TeksHelper::ikon('logout', 18) !!}
                         <span>Keluar</span>
                     </a>
                 @endif
