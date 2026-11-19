@@ -132,24 +132,6 @@
                 </a>
             @endif
         </nav>
-
-        {{-- ── Tombol Download Aplikasi (PWA) di pojok bawah sidebar ── --}}
-        <div class="px-space-md py-space-md border-t border-white/10 flex-shrink-0">
-            <button
-                type="button"
-                id="pwa-download-btn"
-                onclick="triggerPwaDownload()"
-                class="w-full flex items-center gap-3 px-3.5 py-3 rounded-lg bg-secondary hover:bg-[#354c96] active:bg-[#2c3f7e] text-on-secondary transition-colors text-left cursor-pointer border border-white/10"
-            >
-                <span class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0 text-white">
-                    {!! TeksHelper::ikon('download', 20) !!}
-                </span>
-                <span class="flex flex-col min-w-0">
-                    <span id="pwa-download-title" class="text-[14px] font-semibold text-white leading-tight truncate">Download Aplikasi</span>
-                    <span id="pwa-download-sub" class="text-[11px] text-white/80 leading-tight truncate mt-0.5">Pasang Versi iOS / Mobile</span>
-                </span>
-            </button>
-        </div>
     </aside>
 
     {{-- ── Area utama ── --}}
@@ -286,7 +268,7 @@
 
                 <div style="padding: 0.875rem 1rem; background: var(--canvas); border: 1px solid var(--border); border-radius: var(--radius-lg);">
                     <div style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 0.45rem;">
-                        Pengguna Android / Desktop (Chrome &amp; Edge)
+                        Pengguna Android (Chrome &amp; Edge)
                     </div>
                     <ol style="margin: 0; padding-left: 1.25rem; list-style: decimal; font-size: 13px; line-height: 1.65; color: var(--text);">
                         <li>Klik tombol <strong>Pasang Aplikasi</strong> bila tersedia, atau buka menu browser (<strong>&#8942;</strong>).</li>
