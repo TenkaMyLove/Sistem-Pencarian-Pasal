@@ -40,4 +40,11 @@ return [
 
     // Jumlah hasil per halaman pada pencarian web
     'per_halaman' => 5,
+
+    // Proxy / relay Indonesia (opsional, untuk server cloud luar negeri seperti Railway saat mengakses peraturan.bpk.go.id)
+    // Mendukung format:
+    //  - HTTP/SOCKS5 proxy : http://user:pass@ip-indonesia:port atau socks5h://user:pass@ip-indonesia:port
+    //  - Relay endpoint    : https://relay-anda.id/?url={url}
+    //  - Beberapa proxy    : pisahkan dengan koma (,) sebagai cadangan berurutan
+    'crawler_proxy_url' => env('CRAWLER_PROXY_URL', env('BPK_PROXY_URL', '')),
 ];

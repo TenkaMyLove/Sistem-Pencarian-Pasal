@@ -131,21 +131,8 @@ class UrlCrawler
         $statusPeraturan = 'berlaku';
         $crawler = null;
 
-        // 1. Unduh halaman
-        $html = '';
-        try {
-            $response = Http::withoutVerifying()->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language' => 'id-ID,id;q=0.9,en-US;q=0.8',
-            ])->timeout(30)->get($url);
-
-            if ($response->successful()) {
-                $html = $response->body();
-            }
-        } catch (Throwable $e) {
-            logger()->warning('[UrlCrawler] Gagal mengunduh '.$url.': '.$e->getMessage());
-        }
+        // 1. Unduh halaman (mendukung CRAWLER_PROXY_URL ber-IP Indonesia untuk server cloud luar negeri)
+        $html = $this->unduhUrl($url, 30);
 
         // Jika unduhan gagal namun pengguna menempel kode HTML halaman sumber ke kolom teks manual
         if ($html === '' && $teksManual !== '' && preg_match('/<(?:html|body|div|ol|li|meta)\b/i', $teksManual)) {
@@ -385,6 +372,77 @@ class UrlCrawler
         }
 
         return $peraturan;
+    }
+
+    // ------------------------------------------------------------------
+    // Pengunduh HTTP dengan dukungan Proxy / Relay Indonesia
+    // ------------------------------------------------------------------
+
+    /**
+     * Unduh konten URL (HTML maupun PDF).
+     * Jika CRAWLER_PROXY_URL dikonfigurasi (misal HTTP/SOCKS5 proxy Indonesia atau endpoint relay `?url={url}`),
+     * permintaan dikirim melalui proxy tersebut terlebih dahulu agar tidak terblokir Geo-IP di server cloud,
+     * lalu jatuh-balik (fallback) ke koneksi langsung bila diperlukan.
+     */
+    private function unduhUrl(string $targetUrl, int $timeout = 30): string
+    {
+        if ($targetUrl === '') {
+            return '';
+        }
+
+        $headers = [
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept' => 'text/html,application/xhtml+xml,application/xml,application/pdf;q=0.9,*/*;q=0.8',
+            'Accept-Language' => 'id-ID,id;q=0.9,en-US;q=0.8',
+        ];
+
+        $rawProxies = trim((string) config('p3h.crawler_proxy_url', ''));
+        $daftarProxy = $rawProxies !== ''
+            ? array_values(array_filter(array_map('trim', explode(',', $rawProxies)), fn ($p) => $p !== ''))
+            : [];
+
+        // 1. Coba melalui tiap proxy / relay Indonesia yang dikonfigurasi
+        foreach ($daftarProxy as $proxy) {
+            try {
+                // Mode A: Endpoint relay URL (contoh: https://relay-id.example.com/?url={url} atau ...?url=)
+                if (str_contains($proxy, '{url}') || preg_match('/[?&]url=$/i', $proxy)) {
+                    $relayUrl = str_contains($proxy, '{url}')
+                        ? str_replace('{url}', rawurlencode($targetUrl), $proxy)
+                        : $proxy.rawurlencode($targetUrl);
+
+                    $res = Http::withoutVerifying()->withHeaders($headers)->timeout($timeout)->get($relayUrl);
+                    if ($res->successful() && $res->body() !== '') {
+                        return $res->body();
+                    }
+                    continue;
+                }
+
+                // Mode B: HTTP / HTTPS / SOCKS5 proxy standar (contoh: http://user:pass@ip:port atau socks5h://ip:port)
+                $res = Http::withoutVerifying()
+                    ->withHeaders($headers)
+                    ->withOptions(['proxy' => $proxy])
+                    ->timeout($timeout)
+                    ->get($targetUrl);
+
+                if ($res->successful() && $res->body() !== '') {
+                    return $res->body();
+                }
+            } catch (Throwable $e) {
+                logger()->warning('[UrlCrawler] Gagal mengunduh via proxy ('.$targetUrl.'): '.$e->getMessage());
+            }
+        }
+
+        // 2. Koneksi langsung (atau fallback jika proxy tidak diatur / gagal)
+        try {
+            $res = Http::withoutVerifying()->withHeaders($headers)->timeout($timeout)->get($targetUrl);
+            if ($res->successful()) {
+                return $res->body();
+            }
+        } catch (Throwable $e) {
+            logger()->warning('[UrlCrawler] Gagal mengunduh langsung '.$targetUrl.': '.$e->getMessage());
+        }
+
+        return '';
     }
 
     // ------------------------------------------------------------------
@@ -703,6 +761,9 @@ class UrlCrawler
 
             // Buang penanda butir seperti "a.", "b.", "1.", "-", "•"
             $tanpaButir = trim((string) preg_replace('/^(?:[a-z0-9]{1,2}[\.\)]\s*|[\-\•\*]\s*)/iu', '', $baris));
+            if ($tanpaButir === '') {
+                continue;
+            }
             $entri = $this->uraiBarisItemStatus($tanpaButir, $polaReg);
             if ($entri !== null) {
                 $hasil[$kunciAktif][] = $entri;
@@ -1035,15 +1096,11 @@ class UrlCrawler
                 return [];
             }
 
-            $res = Http::withoutVerifying()->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            ])->timeout(45)->get($pdfUrls[0]);
-
-            if (! $res->successful()) {
+            $body = $this->unduhUrl($pdfUrls[0], 45);
+            if ($body === '') {
                 return [];
             }
 
-            $body = $res->body();
             // Batasi ukuran PDF maksimal ~15 MB agar konsumsi memori tetap aman
             if (strlen($body) < 100 || strlen($body) > 15 * 1024 * 1024 || ! str_contains(substr($body, 0, 1024), '%PDF-')) {
                 return [];
