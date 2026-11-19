@@ -18,7 +18,14 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => (function () {
+        $driver = env('SESSION_DRIVER', 'cookie');
+        if (env('RAILWAY_ENVIRONMENT') && in_array($driver, ['file', 'database', ''], true)) {
+            return 'cookie';
+        }
+
+        return $driver ?: 'cookie';
+    })(),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,7 +39,8 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    // 525600 menit = 1 tahun (tanpa auto-logout saat idle; keluar hanya lewat tombol Keluar)
+    'lifetime' => max(525600, (int) env('SESSION_LIFETIME', 525600)),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
@@ -114,7 +122,7 @@ return [
     |
     */
 
-    'lottery' => [2, 100],
+    'lottery' => [0, 100],
 
     /*
     |--------------------------------------------------------------------------
