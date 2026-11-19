@@ -912,8 +912,9 @@ mark {
   .meta-line { gap: 0.35rem 0.45rem; font-size: 11px; }
   .quote { padding: 0.875rem; margin-top: 0.75rem; }
   .row-actions { flex-direction: column; align-items: stretch; gap: 0.5rem; margin-top: 0.875rem; }
-  .row-actions-group { width: 100%; gap: 0.5rem; }
-  .row-actions-group .btn, .row-actions > a.btn { flex: 1 1 auto; min-height: 38px; justify-content: center; }
+  .row-actions-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 0.5rem; }
+  .row-actions-group .btn:only-child { grid-column: 1 / -1; }
+  .row-actions-group .btn, .row-actions > a.btn { min-height: 38px; padding: 0 0.625rem; font-size: 12.5px; justify-content: center; width: 100%; }
   .pager { flex-direction: column; align-items: center; justify-content: center; padding: 0.875rem 1rem; gap: 0.625rem; }
   .pager-pages { justify-content: center; gap: 0.35rem; }
   .pager-btn { min-width: 38px; height: 38px; padding: 0 0.65rem; font-size: 13px; }
@@ -926,7 +927,7 @@ mark {
   .table-wrap { -webkit-overflow-scrolling: touch; }
   .data-table th, .data-table td { padding: 0.75rem 0.75rem; font-size: 13px; }
   .modal-backdrop { padding: 0.75rem; align-items: flex-end; }
-  .modal-content { padding: 1.125rem; max-height: 88dvh; border-radius: 12px; border-width: 1px; }
+  .modal-content { padding: 1.125rem; max-height: 85dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border-width: 1px; }
   .modal-header h3 { font-size: 16px; line-height: 22px; }
   .form-actions { flex-direction: column-reverse; align-items: stretch; gap: 0.5rem; }
   .form-actions .btn { width: 100%; height: 42px; }

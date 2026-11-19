@@ -39,7 +39,24 @@
                 <h3>Daftar Akun Sistem</h3>
             </div>
 
-            <div class="table-wrap">
+            {{-- Tampilan kartu responsif khusus Mobile / PWA (< 768px) --}}
+            <div class="md:hidden divide-y divide-[#e2e8f0]">
+                @foreach ($userAccounts as $acc)
+                    <div class="p-4 flex flex-col gap-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[15px] font-bold text-[#0f172a]">{{ $acc->username }}</span>
+                            <span class="tag tag-neutral">{{ $acc->peran }}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-[#64748b] bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+                            <span>Diubah oleh: <strong class="text-[#1e293b]">{{ $acc->diubah_terakhir_oleh ?: 'System' }}</strong></span>
+                            <span>{{ $acc->tanggal_kata_sandi_diubah ? $acc->tanggal_kata_sandi_diubah->locale('id')->translatedFormat('j M Y H.i') : '-' }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Tampilan tabel penuh untuk Tablet / Desktop (>= 768px) --}}
+            <div class="hidden md:block table-wrap">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -56,7 +73,7 @@
                                 <td><span class="tag tag-neutral">{{ $acc->peran }}</span></td>
                                 <td>{{ $acc->diubah_terakhir_oleh ?: 'System' }}</td>
                                 {{-- Contoh hasil: "3 Nov 2025 14.30" --}}
-                                <td>{{ $acc->tanggal_kata_sandi_diubah ? $acc->tanggal_kata_sandi_diubah->translatedFormat('j M Y H.i') : '-' }}</td>
+                                <td>{{ $acc->tanggal_kata_sandi_diubah ? $acc->tanggal_kata_sandi_diubah->locale('id')->translatedFormat('j M Y H.i') : '-' }}</td>
                             </tr>
                         @endforeach
                     </tbody>

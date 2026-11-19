@@ -67,7 +67,10 @@
     <script src="/js/tailwind-config.js"></script>
 
     <style>
-        @layer base { html, body { margin: 0; padding: 0; overflow-x: hidden; } body { overscroll-behavior-y: none; } }
+        @layer base {
+            html, body { margin: 0; padding: 0; height: auto; min-height: 100%; }
+            body { overflow-x: clip; -webkit-overflow-scrolling: touch; }
+        }
         ::-webkit-scrollbar { display: none; }
         .content-body { width: 100%; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
         .pwa-safe-top { padding-top: env(safe-area-inset-top, 0px); }
@@ -75,7 +78,7 @@
     </style>
 
     {{-- CSS halaman (hasil pencarian, tabel, modal, dll.) --}}
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=2">
 
     {{-- HTMX --}}
     <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
@@ -100,11 +103,11 @@
         class="fixed left-0 top-0 h-full w-[280px] max-w-[85vw] lg:w-72 xl:w-80 bg-primary-container text-on-primary border-r border-outline/20 z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out pwa-safe-top pwa-safe-bottom"
         aria-label="Navigasi utama"
     >
-        <div class="h-16 px-space-md border-b border-white/10 flex items-center justify-between gap-space-sm flex-shrink-0">
-            <div class="flex items-center gap-space-sm min-w-0">
-                <img src="/images/logo.png" alt="Logo Pengayoman" class="w-10 h-10 object-contain rounded-lg flex-shrink-0">
+        <div class="h-16 px-space-md border-b border-white/10 flex items-center justify-between gap-2 flex-shrink-0">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <img src="/images/logo.png" alt="Logo Pengayoman" class="w-9 h-9 lg:w-10 lg:h-10 object-contain rounded-lg flex-shrink-0">
                 <div class="flex flex-col min-w-0 leading-tight">
-                    <span class="text-[17px] font-bold text-on-primary tracking-tight truncate">Kementerian Hukum</span>
+                    <span class="text-[15px] lg:text-[17px] font-bold text-on-primary tracking-tight whitespace-nowrap">Kementerian Hukum</span>
                     <span class="text-[12px] text-[#94a3b8] font-medium tracking-normal truncate">Kalimantan Selatan</span>
                 </div>
             </div>
@@ -171,7 +174,7 @@
     <div class="lg:pl-72 xl:pl-80 min-h-screen flex flex-col">
 
         <header class="fixed top-0 left-0 lg:left-72 xl:left-80 right-0 min-h-16 bg-surface-container-lowest border-b border-outline-variant z-30 px-3 sm:px-space-lg flex items-center justify-between gap-2 pwa-safe-top">
-            <div class="flex items-center gap-2.5 min-w-0 flex-1 py-2">
+            <div class="flex items-center gap-2 min-w-0 flex-1 py-2">
                 <button
                     type="button"
                     class="lg:hidden w-10 h-10 -ml-1 rounded-lg flex items-center justify-center text-[#0b192c] hover:bg-surface-container transition-colors flex-shrink-0"
@@ -181,7 +184,7 @@
                     {!! TeksHelper::ikon('menu', 22) !!}
                 </button>
                 <img src="/images/logo.png" alt="Logo Pengayoman" class="lg:hidden w-7 h-7 object-contain flex-shrink-0">
-                <h1 class="text-[14px] sm:text-[17px] lg:text-[18px] font-bold text-[#0b192c] tracking-tight uppercase truncate">{{ mb_strtoupper($title) }}</h1>
+                <h1 class="text-[13px] sm:text-[17px] lg:text-[18px] font-bold text-[#0b192c] tracking-tight uppercase truncate">{{ mb_strtoupper($title) }}</h1>
             </div>
 
             <div class="flex items-center gap-2 sm:gap-space-md flex-shrink-0 py-2">
@@ -207,7 +210,7 @@
             </div>
         </header>
 
-        <main class="w-full pt-16 pb-20 lg:pb-0 bg-surface flex-1">
+        <main class="w-full pt-16 pb-24 lg:pb-0 bg-surface flex-1">
             <div class="content-body">
                 @yield('content')
             </div>
@@ -245,6 +248,7 @@
 
         <button
             type="button"
+            id="mobile-nav-pwa-btn"
             onclick="triggerPwaDownload()"
             class="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 text-[#64748b] hover:text-[#0e1c2f] font-medium cursor-pointer bg-transparent border-0"
         >
@@ -295,10 +299,10 @@
 
             <div class="space-y-3">
                 <div style="padding: 0.875rem 1rem; background: var(--canvas); border: 1px solid var(--border); border-radius: var(--radius-lg);">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 0.45rem;">
                         Pengguna Apple (iPhone / iPad — Safari)
                     </div>
-                    <ol style="margin: 0; padding-left: 1.2rem; font-size: 13px; line-height: 1.6; color: var(--text);">
+                    <ol style="margin: 0; padding-left: 1.25rem; list-style: decimal; font-size: 13px; line-height: 1.65; color: var(--text);">
                         <li>Buka situs ini menggunakan browser <strong>Safari</strong>.</li>
                         <li>Ketuk tombol <strong>Bagikan (Share)</strong> di bagian bawah layar Safari.</li>
                         <li>Gulir ke bawah lalu pilih <strong>Tambahkan ke Layar Utama (Add to Home Screen)</strong>.</li>
@@ -307,10 +311,10 @@
                 </div>
 
                 <div style="padding: 0.875rem 1rem; background: var(--canvas); border: 1px solid var(--border); border-radius: var(--radius-lg);">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 0.45rem;">
                         Pengguna Android / Desktop (Chrome &amp; Edge)
                     </div>
-                    <ol style="margin: 0; padding-left: 1.2rem; font-size: 13px; line-height: 1.6; color: var(--text);">
+                    <ol style="margin: 0; padding-left: 1.25rem; list-style: decimal; font-size: 13px; line-height: 1.65; color: var(--text);">
                         <li>Klik tombol <strong>Pasang Aplikasi</strong> bila tersedia, atau buka menu browser (<strong>&#8942;</strong>).</li>
                         <li>Pilih <strong>Instal Aplikasi</strong> / <strong>Tambahkan ke layar utama</strong>.</li>
                     </ol>
@@ -353,11 +357,13 @@
             const subEl = document.getElementById('pwa-download-sub');
             const standaloneNote = document.getElementById('pwa-modal-standalone');
             const promptWrap = document.getElementById('pwa-modal-prompt-wrap');
+            const mobileNavPwaBtn = document.getElementById('mobile-nav-pwa-btn');
 
             if (isRunningStandalone()) {
                 if (titleEl) titleEl.textContent = 'Aplikasi Terpasang';
                 if (subEl) subEl.textContent = 'Mode PWA Aktif';
                 if (standaloneNote) standaloneNote.classList.remove('hidden');
+                if (mobileNavPwaBtn) mobileNavPwaBtn.classList.add('hidden');
             }
             if (promptWrap) {
                 if (deferredPwaPrompt) promptWrap.classList.remove('hidden');
@@ -415,7 +421,13 @@
             }
         });
 
+        window.addEventListener('pageshow', () => {
+            closeMobileDrawer();
+            document.body.style.overflow = '';
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
+            document.body.style.overflow = '';
             updatePwaUi();
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js').catch(() => {});
