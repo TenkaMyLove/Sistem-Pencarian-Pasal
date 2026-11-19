@@ -89,36 +89,18 @@
 {{-- hx-headers: setiap permintaan HTMX otomatis menyertakan token CSRF (wajib di Laravel untuk POST) --}}
 <body class="bg-surface font-body-md text-on-surface antialiased" hx-headers='{"X-CSRF-TOKEN": "{{ csrf_token() }}"}'>
 
-    {{-- ── Backdrop Drawer Mobile ── --}}
-    <div
-        id="mobile-drawer-backdrop"
-        class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"
-        onclick="closeMobileDrawer()"
-        aria-hidden="true"
-    ></div>
-
-    {{-- ── Sidebar (Desktop: fixed; Mobile/PWA: slide-out drawer) ── --}}
+    {{-- ── Sidebar (Khusus Desktop >= 1024px; Mobile memakai navigasi bawah) ── --}}
     <aside
         id="app-sidebar"
-        class="fixed left-0 top-0 h-full w-[280px] max-w-[85vw] lg:w-72 xl:w-80 bg-primary-container text-on-primary border-r border-outline/20 z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out pwa-safe-top pwa-safe-bottom"
+        class="hidden lg:flex fixed left-0 top-0 h-full w-72 xl:w-80 bg-primary-container text-on-primary border-r border-outline/20 z-50 flex-col"
         aria-label="Navigasi utama"
     >
-        <div class="h-16 px-space-md border-b border-white/10 flex items-center justify-between gap-2 flex-shrink-0">
-            <div class="flex items-center gap-2.5 min-w-0">
-                <img src="/images/logo.png" alt="Logo Pengayoman" class="w-9 h-9 lg:w-10 lg:h-10 object-contain rounded-lg flex-shrink-0">
-                <div class="flex flex-col min-w-0 leading-tight">
-                    <span class="text-[15px] lg:text-[17px] font-bold text-on-primary tracking-tight whitespace-nowrap">Kementerian Hukum</span>
-                    <span class="text-[12px] text-[#94a3b8] font-medium tracking-normal truncate">Kalimantan Selatan</span>
-                </div>
+        <div class="h-16 px-space-md border-b border-white/10 flex items-center gap-space-sm flex-shrink-0">
+            <img src="/images/logo.png" alt="Logo Pengayoman" class="w-10 h-10 object-contain rounded-lg flex-shrink-0">
+            <div class="flex flex-col min-w-0 leading-tight">
+                <span class="text-[17px] font-bold text-on-primary tracking-tight truncate">Kementerian Hukum</span>
+                <span class="text-[12px] text-[#94a3b8] font-medium tracking-normal truncate">Kalimantan Selatan</span>
             </div>
-            <button
-                type="button"
-                class="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-[#94a3b8] hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
-                onclick="closeMobileDrawer()"
-                aria-label="Tutup menu"
-            >
-                {!! TeksHelper::ikon('close', 20) !!}
-            </button>
         </div>
 
         <div class="px-space-md pt-space-md pb-space-xs flex-shrink-0">
@@ -126,25 +108,25 @@
         </div>
 
         <nav class="flex flex-col px-space-md gap-space-xs flex-1 overflow-y-auto">
-            <a href="/pencarian" class="{{ $navCls('pencarian') }}" onclick="closeMobileDrawer()">
+            <a href="/pencarian" class="{{ $navCls('pencarian') }}">
                 <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['pencarian'], 20) !!}</span>
                 <span class="text-[15px] font-semibold">Pencarian Pasal</span>
             </a>
 
             @unless ($isGuest)
-                <a href="/jadwal" class="{{ $navCls('jadwal') }}" onclick="closeMobileDrawer()">
+                <a href="/jadwal" class="{{ $navCls('jadwal') }}">
                     <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['jadwal'], 20) !!}</span>
                     <span class="text-[15px] font-semibold">Jadwal Harmonisasi</span>
                 </a>
             @endunless
 
             @if ($isPengelola)
-                <a href="/tambah-peraturan" class="{{ $navCls('tambah-peraturan') }}" onclick="closeMobileDrawer()">
+                <a href="/tambah-peraturan" class="{{ $navCls('tambah-peraturan') }}">
                     <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['tambah-peraturan'], 20) !!}</span>
                     <span class="text-[15px] font-semibold">Tambah Peraturan</span>
                 </a>
 
-                <a href="/kelola-akun" class="{{ $navCls('kelola-akun') }}" onclick="closeMobileDrawer()">
+                <a href="/kelola-akun" class="{{ $navCls('kelola-akun') }}">
                     <span class="flex-shrink-0">{!! TeksHelper::ikon($navIcon['kelola-akun'], 20) !!}</span>
                     <span class="text-[15px] font-semibold">Kelola Akun</span>
                 </a>
@@ -157,14 +139,14 @@
                 type="button"
                 id="pwa-download-btn"
                 onclick="triggerPwaDownload()"
-                class="w-full flex items-center gap-3 px-3.5 py-3 rounded-lg bg-[#1d4ed8] hover:bg-[#1e40af] active:bg-[#1e3a8a] text-white transition-colors text-left cursor-pointer border border-white/10"
+                class="w-full flex items-center gap-3 px-3.5 py-3 rounded-lg bg-secondary hover:bg-[#354c96] active:bg-[#2c3f7e] text-on-secondary transition-colors text-left cursor-pointer border border-white/10"
             >
                 <span class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0 text-white">
                     {!! TeksHelper::ikon('download', 20) !!}
                 </span>
                 <span class="flex flex-col min-w-0">
                     <span id="pwa-download-title" class="text-[14px] font-semibold text-white leading-tight truncate">Download Aplikasi</span>
-                    <span id="pwa-download-sub" class="text-[11px] text-[#dbeafe] leading-tight truncate mt-0.5">Pasang versi PWA (iOS / Mobile)</span>
+                    <span id="pwa-download-sub" class="text-[11px] text-white/80 leading-tight truncate mt-0.5">Pasang Versi iOS / Mobile</span>
                 </span>
             </button>
         </div>
@@ -174,17 +156,9 @@
     <div class="lg:pl-72 xl:pl-80 min-h-screen flex flex-col">
 
         <header class="fixed top-0 left-0 lg:left-72 xl:left-80 right-0 min-h-16 bg-surface-container-lowest border-b border-outline-variant z-30 px-3 sm:px-space-lg flex items-center justify-between gap-2 pwa-safe-top">
-            <div class="flex items-center gap-2 min-w-0 flex-1 py-2">
-                <button
-                    type="button"
-                    class="lg:hidden w-10 h-10 -ml-1 rounded-lg flex items-center justify-center text-[#0b192c] hover:bg-surface-container transition-colors flex-shrink-0"
-                    onclick="openMobileDrawer()"
-                    aria-label="Buka menu navigasi"
-                >
-                    {!! TeksHelper::ikon('menu', 22) !!}
-                </button>
-                <img src="/images/logo.png" alt="Logo Pengayoman" class="lg:hidden w-7 h-7 object-contain flex-shrink-0">
-                <h1 class="text-[13px] sm:text-[17px] lg:text-[18px] font-bold text-[#0b192c] tracking-tight uppercase truncate">{{ mb_strtoupper($title) }}</h1>
+            <div class="flex items-center gap-2.5 min-w-0 flex-1 py-2">
+                <img src="/images/logo.png" alt="Logo Pengayoman" class="lg:hidden w-8 h-8 object-contain flex-shrink-0">
+                <h1 class="text-[14px] sm:text-[17px] lg:text-[18px] font-bold text-[#0b192c] tracking-tight uppercase truncate">{{ mb_strtoupper($title) }}</h1>
             </div>
 
             <div class="flex items-center gap-2 sm:gap-space-md flex-shrink-0 py-2">
@@ -328,23 +302,6 @@
     </div>
 
     <script>
-        // ── Drawer Mobile ──
-        function openMobileDrawer() {
-            const sidebar = document.getElementById('app-sidebar');
-            const backdrop = document.getElementById('mobile-drawer-backdrop');
-            if (sidebar) sidebar.classList.remove('-translate-x-full');
-            if (backdrop) backdrop.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeMobileDrawer() {
-            const sidebar = document.getElementById('app-sidebar');
-            const backdrop = document.getElementById('mobile-drawer-backdrop');
-            if (sidebar) sidebar.classList.add('-translate-x-full');
-            if (backdrop) backdrop.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-
         // ── PWA Install & Service Worker ──
         let deferredPwaPrompt = null;
 
@@ -361,7 +318,7 @@
 
             if (isRunningStandalone()) {
                 if (titleEl) titleEl.textContent = 'Aplikasi Terpasang';
-                if (subEl) subEl.textContent = 'Mode PWA Aktif';
+                if (subEl) subEl.textContent = 'Mode Aplikasi Aktif';
                 if (standaloneNote) standaloneNote.classList.remove('hidden');
                 if (mobileNavPwaBtn) mobileNavPwaBtn.classList.add('hidden');
             }
@@ -406,7 +363,6 @@
         }
 
         function triggerPwaDownload() {
-            closeMobileDrawer();
             if (deferredPwaPrompt) {
                 runNativePwaInstall();
             } else {
@@ -416,18 +372,11 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                closeMobileDrawer();
                 closePwaModal();
             }
         });
 
-        window.addEventListener('pageshow', () => {
-            closeMobileDrawer();
-            document.body.style.overflow = '';
-        });
-
         document.addEventListener('DOMContentLoaded', () => {
-            document.body.style.overflow = '';
             updatePwaUi();
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js').catch(() => {});
