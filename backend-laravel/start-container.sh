@@ -1,40 +1,29 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-# ============================================================
-# Custom startup script for Railway (Railpack + FrankenPHP)
-# ============================================================
-# Railpack runs `php artisan config:cache` during BUILD time,
-# but Railway env vars (DB_HOST, DB_PASSWORD, etc.) are NOT
-# available at build time. So the cached config has wrong values.
-# This script clears that stale cache at RUNTIME before starting.
-# ============================================================
+echo "Starting Sistem Pencarian Pasal..."
 
-echo "🚀 Starting Sistem Pencarian Pasal..."
+# 1. Hapus cache config/route/event sisa build-time agar env runtime Railway terbaca
+php artisan optimize:clear || true
 
-# 1. Clear the stale build-time config cache
-echo "🔧 Clearing build-time config cache..."
-php artisan config:clear
-php artisan event:clear
-php artisan route:clear
+# 2. Pastikan direktori storage & cache writable
+mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache
+chmod -R a+rw storage bootstrap/cache || true
 
-# 2. Re-cache config with actual runtime env vars
-echo "🔧 Re-caching config with runtime environment variables..."
+# 3. Buat symlink storage (abaikan jika sudah ada)
+php artisan storage:link || true
+
+# 4. Cache ulang config/route/view dengan env runtime yang sebenarnya
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# 3. Ensure storage directories exist and are writable
-mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache
-chmod -R a+rw storage bootstrap/cache
-
-# 4. Run migrations (unless explicitly skipped)
+# 5. Jalankan migrasi jika tidak di-skip (aman jika tabel sudah ada)
 if [ "${RAILPACK_SKIP_MIGRATIONS:-false}" != "true" ]; then
-    echo "🔧 Running database migrations..."
-    php artisan migrate --force || echo "⚠️ Migration skipped (may already be up to date)"
+    php artisan migrate --force || echo "Warning: migration skipped or already up to date"
 fi
 
-echo "✅ Setup complete, starting FrankenPHP..."
+echo "Starting FrankenPHP server..."
 
-# 5. Start FrankenPHP (Caddy) — the default Railpack runtime
-exec frankenphp run --config /etc/caddy/Caddyfile
+# 6. Jalankan FrankenPHP sesuai entrypoint resmi Railpack
+exec docker-php-entrypoint --config /Caddyfile --adapter caddyfile 2>&1
