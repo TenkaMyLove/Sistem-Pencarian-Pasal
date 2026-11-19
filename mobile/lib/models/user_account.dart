@@ -28,7 +28,7 @@ class UserAccount {
       id: 1,
       username: 'Pengelola',
       peran: 'Pengelola',
-      diubahTerakhirOleh: 'Admin',
+      diubahTerakhirOleh: 'Pengelola',
       tanggalKataSandiDiubah: '2026-10-25 10:00:00',
     );
   }

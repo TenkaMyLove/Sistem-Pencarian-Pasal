@@ -20,7 +20,7 @@ class AuthController extends Controller
 
         // Sudah login sebagai pegawai -> langsung ke aplikasi
         if ($user && $user['peran'] !== 'Tamu') {
-            return redirect($user['peran'] === 'Admin' ? '/kelola-akun' : '/pencarian');
+            return redirect('/pencarian');
         }
 
         return view('auth.login', ['error' => null]);
@@ -35,8 +35,10 @@ class AuthController extends Controller
             return response()->view('auth.login', ['error' => 'Username dan kata sandi wajib diisi'], 400);
         }
 
-        // Cari tanpa membedakan huruf besar/kecil
-        $pengguna = Pengguna::whereRaw('LOWER(username) = ?', [strtolower($username)])->first();
+        // Cari tanpa membedakan huruf besar/kecil (peran Admin telah dihapus)
+        $pengguna = Pengguna::where('peran', '!=', 'Admin')
+            ->whereRaw('LOWER(username) = ?', [strtolower($username)])
+            ->first();
 
         if (! $pengguna || ! $pengguna->cekKataSandi($kataSandi)) {
             return response()->view('auth.login', ['error' => 'Username atau kata sandi salah'], 401);
@@ -50,7 +52,7 @@ class AuthController extends Controller
             'peran' => $pengguna->peran,
         ]);
 
-        return redirect($pengguna->peran === 'Admin' ? '/kelola-akun' : '/pencarian');
+        return redirect('/pencarian');
     }
 
     /** Masuk sebagai Tamu (publik, hanya bisa mencari pasal). */

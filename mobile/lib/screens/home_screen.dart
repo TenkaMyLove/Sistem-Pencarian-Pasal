@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService().currentUser;
-    final isAdmin = user?.isAdmin ?? false;
+    final canManageAkun = user?.canManageAkun ?? false;
     final isTamu = user?.isTamu ?? true;
     final canTambah = user?.canTambahPeraturan ?? false;
 
@@ -90,13 +90,13 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: Icons.post_add_outlined,
           activeIcon: Icons.post_add,
         ),
-      if (isAdmin)
+      if (canManageAkun)
         const _NavTab(
           screen: KelolaAkunScreen(),
           label: 'Kelola Akun',
           subtitle: 'KELOLA AKUN',
-          icon: Icons.admin_panel_settings_outlined,
-          activeIcon: Icons.admin_panel_settings,
+          icon: Icons.manage_accounts_outlined,
+          activeIcon: Icons.manage_accounts,
         ),
     ];
 

@@ -52,27 +52,30 @@ backend-laravel/
 │   ├── Http/
 │   │   ├── Middleware/
 │   │   │   ├── LoadUser.php            # Mengisi variabel $user di setiap halaman (default: Tamu)
-│   │   │   └── CheckRole.php           # Pembatas hak akses (role:staff, role:pengelola, role:admin)
+│   │   │   └── CheckRole.php           # Pembatas hak akses (role:staff, role:pengelola)
 │   │   └── Controllers/
 │   │       ├── AuthController.php      # Login, Logout, dan Mode Tamu
 │   │       ├── SearchController.php    # Pencarian pasal, modal status, edit/hapus peraturan & pasal
 │   │       ├── JadwalController.php    # CRUD Jadwal Rapat Harmonisasi
 │   │       ├── TambahPeraturanController.php # Form tambah peraturan baru via URL crawler
-│   │       ├── AdminController.php     # Kelola akun & reset kata sandi staf
+│   │       ├── AdminController.php     # Kelola akun & reset kata sandi staf (khusus Pengelola)
 │   │       └── Api/ApiController.php   # Semua endpoint JSON `/api/*` untuk Flutter
 │   ├── Services/
 │   │   ├── SearchService.php           # Logika query pencarian (dipakai bersama oleh Web & API)
 │   │   ├── UrlCrawler.php              # Robot pengambil judul, pasal, dan status dari halaman JDIH/BPK
 │   │   └── RecrawlService.php          # Pemeriksa kesehatan tautan peraturan
 │   └── Support/
-│       └── TeksHelper.php              # Penyorot kata kunci (<mark>) & pembuat link rujukan peraturan
+│       └── TeksHelper.php              # Penyorot kata kunci (<mark>), SVG inline & pembuat link rujukan peraturan
 ├── database/
 │   ├── migrations/
 │   │   └── 2026_11_14_000000_create_p3h_tables.php # Skema tabel database MySQL
 │   └── seeders/
-│       └── DatabaseSeeder.php          # Pembuat akun awal (Admin, Pengelola, Perancang)
+│       └── DatabaseSeeder.php          # Pembuat akun awal (Pengelola, Perancang)
+├── public/
+│   ├── manifest.json                   # Konfigurasi PWA (ikon, nama, mode standalone)
+│   └── sw.js                           # Service Worker PWA
 ├── resources/views/                    # Template HTML (Blade)
-│   ├── layouts/app.blade.php           # Kerangka utama (Sidebar + Topbar)
+│   ├── layouts/app.blade.php           # Kerangka utama responsif (Sidebar/Drawer + Topbar + PWA Download + Bottom Nav)
 │   ├── auth/login.blade.php            # Halaman Login
 │   ├── search/                         # Halaman pencarian, daftar hasil, dan popup modal
 │   ├── jadwal/                         # Halaman tabel & modal jadwal rapat

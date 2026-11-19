@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $akun = [
-            ['username' => 'Admin',     'peran' => 'Admin',     'kata_sandi' => 'admin123'],
             ['username' => 'Pengelola', 'peran' => 'Pengelola', 'kata_sandi' => 'pengelola123'],
             ['username' => 'Perancang', 'peran' => 'Perancang', 'kata_sandi' => 'perancang123'],
         ];

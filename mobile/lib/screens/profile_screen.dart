@@ -368,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   _PermissionRow(
                     label: 'Kelola Akun Pengguna & Reset Kata Sandi',
-                    allowed: user?.isAdmin ?? false,
+                    allowed: user?.canManageAkun ?? false,
                     isLast: true,
                   ),
                 ],

@@ -62,7 +62,7 @@ class SearchController extends Controller
         return view('search.status-modal', ['peraturan' => Peraturan::findOrFail($id)]);
     }
 
-    // ---------------- Peraturan (khusus Pengelola/Admin) ----------------
+    // ---------------- Peraturan (khusus Pengelola) ----------------
 
     public function editPeraturanModal(int $id): View
     {
@@ -108,7 +108,7 @@ class SearchController extends Controller
         return response('', 200)->header('HX-Trigger', 'refreshResults');
     }
 
-    // ---------------- Pasal (khusus Pengelola/Admin) ----------------
+    // ---------------- Pasal (khusus Pengelola) ----------------
 
     public function editPasalModal(int $id): View
     {

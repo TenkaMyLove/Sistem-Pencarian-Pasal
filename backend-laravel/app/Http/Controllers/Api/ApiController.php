@@ -65,7 +65,9 @@ class ApiController extends Controller
                 return $this->pesan('Username dan kata sandi wajib diisi', 400);
             }
 
-            $pengguna = Pengguna::whereRaw('LOWER(username) = ?', [strtolower($username)])->first();
+            $pengguna = Pengguna::where('peran', '!=', 'Admin')
+                ->whereRaw('LOWER(username) = ?', [strtolower($username)])
+                ->first();
 
             if (! $pengguna || ! $pengguna->cekKataSandi($kataSandi)) {
                 return $this->pesan('Username atau kata sandi salah', 401);
@@ -307,12 +309,13 @@ class ApiController extends Controller
     }
 
     // ------------------------------------------------------------------
-    // 6. Manajemen pengguna (Admin)
+    // 6. Manajemen pengguna (Pengelola)
     // ------------------------------------------------------------------
     public function daftarPengguna(): JsonResponse
     {
         try {
-            $users = Pengguna::orderBy('id')
+            $users = Pengguna::where('peran', '!=', 'Admin')
+                ->orderBy('id')
                 ->get(['id', 'username', 'peran', 'diubah_terakhir_oleh', 'tanggal_kata_sandi_diubah']);
 
             return response()->json(['success' => true, 'data' => $users]);
@@ -324,11 +327,15 @@ class ApiController extends Controller
     public function resetKataSandi(Request $request): JsonResponse
     {
         try {
-            $target = $request->input('target_username');
+            $target = trim((string) $request->input('target_username'));
             $baru = (string) $request->input('kata_sandi_baru');
 
-            if (! $target || $baru === '') {
+            if ($target === '' || $baru === '') {
                 return $this->pesan('Target username dan kata sandi baru wajib diisi', 400);
+            }
+
+            if (! in_array($target, config('p3h.akun_operasional'), true)) {
+                return $this->pesan('Hanya kata sandi akun Pengelola atau Perancang yang dapat diubah', 400);
             }
 
             if (mb_strlen($baru) < 6) {
@@ -337,7 +344,7 @@ class ApiController extends Controller
 
             Pengguna::where('username', $target)->update([
                 'kata_sandi_terenkripsi' => Hash::make($baru),
-                'diubah_terakhir_oleh' => $request->input('admin_username') ?: 'Admin',
+                'diubah_terakhir_oleh' => $request->input('pengelola_username') ?: $request->input('admin_username') ?: 'Pengelola',
                 'tanggal_kata_sandi_diubah' => now(),
             ]);
 

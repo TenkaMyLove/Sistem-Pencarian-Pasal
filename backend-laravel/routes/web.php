@@ -28,7 +28,7 @@ Route::get('/pencarian', [SearchController::class, 'index']);
 Route::get('/search-results', [SearchController::class, 'results']);
 Route::get('/pencarian/status-modal/{id}', [SearchController::class, 'statusModal']);
 
-// --- Hanya Pengelola / Admin: ubah data & tambah peraturan ---
+// --- Hanya Pengelola: ubah data, tambah peraturan, dan kelola akun ---
 Route::middleware('role:pengelola')->group(function () {
     Route::get('/pencarian/edit-peraturan-modal/{id}', [SearchController::class, 'editPeraturanModal']);
     Route::post('/pencarian/edit-peraturan/{id}', [SearchController::class, 'updatePeraturan']);
@@ -39,9 +39,12 @@ Route::middleware('role:pengelola')->group(function () {
 
     Route::get('/tambah-peraturan', [TambahPeraturanController::class, 'form']);
     Route::post('/tambah-peraturan', [TambahPeraturanController::class, 'simpan']);
+
+    Route::get('/kelola-akun', [AdminController::class, 'index']);
+    Route::post('/kelola-akun', [AdminController::class, 'resetKataSandi']);
 });
 
-// --- Pegawai (bukan Tamu): jadwal rapat harmonisasi ---
+// --- Pegawai (Pengelola & Perancang): jadwal rapat harmonisasi ---
 Route::middleware('role:staff')->group(function () {
     Route::get('/jadwal', [JadwalController::class, 'index']);
     Route::get('/jadwal/modal/tambah', [JadwalController::class, 'modalTambah']);
@@ -49,10 +52,4 @@ Route::middleware('role:staff')->group(function () {
     Route::post('/jadwal', [JadwalController::class, 'store']);
     Route::post('/jadwal/{id}/edit', [JadwalController::class, 'update']);
     Route::post('/jadwal/{id}/delete', [JadwalController::class, 'destroy']);
-});
-
-// --- Hanya Admin: kelola akun ---
-Route::middleware('role:admin')->group(function () {
-    Route::get('/kelola-akun', [AdminController::class, 'index']);
-    Route::post('/kelola-akun', [AdminController::class, 'resetKataSandi']);
 });

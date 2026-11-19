@@ -86,7 +86,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('username', 50)->unique();
                 $table->string('kata_sandi_terenkripsi', 255);
-                $table->string('peran', 50); // Admin, Pengelola, Perancang
+                $table->string('peran', 50); // Pengelola, Perancang
                 $table->string('diubah_terakhir_oleh', 50)->nullable();
                 $table->dateTime('tanggal_kata_sandi_diubah')->useCurrent();
             });

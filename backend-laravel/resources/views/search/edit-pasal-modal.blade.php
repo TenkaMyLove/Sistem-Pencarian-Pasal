@@ -1,6 +1,6 @@
 @use('App\Support\TeksHelper')
 {{--
-    Popup "Edit Pasal" — hanya untuk Pengelola/Admin (partial, tanpa layout).
+    Popup "Edit Pasal" — khusus untuk Pengelola (partial, tanpa layout).
     Variabel: $pasal (model atau stdClass), $error (teks atau null)
 --}}
 <div class="modal-backdrop" id="edit-pasal-modal" onclick="if(event.target===this)this.remove()">

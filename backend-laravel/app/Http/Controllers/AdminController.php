@@ -6,13 +6,13 @@ use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-/** Kelola Akun (khusus Admin): reset kata sandi akun Pengelola / Perancang. */
+/** Kelola Akun (khusus Pengelola): reset kata sandi akun Pengelola / Perancang. */
 class AdminController extends Controller
 {
     private function tampil(int $status = 200, ?string $message = null, ?string $error = null)
     {
         return response()->view('admin.akun', [
-            'userAccounts' => Pengguna::orderBy('id')->get(),
+            'userAccounts' => Pengguna::where('peran', '!=', 'Admin')->orderBy('id')->get(),
             'message' => $message,
             'error' => $error,
         ], $status);
@@ -47,9 +47,11 @@ class AdminController extends Controller
             return $this->tampil(400, error: 'Konfirmasi kata sandi baru tidak cocok.');
         }
 
+        $pengubah = $request->session()->get('user.username', 'Pengelola');
+
         Pengguna::where('username', $target)->update([
             'kata_sandi_terenkripsi' => Hash::make($baru),
-            'diubah_terakhir_oleh' => 'Admin',
+            'diubah_terakhir_oleh' => $pengubah,
             'tanggal_kata_sandi_diubah' => now(),
         ]);
 

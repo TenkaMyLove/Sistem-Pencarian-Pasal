@@ -1,0 +1,26 @@
+{
+  "name": "P3H Kemenkum Kalsel — Sistem Pencarian Pasal",
+  "short_name": "P3H Kalsel",
+  "description": "Portal Pencarian Pasal Peraturan Perundang-undangan & Harmonisasi Regulasi Daerah — Kanwil Kementerian Hukum Kalimantan Selatan",
+  "start_url": "/pencarian",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0e1c2f",
+  "theme_color": "#0e1c2f",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

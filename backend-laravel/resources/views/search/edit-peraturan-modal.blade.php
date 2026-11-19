@@ -1,6 +1,6 @@
 @use('App\Support\TeksHelper')
 {{--
-    Popup "Edit Data Peraturan" — hanya untuk Pengelola/Admin (partial, tanpa layout).
+    Popup "Edit Data Peraturan" — khusus untuk Pengelola (partial, tanpa layout).
     Variabel: $peraturan (model atau stdClass), $error (teks atau null)
 --}}
 @php
