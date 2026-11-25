@@ -66,3 +66,19 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
+
+// Klik notifikasi jadwal rapat -> buka/fokuskan halaman Jadwal
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/jadwal';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+          return client.navigate(target).then((c) => (c || client).focus()).catch(() => client.focus());
+        }
+      }
+      return self.clients.openWindow(target);
+    })
+  );
+});

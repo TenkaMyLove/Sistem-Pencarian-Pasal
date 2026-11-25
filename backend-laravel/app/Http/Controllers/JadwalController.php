@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JadwalRapat;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -49,6 +50,19 @@ class JadwalController extends Controller
     public function index(): View
     {
         return view('jadwal.index', ['jadwalList' => $this->daftar()]);
+    }
+
+    /** GET /jadwal/notifikasi-hari-ini — rapat hari ini yang belum lewat (JSON untuk notifikasi web/PWA) */
+    public function notifikasiHariIni(): JsonResponse
+    {
+        $now = now('Asia/Makassar');
+
+        return response()->json([
+            'success' => true,
+            'data' => JadwalRapat::aktifHariIni()->makeHidden(['created_at', 'updated_at']),
+            'tanggal' => $now->toDateString(),
+            'jam_server' => $now->format('H:i:s'),
+        ]);
     }
 
     /** GET /jadwal/modal/tambah — popup form kosong */

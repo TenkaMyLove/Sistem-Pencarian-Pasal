@@ -168,6 +168,25 @@ class ApiService {
     }
   }
 
+  /// Rapat hari ini (WITA) yang jamnya belum lewat — dipakai untuk notifikasi.
+  Future<List<JadwalItem>> getJadwalHariIni() async {
+    final baseUrl = await getBaseUrl();
+    final uri = Uri.parse('$baseUrl/api/jadwal/hari-ini');
+
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return (json['data'] as List? ?? [])
+            .map((e) => JadwalItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw Exception('Gagal memuat jadwal hari ini (${response.statusCode})');
+    } catch (e) {
+      throw Exception('Koneksi bermasalah: $e');
+    }
+  }
+
   Future<void> addJadwal(Map<String, dynamic> data) async {
     final baseUrl = await getBaseUrl();
     final uri = Uri.parse('$baseUrl/api/jadwal');

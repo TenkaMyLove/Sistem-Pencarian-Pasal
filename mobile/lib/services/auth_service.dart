@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
+import 'notification_service.dart';
 
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
@@ -55,6 +56,7 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    await NotificationService().stopPolling();
     _currentUser = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.prefUserData);
