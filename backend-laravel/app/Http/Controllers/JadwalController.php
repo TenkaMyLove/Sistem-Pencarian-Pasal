@@ -52,7 +52,7 @@ class JadwalController extends Controller
         return view('jadwal.index', ['jadwalList' => $this->daftar()]);
     }
 
-    /** GET /jadwal/notifikasi-hari-ini — rapat hari ini yang belum lewat (JSON untuk notifikasi web/PWA) */
+    /** GET /jadwal/notifikasi-hari-ini — semua rapat hari ini (JSON untuk notifikasi web/PWA) */
     public function notifikasiHariIni(): JsonResponse
     {
         $now = now('Asia/Makassar');

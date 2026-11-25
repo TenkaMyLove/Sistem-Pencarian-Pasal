@@ -1,11 +1,11 @@
 /**
  * P3H Kalsel — Notifikasi Jadwal Rapat Harmonisasi (web / PWA).
  *
- * Setiap 60 detik mengambil /jadwal/notifikasi-hari-ini (rapat hari ini yang jamnya belum lewat,
+ * Setiap 60 detik mengambil /jadwal/notifikasi-hari-ini (semua rapat hari ini,
  * dihitung server dalam WITA), lalu:
  *  - menampilkan banner di halaman (tanpa izin browser), dan
  *  - mengirim notifikasi browser sekali per rapat (bila izin diberikan).
- * Rapat yang jamnya sudah lewat hilang dari banner dan notifikasinya ditutup otomatis.
+ * Ketika tanggal berganti, rapat kemarin hilang dari banner dan notifikasinya ditutup otomatis.
  * Notifikasi baru aktif mulai pukul 08:00 WITA (jam server, bukan jam perangkat).
  */
 (function () {
@@ -127,7 +127,7 @@
     var activeTags = items.map(function (it) { return TAG_PREFIX + it.id; });
 
     return swRegistration().then(function (reg) {
-      // Tutup otomatis notifikasi rapat yang jamnya sudah lewat
+      // Tutup otomatis notifikasi rapat yang bukan jadwal hari ini (tanggal sudah berganti)
       if (reg && reg.getNotifications) {
         reg.getNotifications().then(function (notifs) {
           notifs.forEach(function (n) {

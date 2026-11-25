@@ -21,32 +21,13 @@ class JadwalRapat extends Model
     ];
 
     /**
-     * Rapat hari ini (WITA) yang jamnya belum lewat — dipakai untuk notifikasi web & mobile.
-     * Rapat dengan format jam yang tidak dikenali tetap ditampilkan sepanjang hari.
+     * Semua rapat hari ini (WITA) — dipakai untuk notifikasi web & mobile.
+     * Rapat tetap ditampilkan sepanjang hari dan baru hilang ketika tanggal berganti.
      */
     public static function aktifHariIni(): Collection
     {
-        $now = now('Asia/Makassar');
-        $jamSekarang = $now->format('H:i:s');
-
-        return static::whereDate('tanggal', $now->toDateString())
+        return static::whereDate('tanggal', now('Asia/Makassar')->toDateString())
             ->orderBy('jam')
-            ->get()
-            ->filter(function (self $item) use ($jamSekarang) {
-                $jam = self::normalisasiJam($item->jam);
-
-                return $jam === null || $jam >= $jamSekarang;
-            })
-            ->values();
-    }
-
-    /** "9.30 WITA" / "09:30" / "09:30:00" -> "09:30:00"; null bila format tidak dikenali. */
-    public static function normalisasiJam(?string $jam): ?string
-    {
-        if (! preg_match('/(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?/', (string) $jam, $m)) {
-            return null;
-        }
-
-        return sprintf('%02d:%02d:%02d', $m[1], $m[2], $m[3] ?? 0);
+            ->get();
     }
 }

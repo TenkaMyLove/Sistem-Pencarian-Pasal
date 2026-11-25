@@ -7,9 +7,9 @@ import 'api_service.dart';
 /// Notifikasi lokal untuk jadwal rapat harmonisasi hari ini.
 ///
 /// Selama aplikasi berjalan, setiap 60 detik mengambil /api/jadwal/hari-ini
-/// (rapat hari ini yang jamnya belum lewat, dihitung server dalam WITA):
+/// (semua rapat hari ini, dihitung server dalam WITA):
 ///  - rapat baru  -> tampilkan notifikasi (sekali per rapat),
-///  - rapat yang sudah lewat -> notifikasinya dihapus otomatis.
+///  - tanggal berganti -> notifikasi rapat kemarin dihapus otomatis.
 /// Notifikasi baru aktif mulai pukul 08:00 WITA.
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -99,7 +99,7 @@ class NotificationService {
           : await ApiService().getJadwalHariIni();
       final activeIds = items.map((e) => e.id).toSet();
 
-      // Hapus notifikasi rapat yang jamnya sudah lewat
+      // Hapus notifikasi rapat yang bukan jadwal hari ini (tanggal sudah berganti)
       final active = await _plugin.getActiveNotifications();
       for (final n in active) {
         if (n.id != null && n.channelId == _channelId && !activeIds.contains(n.id)) {
