@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS antrian_scraping CASCADE;
 DROP TABLE IF EXISTS sumber_scraping CASCADE;
 DROP TABLE IF EXISTS pasal CASCADE;
 DROP TABLE IF EXISTS peraturan CASCADE;
+DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS jadwal_rapat_harmonisasi CASCADE;
 DROP TABLE IF EXISTS pengguna CASCADE;
 
@@ -101,10 +102,28 @@ CREATE TABLE jadwal_rapat_harmonisasi (
     tim_pokja VARCHAR(50) NOT NULL,
     dibuat_oleh VARCHAR(50) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    notifikasi_terkirim_tanggal DATE NULL -- Web Push: tanggal notifikasi rapat ini terkirim (sekali per hari)
 );
 
 CREATE INDEX idx_jadwal_tanggal ON jadwal_rapat_harmonisasi(tanggal);
+
+-- 8. Table: push_subscriptions (Web Push device subscriptions for jadwal rapat notifications)
+--    Berisi "alamat" push per perangkat/browser pegawai; sengaja tidak diekspor datanya.
+CREATE TABLE push_subscriptions (
+    id BIGSERIAL PRIMARY KEY,
+    pengguna_id BIGINT NULL,
+    endpoint TEXT NOT NULL,
+    endpoint_hash VARCHAR(64) NOT NULL UNIQUE, -- sha256(endpoint)
+    public_key VARCHAR(255) NULL,              -- p256dh
+    auth_token VARCHAR(255) NULL,              -- auth
+    content_encoding VARCHAR(20) NOT NULL DEFAULT 'aes128gcm',
+    user_agent VARCHAR(255) NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX push_subscriptions_pengguna_id_index ON push_subscriptions(pengguna_id);
 
 
 -- Data for pengguna (2 rows)

@@ -405,7 +405,7 @@
 
     @unless ($isGuest)
         {{-- Notifikasi jadwal rapat hari ini (banner + notifikasi browser) --}}
-        <script src="/js/notification.js?v=5" defer></script>
+        <script src="/js/notification.js?v=6" defer></script>
     @endunless
 
 </body>

@@ -1,6 +1,8 @@
 -- ========================================================
 -- MySQL Data Dump: p3h_kemenkum_kalsel
 -- Updated: 2026-11-15T00:16:23.000Z
+-- Skema dibuat oleh migrasi Laravel (php artisan migrate), termasuk tabel push_subscriptions
+-- dan kolom jadwal_rapat_harmonisasi.notifikasi_terkirim_tanggal (Web Push notifikasi jadwal rapat).
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -1543,5 +1545,7 @@ INSERT INTO pasal (id, peraturan_id, nomor_pasal, nomor_ayat, teks_pasal) VALUES
 -- Data for jadwal_rapat_harmonisasi (1 rows)
 INSERT INTO jadwal_rapat_harmonisasi (id, jenis_rancangan, tentang, tanggal, jam, nama_kompilator, tim_pokja, dibuat_oleh, created_at, updated_at) VALUES
   (28, 'Ranperkada', 'Rancangan Peraturan Wali Kota Bjm Tentang RDTR Kawasan Pengembangan Ekonomi Mantuil dan Sekitarnya', '2026-08-18', '09:00:00', 'Dame, yes', 'Pokja 2', 'Perancang', '2026-08-18 10:07:51', '2026-08-18 13:43:09');
+
+-- Data for push_subscriptions (0 rows) — langganan Web Push bersifat per perangkat dan tidak diekspor
 
 SET FOREIGN_KEY_CHECKS = 1;
