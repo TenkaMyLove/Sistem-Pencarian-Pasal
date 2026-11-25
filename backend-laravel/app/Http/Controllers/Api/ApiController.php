@@ -7,6 +7,7 @@ use App\Models\JadwalRapat;
 use App\Models\Pasal;
 use App\Models\Pengguna;
 use App\Models\Peraturan;
+use App\Services\JadwalPushService;
 use App\Services\RecrawlService;
 use App\Services\SearchService;
 use App\Services\UrlCrawler;
@@ -409,5 +410,15 @@ class ApiController extends Controller
             'message' => 'cPanel Cron Job execution completed',
             'result' => $recrawl->jalankan(),
         ]);
+    }
+
+    /**
+     * GET /api/cron/notifikasi-jadwal — cadangan bila scheduler server tidak berjalan
+     * (bisa dipanggil cron eksternal tiap beberapa menit). Aman dipanggil berulang:
+     * tiap rapat hanya dikirim sekali per hari.
+     */
+    public function cronNotifikasiJadwal(JadwalPushService $push): JsonResponse
+    {
+        return response()->json(['result' => $push->kirimHariIni()]);
     }
 }

@@ -35,3 +35,4 @@ Route::post('/tambah-peraturan', [ApiController::class, 'tambahPeraturan']);
 
 // Dipanggil oleh cPanel Cron Job
 Route::get('/cron/recrawl', [ApiController::class, 'cronRecrawl']);
+Route::get('/cron/notifikasi-jadwal', [ApiController::class, 'cronNotifikasiJadwal']);

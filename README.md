@@ -152,6 +152,25 @@ cd backend-laravel
 php artisan test
 ```
 
+### 6. Notifikasi Jadwal Rapat (Web Push)
+Pegawai (Pengelola/Perancang) dapat mengaktifkan notifikasi melalui ikon lonceng di header. Setiap hari mulai pukul **08:00 WITA** server mengirim notifikasi untuk setiap rapat hari ini — tetap muncul sebagai notifikasi sistem (Windows, Android, macOS, iPhone/iPad) walau browser/PWA sedang tertutup. Rapat yang ditambahkan setelah 08:00 untuk hari yang sama terkirim dalam ±1 menit. Rapat tampil sepanjang hari dan hilang saat tanggal berganti.
+
+1. Buat kunci VAPID **sekali saja** lalu isi `VAPID_PUBLIC_KEY` & `VAPID_PRIVATE_KEY` di `.env` (dan variabel server produksi). Mengganti kunci memutus semua langganan perangkat.
+   ```bash
+   php artisan webpush:vapid --write
+   ```
+2. Jalankan scheduler Laravel agar notifikasi terkirim otomatis (di server produksi sudah dijalankan oleh `start-container.sh`):
+   ```bash
+   php artisan schedule:work
+   ```
+   Cadangan bila scheduler tidak berjalan: panggil `GET /api/cron/notifikasi-jadwal` dari cron eksternal tiap beberapa menit (aman dipanggil berulang — tiap rapat hanya dikirim sekali).
+3. Kirim manual / uji: `php artisan jadwal:kirim-notifikasi`
+
+Catatan perangkat:
+- **iPhone/iPad**: hanya untuk aplikasi yang sudah ditambahkan ke Layar Utama (iOS 16.4+), lalu ketuk lonceng di dalam aplikasi.
+- **Windows**: notifikasi diterima selama proses browser masih berjalan. Edge umumnya tetap berjalan di latar belakang setelah jendela ditutup (pengaturan *Lanjutkan menjalankan ekstensi dan aplikasi latar belakang*), sehingga notifikasi tetap muncul. Bila browser benar-benar tertutup (mis. Chrome), notifikasi muncul saat browser dibuka kembali pada hari yang sama.
+- **Windows (pengembangan lokal)**: bila muncul `Unable to create the key` atau `cURL error 60`, atur `OPENSSL_CONF` ke `extras\ssl\openssl.cnf` milik PHP dan `curl.cainfo` di `php.ini`.
+
 ---
 
 ## Menjalankan Aplikasi Mobile (Flutter)
