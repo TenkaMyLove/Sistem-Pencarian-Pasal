@@ -23,7 +23,14 @@ if [ "${RAILPACK_SKIP_MIGRATIONS:-false}" != "true" ]; then
     php artisan migrate --force || echo "Warning: migration skipped or already up to date"
 fi
 
+# 6. Scheduler Laravel di latar belakang (Web Push jadwal rapat tiap menit mulai 08:00 WITA).
+#    Dijalankan ulang otomatis bila berhenti. Set DISABLE_SCHEDULER=true untuk mematikan.
+if [ "${DISABLE_SCHEDULER:-false}" != "true" ]; then
+    echo "Starting Laravel scheduler..."
+    ( while true; do php artisan schedule:work 2>&1; echo "Scheduler stopped, restarting in 5s..."; sleep 5; done ) &
+fi
+
 echo "Starting FrankenPHP server..."
 
-# 6. Jalankan FrankenPHP sesuai entrypoint resmi Railpack
+# 7. Jalankan FrankenPHP sesuai entrypoint resmi Railpack
 exec docker-php-entrypoint --config /Caddyfile --adapter caddyfile 2>&1
