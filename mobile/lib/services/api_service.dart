@@ -168,7 +168,7 @@ class ApiService {
     }
   }
 
-  /// Rapat hari ini (WITA) yang jamnya belum lewat — dipakai untuk notifikasi.
+  /// Semua rapat hari ini (WITA) — dipakai untuk notifikasi.
   Future<List<JadwalItem>> getJadwalHariIni() async {
     final baseUrl = await getBaseUrl();
     final uri = Uri.parse('$baseUrl/api/jadwal/hari-ini');

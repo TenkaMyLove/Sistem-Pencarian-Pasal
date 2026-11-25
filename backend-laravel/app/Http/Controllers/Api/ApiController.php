@@ -259,7 +259,7 @@ class ApiController extends Controller
         }
     }
 
-    /** GET /api/jadwal/hari-ini — rapat hari ini (WITA) yang jamnya belum lewat */
+    /** GET /api/jadwal/hari-ini — semua rapat hari ini (WITA) */
     public function jadwalHariIni(): JsonResponse
     {
         try {
