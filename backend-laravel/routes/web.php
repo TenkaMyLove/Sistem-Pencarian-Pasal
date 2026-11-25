@@ -47,6 +47,7 @@ Route::middleware('role:pengelola')->group(function () {
 // --- Pegawai (Pengelola & Perancang): jadwal rapat harmonisasi ---
 Route::middleware('role:staff')->group(function () {
     Route::get('/jadwal', [JadwalController::class, 'index']);
+    Route::get('/jadwal/notifikasi-hari-ini', [JadwalController::class, 'notifikasiHariIni']);
     Route::get('/jadwal/modal/tambah', [JadwalController::class, 'modalTambah']);
     Route::get('/jadwal/modal/edit/{id}', [JadwalController::class, 'modalEdit']);
     Route::post('/jadwal', [JadwalController::class, 'store']);

@@ -257,6 +257,23 @@ class ApiController extends Controller
         }
     }
 
+    /** GET /api/jadwal/hari-ini — rapat hari ini (WITA) yang jamnya belum lewat */
+    public function jadwalHariIni(): JsonResponse
+    {
+        try {
+            $now = now('Asia/Makassar');
+
+            return response()->json([
+                'success' => true,
+                'data' => JadwalRapat::aktifHariIni()->makeHidden(['created_at', 'updated_at']),
+                'tanggal' => $now->toDateString(),
+                'jam_server' => $now->format('H:i:s'),
+            ]);
+        } catch (Throwable $e) {
+            return $this->gagal($e, 'Gagal memuat jadwal hari ini');
+        }
+    }
+
     public function tambahJadwal(Request $request): JsonResponse
     {
         try {

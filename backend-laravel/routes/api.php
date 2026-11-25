@@ -23,6 +23,7 @@ Route::put('/pasal/{id}', [ApiController::class, 'updatePasal']);
 Route::delete('/pasal/{id}', [ApiController::class, 'hapusPasal']);
 
 Route::get('/jadwal', [ApiController::class, 'daftarJadwal']);
+Route::get('/jadwal/hari-ini', [ApiController::class, 'jadwalHariIni']);
 Route::post('/jadwal', [ApiController::class, 'tambahJadwal']);
 Route::put('/jadwal/{id}', [ApiController::class, 'ubahJadwal']);
 Route::delete('/jadwal/{id}', [ApiController::class, 'hapusJadwal']);

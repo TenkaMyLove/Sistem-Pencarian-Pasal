@@ -79,6 +79,8 @@
 
     {{-- CSS halaman (hasil pencarian, tabel, modal, dll.) --}}
     <link rel="stylesheet" href="/css/style.css?v=2">
+    {{-- Banner notifikasi jadwal rapat hari ini --}}
+    <link rel="stylesheet" href="/css/notification.css?v=1">
 
     {{-- HTMX --}}
     <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
@@ -87,7 +89,7 @@
 </head>
 
 {{-- hx-headers: setiap permintaan HTMX otomatis menyertakan token CSRF (wajib di Laravel untuk POST) --}}
-<body class="bg-surface font-body-md text-on-surface antialiased" hx-headers='{"X-CSRF-TOKEN": "{{ csrf_token() }}"}'>
+<body class="bg-surface font-body-md text-on-surface antialiased" data-is-guest="{{ $isGuest ? 'true' : 'false' }}" hx-headers='{"X-CSRF-TOKEN": "{{ csrf_token() }}"}'>
 
     {{-- ── Sidebar (Khusus Desktop >= 1024px; Mobile memakai navigasi bawah) ── --}}
     <aside
@@ -168,6 +170,24 @@
 
         <main class="w-full pt-16 pb-24 lg:pb-0 bg-surface flex-1">
             <div class="content-body">
+                @unless ($isGuest)
+                    {{-- Diisi oleh /js/notification.js bila ada rapat hari ini yang belum lewat --}}
+                    <div id="jadwal-notif-banner" class="jadwal-notif-banner hidden" role="status" aria-live="polite">
+                        <div class="jadwal-notif-inner">
+                            <span class="jadwal-notif-icon">{!! TeksHelper::ikon('notifications', 22) !!}</span>
+                            <div class="jadwal-notif-content">
+                                <a href="/jadwal" class="jadwal-notif-title">Jadwal Rapat Hari Ini</a>
+                                <div id="jadwal-notif-list"></div>
+                                <button type="button" id="jadwal-notif-enable" class="jadwal-notif-enable hidden" onclick="enableJadwalNotifications()">
+                                    Aktifkan notifikasi perangkat
+                                </button>
+                            </div>
+                            <button type="button" class="jadwal-notif-close" onclick="dismissJadwalBanner()" aria-label="Tutup">
+                                {!! TeksHelper::ikon('close', 18) !!}
+                            </button>
+                        </div>
+                    </div>
+                @endunless
                 @yield('content')
             </div>
         </main>
@@ -365,6 +385,11 @@
             }
         });
     </script>
+
+    @unless ($isGuest)
+        {{-- Notifikasi jadwal rapat hari ini (banner + notifikasi browser) --}}
+        <script src="/js/notification.js?v=1" defer></script>
+    @endunless
 
 </body>
 </html>

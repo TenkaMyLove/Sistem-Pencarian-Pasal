@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import '../utils/constants.dart';
 import 'jadwal_screen.dart';
 import 'kelola_akun_screen.dart';
@@ -40,6 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _checkHealthQuietly();
+
+    // Notifikasi jadwal rapat hari ini — hanya untuk pegawai (bukan Tamu)
+    final user = AuthService().currentUser;
+    if (user != null && !user.isTamu) {
+      NotificationService().startPolling();
+    }
   }
 
   Future<void> _checkHealthQuietly() async {
