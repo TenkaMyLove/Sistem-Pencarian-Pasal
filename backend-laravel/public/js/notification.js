@@ -242,7 +242,12 @@
     return Promise.resolve(Notification.requestPermission()).then(function (perm) {
       if (perm !== 'granted') return;
       if (!pushSupported()) return;
-      return subscribePush().then(function () {
+      // Kegagalan pertama sering hanya sementara (mis. service worker baru sedang diaktifkan setelah
+      // pembaruan aplikasi): coba sekali lagi diam-diam sebelum menampilkan pesan ke pengguna.
+      return subscribePush().catch(function (err) {
+        if (err && err.tahap === 'sesi') throw err;
+        return new Promise(function (resolve) { setTimeout(resolve, 1500); }).then(subscribePush);
+      }).then(function () {
         return swRegistration().then(function (reg) {
           if (reg) {
             reg.showNotification('Notifikasi jadwal rapat aktif', {

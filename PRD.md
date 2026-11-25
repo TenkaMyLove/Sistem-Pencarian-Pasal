@@ -1,8 +1,8 @@
 # Product Requirement Document (PRD)
 ## Sistem Pencarian Pasal — P3H Kemenkum Kalsel
 
-**Versi**: 4.0  
-**Tanggal Pembaruan**: 19 November 2026  
+**Versi**: 4.1  
+**Tanggal Pembaruan**: 25 November 2026  
 **Status**: Approved & Production Ready  
 **Target Pengguna**: Divisi Peraturan Perundang-undangan dan Pembinaan Hukum (P3H), Kantor Wilayah Kementerian Hukum Kalimantan Selatan  
 
@@ -74,6 +74,13 @@ Sistem membagi akses pengguna ke dalam **3 tingkatan peran** *(peran `Admin` tel
   - Web mendukung checkbox pilihan tim perancang standar serta entri manual nama kompilator tambahan.
   - Mobile (`JadwalFormDialog`) mengirimkan format jam `HH:mm` agar sesuai dengan kolom MySQL `TIME NOT NULL` dan menampilkannya secara konsisten dalam format `HH.mm WITA`.
 - **Kontrol Hak Akses**: **Pengelola** dan **Perancang** memiliki kontrol CRUD penuh (Tambah, Ubah, Hapus di Web, PWA dan Mobile), sedangkan **Tamu** dibatasi dari akses agenda rapat internal.
+- **Notifikasi Jadwal Rapat Hari Ini (Khusus Pengelola & Perancang; Tamu tidak menerima notifikasi)**:
+  - **Aturan tampil**: notifikasi aktif mulai **08:00 WITA** (jam server `Asia/Makassar`, bukan jam perangkat), memuat seluruh rapat hari ini, tetap tampil sepanjang hari, dan **hilang otomatis saat tanggal berganti** (bukan saat jam rapat lewat).
+  - **Web Push (Web/PWA — tetap sampai walau browser/PWA tertutup)**: pegawai mengaktifkan notifikasi per perangkat melalui **ikon lonceng** di header (titik hijau = aktif, titik oranye = belum aktif). Scheduler Laravel menjalankan `jadwal:kirim-notifikasi` tiap menit mulai 08:00 WITA dan mengirim setiap rapat **sekali per hari** (penanda `notifikasi_terkirim_tanggal`); rapat yang ditambahkan setelah 08:00 untuk hari yang sama terkirim dalam ±1 menit. Notifikasi tampil sebagai notifikasi sistem (Windows, Android, macOS, iPhone/iPad) dan membuka `/jadwal` saat diketuk. Pesan push kedaluwarsa tengah malam WITA, dan bila seluruh pengiriman gagal (mis. gangguan jaringan) pengiriman diulang menit berikutnya. Langganan perangkat dihapus saat **Keluar** atau ketika browser mencabut izin.
+  - **Persyaratan perangkat**: iPhone/iPad hanya untuk PWA yang ditambahkan ke Layar Utama (iOS 16.4+) — di Safari biasa ikon lonceng menampilkan panduan pemasangan. Windows menerima notifikasi selama proses browser berjalan (Edge umumnya tetap berjalan di latar belakang setelah jendela ditutup).
+  - **Banner di halaman**: banner *Jadwal Rapat Hari Ini* di bagian atas setiap halaman (diperbarui tiap 60 detik melalui `/jadwal/notifikasi-hari-ini`), dapat ditutup sementara (muncul kembali setelah 5 menit). Bila Web Push tidak didukung, browser tetap menampilkan notifikasi selama halaman terbuka (cadangan).
+  - **Pesan kegagalan yang jelas**: bila pengaktifan gagal, pengguna mendapat pesan sesuai penyebab (aplikasi masih disiapkan, sesi login berakhir, browser menolak pendaftaran, server gagal menyimpan, atau perangkat offline) beserta kode singkat untuk penelusuran; kegagalan pertama dicoba ulang otomatis sekali.
+  - **Mobile Flutter**: `NotificationService` (`flutter_local_notifications`) mengambil `/api/jadwal/hari-ini` tiap 60 detik selama aplikasi terbuka, menampilkan satu notifikasi per rapat, menghapus notifikasi rapat kemarin saat tanggal berganti, serta berhenti dan membersihkan notifikasi saat logout.
 
 ### 3.3. Tambah Peraturan via Tautan (Web Crawler & Ingestion)
 - Dapat diakses khusus oleh **Pengelola** pada antarmuka Web/PWA (`/tambah-peraturan`) dan Mobile (`TambahPeraturanScreen`).
@@ -153,7 +160,8 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **86 Peraturan Perundang-Un
 - **Database Engine**: MySQL 8.x (`mysql2 ^3.11.3` dengan Full-Text Indexing)
 - **Frontend Web**: HTMX 1.9.10 + Tailwind CSS + Custom Vanilla CSS (`public/css/style.css`)
 - **Mobile Framework**: Flutter & Dart `^3.11.5` (Material 3 Multi-platform)
-- **Mobile UI Libraries**: `skeletonizer ^3.0.0`, `google_fonts ^8.2.1`, `http ^1.6.0`, `shared_preferences ^2.5.6`, `url_launcher ^6.3.3`, `intl ^0.20.3`
+- **Mobile UI Libraries**: `skeletonizer ^3.0.0`, `google_fonts ^8.2.1`, `http ^1.6.0`, `shared_preferences ^2.5.6`, `url_launcher ^6.3.3`, `intl ^0.20.3`, `flutter_local_notifications ^18.0.1`
+- **Notifikasi Web Push**: `minishlink/web-push ^11.0` (VAPID; kunci dibuat dengan `php artisan webpush:vapid`), Service Worker `public/sw.js` (event `push` & `notificationclick`), Laravel Scheduler (`schedule:work` dijalankan oleh `start-container.sh` di server produksi)
 - **Web Scraper & Crawler**: `cheerio ^1.2.0` + `node-fetch ^3.3.2`
 - **Security & Hashing**: `bcryptjs ^3.0.2` (Cost factor 10) + HTTP-Only Session Cookie & Global `/api/*` CORS Middleware
 
@@ -175,6 +183,8 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **86 Peraturan Perundang-Un
 | `PUT` | `/api/pasal/:id` | Memperbarui `nomor_pasal`, `nomor_ayat`, dan `teks_pasal` | Khusus Pengelola |
 | `DELETE` | `/api/pasal/:id` | Menghapus satu baris pasal | Khusus Pengelola |
 | `GET` | `/api/jadwal` | Mengambil daftar agenda rapat harmonisasi | Staf terautentikasi |
+| `GET` | `/api/jadwal/hari-ini` | Seluruh rapat hari ini (WITA) untuk notifikasi mobile (`data`, `tanggal`, `jam_server`) | Staf terautentikasi (Mobile) |
+| `GET` | `/api/cron/notifikasi-jadwal` | Cadangan pemicu Web Push bila scheduler server tidak berjalan; aman dipanggil berulang (tiap rapat dikirim sekali per hari) | Cron / Sistem |
 | `POST` | `/api/jadwal` | Menambahkan agenda jadwal rapat baru (`jam` berformat `HH:mm`) | Pengelola / Perancang |
 | `PUT` | `/api/jadwal/:id` | Memperbarui data jadwal rapat harmonisasi | Pengelola / Perancang |
 | `DELETE` | `/api/jadwal/:id` | Menghapus agenda rapat harmonisasi | Pengelola / Perancang |
@@ -196,6 +206,9 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **86 Peraturan Perundang-Un
 | `POST` | `/pencarian/edit-pasal/:pasal_id` | Menyimpan pembaruan nomor pasal, ayat, dan teks pasal (`HX-Trigger: refreshResults`) | `role:pengelola` (Khusus Pengelola) |
 | `POST` | `/pencarian/hapus-pasal/:pasal_id` | Menghapus baris pasal dari basis data (`HX-Trigger: refreshResults`) | `role:pengelola` (Khusus Pengelola) |
 | `GET` / `POST` | `/jadwal`, `/jadwal/modal/*`, `/jadwal/:id/*` | Halaman & aksi CRUD jadwal rapat harmonisasi | `role:staff` (Pengelola & Perancang) |
+| `GET` | `/jadwal/notifikasi-hari-ini` | JSON seluruh rapat hari ini untuk banner & notifikasi halaman (`data`, `tanggal`, `jam_server`) | `role:staff` (Pengelola & Perancang) |
+| `POST` | `/notifikasi/langganan` | Menyimpan/memperbarui langganan Web Push perangkat ini (`endpoint` https, `keys.p256dh`, `keys.auth`, `contentEncoding`) | `role:staff` (Pengelola & Perancang) |
+| `POST` | `/notifikasi/berhenti` | Menghapus langganan Web Push perangkat ini (tombol lonceng / saat Keluar) | Publik (berbasis endpoint rahasia perangkat, CSRF) |
 | `GET` / `POST` | `/tambah-peraturan` | Formulir & eksekusi web crawler peraturan baru | `role:pengelola` (Khusus Pengelola) |
 | `GET` / `POST` | `/kelola-akun` | Kelola akun dan reset kata sandi staf operasional | `role:pengelola` (Khusus Pengelola) |
 
@@ -203,7 +216,7 @@ Basis data awal (`database_dump_mysql.sql`) mencakup **86 Peraturan Perundang-Un
 
 ## 7. Skema Database MySQL 8.x (DDL Resmi)
 
-Database `p3h_kemenkum_kalsel` menggunakan 7 tabel terstruktur (`src/db/schema_mysql.sql`):
+Database `p3h_kemenkum_kalsel` menggunakan 8 tabel terstruktur (`src/db/schema_mysql.sql`; tabel `push_subscriptions` dan kolom `notifikasi_terkirim_tanggal` dibuat oleh migrasi Laravel `2026_11_25_000000_create_push_subscriptions_table`):
 
 ```sql
 -- 1. Tabel Peraturan
@@ -291,7 +304,23 @@ CREATE TABLE jadwal_rapat_harmonisasi (
     dibuat_oleh VARCHAR(50) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    notifikasi_terkirim_tanggal DATE NULL, -- Web Push: tanggal notifikasi rapat ini terkirim (sekali per hari)
     INDEX idx_jadwal_tanggal (tanggal)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 8. Tabel Langganan Web Push (perangkat/browser pegawai yang mengaktifkan notifikasi jadwal rapat)
+CREATE TABLE push_subscriptions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    pengguna_id BIGINT UNSIGNED NULL,
+    endpoint TEXT NOT NULL,
+    endpoint_hash VARCHAR(64) NOT NULL UNIQUE,  -- sha256(endpoint)
+    public_key VARCHAR(255) NULL,               -- p256dh
+    auth_token VARCHAR(255) NULL,               -- auth
+    content_encoding VARCHAR(20) NOT NULL DEFAULT 'aes128gcm',
+    user_agent VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX push_subscriptions_pengguna_id_index (pengguna_id)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
@@ -309,6 +338,7 @@ CREATE TABLE jadwal_rapat_harmonisasi (
    - Pencegahan injeksi SQL melalui *parameterized queries* (`mysql2/promise`).
    - Middleware CORS aktif pada seluruh rute `/api/*` (`app.use('/api/*', cors(...))`) agar aplikasi Web & Flutter Web dapat mengakses `/api/health` maupun endpoint REST API lainnya dengan aman.
    - Tidak ada kredensial akun, kata sandi, maupun nilai `.env` produksi yang dicantumkan pada dokumentasi (`README.md` / `PRD.md`).
+   - Kunci privat VAPID (`VAPID_PRIVATE_KEY`) hanya disimpan sebagai variabel lingkungan server; halaman web hanya menerima kunci publik, dan hanya untuk Pengelola/Perancang. Isi notifikasi ditampilkan sebagai teks biasa (bukan HTML) untuk mencegah injeksi skrip.
 3. **Ketersediaan & Aksesibilitas**:
    - Desain tata letak responsif untuk resolusi desktop, laptop, tablet, dan smartphone Android.
    - Skema warna terstandarisasi mengacu pada identitas Kementerian Hukum Republik Indonesia (Sovereign Navy `#0B192C`, Administrative Blue `#1D4ED8`, Slate `#1E293B`).
