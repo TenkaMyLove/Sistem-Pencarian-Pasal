@@ -82,3 +82,35 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+// Web Push jadwal rapat dari server — tampil walau browser/PWA tertutup
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (_) {
+    data = { body: event.data ? event.data.text() : '' };
+  }
+
+  event.waitUntil(
+    (async () => {
+      // Tutup notifikasi jadwal dari tanggal sebelumnya
+      if (data.tanggal) {
+        const lama = await self.registration.getNotifications();
+        lama.forEach((n) => {
+          if (n.tag && n.tag.startsWith('jadwal-') && n.data && n.data.tanggal && n.data.tanggal !== data.tanggal) {
+            n.close();
+          }
+        });
+      }
+
+      await self.registration.showNotification(data.title || 'Rapat Harmonisasi Hari Ini', {
+        body: data.body || 'Ada jadwal rapat harmonisasi hari ini.',
+        icon: '/images/icon-192.png',
+        badge: '/images/icon-192.png',
+        tag: data.tag || 'jadwal',
+        data: { url: data.url || '/jadwal', tanggal: data.tanggal || null },
+      });
+    })()
+  );
+});

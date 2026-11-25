@@ -47,6 +47,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if (! $isGuest && \App\Services\JadwalPushService::aktif())
+        {{-- Kunci publik Web Push (aman ditampilkan) --}}
+        <meta name="vapid-public-key" content="{{ config('webpush.public_key') }}">
+    @endif
     <meta name="theme-color" content="#0e1c2f">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -80,7 +84,7 @@
     {{-- CSS halaman (hasil pencarian, tabel, modal, dll.) --}}
     <link rel="stylesheet" href="/css/style.css?v=2">
     {{-- Banner notifikasi jadwal rapat hari ini --}}
-    <link rel="stylesheet" href="/css/notification.css?v=1">
+    <link rel="stylesheet" href="/css/notification.css?v=2">
 
     {{-- HTMX --}}
     <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
@@ -160,7 +164,20 @@
                         <span>Masuk</span>
                     </a>
                 @else
-                    <a href="/logout" class="h-9 px-3 sm:px-space-md bg-surface-container text-on-surface border border-outline-variant font-semibold text-[13px] flex items-center gap-1.5 transition-colors rounded-lg hover:bg-surface-container-high">
+                    {{-- Notifikasi jadwal rapat di perangkat ini (Web Push) — status diatur oleh /js/notification.js --}}
+                    <button
+                        type="button"
+                        id="notif-toggle-btn"
+                        class="notif-toggle-btn hidden h-9 w-9 border border-outline-variant rounded-lg flex items-center justify-center transition-colors"
+                        onclick="toggleJadwalNotifications()"
+                        aria-label="Notifikasi jadwal rapat"
+                        title="Notifikasi jadwal rapat"
+                    >
+                        {!! TeksHelper::ikon('notifications', 18) !!}
+                        <span class="notif-toggle-dot" aria-hidden="true"></span>
+                    </button>
+
+                    <a href="/logout" id="logout-link" class="h-9 px-3 sm:px-space-md bg-surface-container text-on-surface border border-outline-variant font-semibold text-[13px] flex items-center gap-1.5 transition-colors rounded-lg hover:bg-surface-container-high">
                         {!! TeksHelper::ikon('logout', 17) !!}
                         <span>Keluar</span>
                     </a>
@@ -171,7 +188,7 @@
         <main class="w-full pt-16 pb-24 lg:pb-0 bg-surface flex-1">
             <div class="content-body">
                 @unless ($isGuest)
-                    {{-- Diisi oleh /js/notification.js bila ada rapat hari ini yang belum lewat --}}
+                    {{-- Diisi oleh /js/notification.js bila ada rapat hari ini --}}
                     <div id="jadwal-notif-banner" class="jadwal-notif-banner hidden" role="status" aria-live="polite">
                         <div class="jadwal-notif-inner">
                             <span class="jadwal-notif-icon">{!! TeksHelper::ikon('notifications', 22) !!}</span>
@@ -388,7 +405,7 @@
 
     @unless ($isGuest)
         {{-- Notifikasi jadwal rapat hari ini (banner + notifikasi browser) --}}
-        <script src="/js/notification.js?v=1" defer></script>
+        <script src="/js/notification.js?v=4" defer></script>
     @endunless
 
 </body>

@@ -9,6 +9,7 @@
         "php": "^8.3",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
+        "minishlink/web-push": "^11.0",
         "smalot/pdfparser": "^2.13",
         "symfony/css-selector": "^8.1",
         "symfony/dom-crawler": "^8.1"

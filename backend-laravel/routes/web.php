@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JadwalController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TambahPeraturanController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,9 @@ Route::get('/login', [AuthController::class, 'showLogin']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/tamu', [AuthController::class, 'tamu']);
 Route::get('/logout', [AuthController::class, 'logout']);
+
+// --- Web Push: berhenti berlangganan perangkat ini (dipanggil juga saat logout) ---
+Route::post('/notifikasi/berhenti', [NotifikasiController::class, 'berhenti']);
 
 // --- Pencarian pasal (terbuka untuk semua, termasuk Tamu) ---
 Route::get('/pencarian', [SearchController::class, 'index']);
@@ -48,6 +52,7 @@ Route::middleware('role:pengelola')->group(function () {
 Route::middleware('role:staff')->group(function () {
     Route::get('/jadwal', [JadwalController::class, 'index']);
     Route::get('/jadwal/notifikasi-hari-ini', [JadwalController::class, 'notifikasiHariIni']);
+    Route::post('/notifikasi/langganan', [NotifikasiController::class, 'langganan']);
     Route::get('/jadwal/modal/tambah', [JadwalController::class, 'modalTambah']);
     Route::get('/jadwal/modal/edit/{id}', [JadwalController::class, 'modalEdit']);
     Route::post('/jadwal', [JadwalController::class, 'store']);

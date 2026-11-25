@@ -94,3 +94,46 @@
     padding: 12px 14px;
   }
 }
+
+/* ── Tombol lonceng notifikasi (header) ── */
+.notif-toggle-btn {
+  position: relative;
+  background: var(--md-sys-color-surface-container, #f1f5f9);
+  color: #475569;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.notif-toggle-btn.hidden {
+  display: none;
+}
+.notif-toggle-btn:hover {
+  background: #e2e8f0;
+}
+.notif-toggle-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  box-sizing: content-box;
+  display: none;
+}
+.notif-toggle-btn[data-state="aktif"] {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.notif-toggle-btn[data-state="aktif"] .notif-toggle-dot {
+  display: block;
+  background: #16a34a;
+}
+.notif-toggle-btn[data-state="mati"] .notif-toggle-dot,
+.notif-toggle-btn[data-state="ios-pasang"] .notif-toggle-dot {
+  display: block;
+  background: #f59e0b;
+}
+.notif-toggle-btn[data-state="diblokir"] {
+  color: #94a3b8;
+}
