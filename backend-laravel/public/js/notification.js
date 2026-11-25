@@ -50,12 +50,53 @@
       headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken() },
       body: JSON.stringify(data),
     }).then(function (resp) {
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
+      // Diarahkan ke halaman lain = sesi login habis (middleware role:staff)
+      if (resp.redirected) throw tandai(new Error('redirect'), 'sesi', 'redirect');
+      if (resp.status === 401 || resp.status === 419) throw tandai(new Error('HTTP ' + resp.status), 'sesi', resp.status);
+      if (!resp.ok) throw tandai(new Error('HTTP ' + resp.status), 'server', resp.status);
+      return resp.json().catch(function () { throw tandai(new Error('bukan JSON'), 'server', 'json'); });
     }).then(function (json) {
-      if (!json || !json.success) throw new Error('Gagal');
+      if (!json || !json.success) throw tandai(new Error('Gagal'), 'server', 'gagal');
       return json;
+    }, function (err) {
+      if (err && err.tahap) throw err;
+      throw tandai(err, 'jaringan', 'fetch'); // fetch gagal total (offline / server tak terjangkau)
     });
+  }
+
+  /** Beri label tahap kegagalan agar pesan ke pengguna tepat. */
+  function tandai(err, tahap, kode) {
+    err = err instanceof Error ? err : new Error(String(err));
+    err.tahap = tahap;
+    err.kode = kode;
+    return err;
+  }
+
+  /** Pesan yang mudah dipahami pengguna sesuai penyebab kegagalan Web Push. */
+  function pesanGagal(err) {
+    var tahap = (err && err.tahap) || 'lain';
+    if (!navigator.onLine) tahap = 'jaringan';
+    var kode = ' (kode: ' + tahap + (err && err.kode ? '-' + err.kode : '') + ')';
+
+    switch (tahap) {
+      case 'sw':
+        return 'Notifikasi belum dapat diaktifkan karena aplikasi masih disiapkan. ' +
+          'Muat ulang halaman, lalu ketuk ikon lonceng sekali lagi.' + kode;
+      case 'sesi':
+        return 'Sesi login Anda sudah berakhir. Muat ulang halaman atau masuk kembali, ' +
+          'lalu ketuk ikon lonceng sekali lagi.' + kode;
+      case 'push':
+        return 'Browser ini belum dapat mendaftarkan notifikasi. Pastikan browser sudah versi terbaru ' +
+          'dan notifikasi untuk situs ini diizinkan, lalu coba lagi. ' +
+          'Bila tetap gagal, gunakan Google Chrome atau Microsoft Edge.' + kode;
+      case 'server':
+        return 'Server belum dapat menyimpan pengaturan notifikasi perangkat ini. ' +
+          'Silakan coba beberapa saat lagi atau hubungi pengelola aplikasi.' + kode;
+      case 'jaringan':
+        return 'Perangkat sedang tidak terhubung ke internet. Periksa koneksi, lalu ketuk ikon lonceng sekali lagi.' + kode;
+      default:
+        return 'Notifikasi belum dapat diaktifkan. Muat ulang halaman lalu coba lagi.' + kode;
+    }
   }
 
   function withTimeout(promise, ms) {
@@ -90,8 +131,10 @@
   }
 
   function swReady() {
-    if (!('serviceWorker' in navigator)) return Promise.reject(new Error('no sw'));
-    return withTimeout(navigator.serviceWorker.ready, 5000);
+    if (!('serviceWorker' in navigator)) return Promise.reject(tandai(new Error('no sw'), 'sw', 'none'));
+    return withTimeout(navigator.serviceWorker.ready, 10000).catch(function (err) {
+      throw tandai(err, 'sw', 'timeout');
+    });
   }
 
   function swRegistration() {
@@ -123,6 +166,9 @@
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidKey),
         });
+      }).catch(function (err) {
+        // Ditolak browser / layanan push (mis. kunci VAPID tidak valid, push dimatikan di browser)
+        throw tandai(err, 'push', err && err.name ? err.name : 'error');
       });
     }).then(function (sub) {
       return saveSubscription(sub).then(function () {
@@ -206,8 +252,8 @@
             });
           }
         });
-      }).catch(function () {
-        alert('Notifikasi belum dapat diaktifkan. Periksa koneksi internet lalu coba lagi.');
+      }).catch(function (err) {
+        alert(pesanGagal(err));
       });
     }).then(function () {
       updateUi();
