@@ -4,6 +4,7 @@
 --}}
 @php
     $canEdit = in_array($user['peran'], ['Pengelola', 'Perancang']);
+    $hariIni = now('Asia/Makassar')->toDateString();
 @endphp
 
 @if ($jadwalList->isEmpty())
@@ -20,7 +21,7 @@
         {{-- Tampilan kartu responsif khusus Mobile / PWA (< 768px) --}}
         <div class="md:hidden divide-y divide-[#e2e8f0]">
             @foreach ($jadwalList as $item)
-                <div class="p-4 flex flex-col gap-2.5">
+                <div class="p-4 flex flex-col gap-2.5" data-jadwal="{{ $item->tanggal->toDateString() < $hariIni ? 'berlalu' : 'aktif' }}">
                     <div class="flex items-start justify-between gap-2">
                         <div class="flex flex-wrap items-center gap-1.5">
                             <span class="tag tag-neutral">{{ $item->jenis_rancangan }}</span>
@@ -102,7 +103,7 @@
                 </thead>
                 <tbody>
                     @foreach ($jadwalList as $item)
-                        <tr>
+                        <tr data-jadwal="{{ $item->tanggal->toDateString() < $hariIni ? 'berlalu' : 'aktif' }}">
                             {{-- $loop->iteration = nomor urut mulai dari 1 --}}
                             <td class="col-num">{{ $loop->iteration }}</td>
                             <td><span class="tag tag-neutral">{{ $item->jenis_rancangan }}</span></td>

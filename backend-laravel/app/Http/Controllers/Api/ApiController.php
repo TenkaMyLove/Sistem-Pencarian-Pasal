@@ -251,7 +251,8 @@ class ApiController extends Controller
     public function daftarJadwal(): JsonResponse
     {
         try {
-            $items = JadwalRapat::orderBy('tanggal')->orderBy('jam')->get()
+            $items = JadwalRapat::where('tanggal', '>=', now('Asia/Makassar')->toDateString())
+                ->orderBy('tanggal')->orderBy('jam')->get()
                 ->makeHidden(['created_at', 'updated_at']);
 
             return response()->json(['success' => true, 'data' => $items]);
