@@ -16,25 +16,27 @@
             <p>Daftar jadwal rapat harmonisasi Ranperda dan Ranpergub.</p>
         </div>
 
-        @if ($canEdit)
-            {{-- hx-get: HTMX mengambil form modal dari server lalu menaruhnya di #modal-container --}}
-            <button class="btn btn-primary" hx-get="/jadwal/modal/tambah" hx-target="#modal-container">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Tambah Jadwal
-            </button>
-        @endif
-    </div>
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+            {{-- Filter tab: Terjadwal / Berlalu --}}
+            <div class="jadwal-filter-bar">
+                <button class="jadwal-filter-btn active" onclick="filterJadwal(this,'aktif')">
+                    Terjadwal <span class="jadwal-filter-count" id="count-aktif">0</span>
+                </button>
+                <button class="jadwal-filter-btn" onclick="filterJadwal(this,'berlalu')">
+                    Berlalu <span class="jadwal-filter-count" id="count-berlalu">0</span>
+                </button>
+            </div>
 
-    {{-- Filter tab: Terjadwal / Berlalu --}}
-    <div class="jadwal-filter-bar">
-        <button class="jadwal-filter-btn active" onclick="filterJadwal(this,'aktif')">
-            Terjadwal <span class="jadwal-filter-count" id="count-aktif">0</span>
-        </button>
-        <button class="jadwal-filter-btn" onclick="filterJadwal(this,'berlalu')">
-            Berlalu <span class="jadwal-filter-count" id="count-berlalu">0</span>
-        </button>
+            @if ($canEdit)
+                {{-- hx-get: HTMX mengambil form modal dari server lalu menaruhnya di #modal-container --}}
+                <button class="btn btn-primary" hx-get="/jadwal/modal/tambah" hx-target="#modal-container">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Tambah Jadwal
+                </button>
+            @endif
+        </div>
     </div>
 
     {{-- Wadah tabel utama (diganti oleh HTMX setelah tambah/ubah/hapus) --}}
@@ -49,7 +51,6 @@
         .jadwal-filter-bar {
             display: flex;
             gap: 0.25rem;
-            margin-bottom: 1rem;
             background: #e2e8f0;
             border-radius: 0.5rem;
             padding: 0.25rem;
